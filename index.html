@@ -1707,6 +1707,17 @@
             setInterval(updateGoalTimeSince, 60 * 1000);
             setInterval(updateTimeOfDayInfo, 60 * 1000);
         });
+
+        // Fix for blank screen on browser back button
+        window.addEventListener('pageshow', (event) => {
+            // Check if the page is being shown from the bfcache (back-forward cache)
+            // This means the user navigated back to the page.
+            if (event.persisted) {
+                blankScreenOverlay.style.opacity = '0';
+                blankScreenOverlay.style.pointerEvents = 'none';
+            }
+        });
     </script>
 </body>
 </html>
+

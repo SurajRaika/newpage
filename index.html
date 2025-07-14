@@ -24,6 +24,20 @@
             --active-line-color: #ffffff; /* Directly use white for active line */
         }
 
+        /* Light Mode specific variables (Anime Mode) */
+        body.anime-mode {
+            --bg-dark: #f0f0f0; /* Off-white */
+            --bg-medium: #e0e0e0; /* Slightly darker off-white */
+            --border-dark: #bbbbbb; /* Light gray for borders */
+            --text-light: #1a1a1a; /* Dark text */
+            --text-medium: #444444; /* Medium dark text */
+            --text-dark: #777777; /* Even darker text for placeholders */
+            --focus-border: #888888; /* Darker gray for focus/highlight */
+            --selected-bg: #dddddd; /* Light background for selected radio */
+            --selected-dot: #1a1a1a; /* Dark dot for radio */
+            --active-line-color: #1a1a1a; /* Darker color for active line */
+        }
+
         /* Global transition for all elements for smoother UI */
         * {
             transition: all 0.2s ease-out;
@@ -43,6 +57,74 @@
             padding: 1rem;
             box-sizing: border-box;
         }
+
+        /* Theme Toggle Button */
+        .theme-toggle-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            background-color: var(--bg-medium);
+            color: var(--text-light);
+            border: 1px solid var(--border-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 10001; /* Above other overlays */
+            transition: all 0.2s ease-out;
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        .theme-toggle-button:hover {
+            background-color: var(--border-dark);
+            color: var(--focus-border);
+        }
+
+        /* Adjustments for light mode elements */
+        body.anime-mode .time-icon {
+            background-color: var(--focus-border); /* Icon background should be focus border color */
+            color: var(--bg-dark); /* Icon color should be dark background color */
+        }
+
+        body.anime-mode .clear-history-button:hover {
+            background-color: var(--text-medium); /* Darker on hover */
+            color: var(--bg-dark); /* Text color becomes dark background */
+        }
+
+        body.anime-mode .edit-goal-modal button {
+            background-color: var(--text-light); /* Light mode buttons are dark text */
+            color: var(--bg-dark); /* Text color is dark background */
+        }
+
+        body.anime-mode .edit-goal-modal button.delete-button {
+            background-color: var(--border-dark);
+            color: var(--text-light);
+        }
+
+        body.anime-mode .edit-goal-modal button:hover {
+            background-color: var(--text-medium); /* Darker on hover */
+            color: var(--bg-dark);
+        }
+
+        body.anime-mode .edit-goal-modal button.delete-button:hover {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        body.anime-mode #loading-indicator {
+            background-color: var(--focus-border); /* Loading indicator should be focus border color */
+        }
+
+        /* Ensure scrollbar colors adapt */
+        body.anime-mode .history-list::-webkit-scrollbar-thumb {
+            background-color: var(--border-dark);
+            border: 1px solid var(--bg-medium);
+        }
+        body.anime-mode .history-list {
+            scrollbar-color: var(--border-dark) transparent;
+        }
+
 
         /* Container Wrapper */
         .container-wrapper {
@@ -294,8 +376,6 @@
         /* Specific style for the add-goal-prompt to have a dashed border */
         .add-goal-prompt {
             border-style: dashed; /* Dashed border for the add goal prompt */
-            /* justify-content: center; REMOVED from here, moved to .goal-item, .add-goal-prompt */
-            /* align-items: center; This can stay, vertically centers icon and text */
             color: var(--text-medium); /* Muted color for prompt */
         }
 
@@ -382,7 +462,7 @@
             opacity: 0;
             pointer-events: none;
             z-index: 9999;
-            transition: opacity 0.2s ease-out;
+            transition: opacity 0.05s ease-out; /* Made transition super fast */
             display: flex; /* Added for centering content */
             align-items: center; /* Added for centering content */
             justify-content: center; /* Added for centering content */
@@ -736,6 +816,13 @@
                 padding: 0.5rem; /* Reduce overall padding */
             }
 
+            .theme-toggle-button {
+                padding: 0.3rem 0.7rem; /* Smaller padding for mobile button */
+                font-size: 0.7rem; /* Smaller font for mobile button */
+                top: 0.5rem; /* Adjust position for mobile */
+                left: 0.5rem; /* Adjust position for mobile */
+            }
+
             .container-wrapper {
                 gap: 0.75rem; /* Smaller gap between sections */
             }
@@ -903,6 +990,8 @@
     </style>
 </head>
 <body>
+    <button id="theme-toggle" class="theme-toggle-button">Anime Mode</button>
+
     <!-- Blank screen overlay for transition -->
     <div id="blank-screen-overlay">
         <div id="loading-indicator"></div>
@@ -1484,10 +1573,23 @@
         const searchHistorySection = document.getElementById('search-history-section');
         const historyList = document.getElementById('history-list');
         const clearHistoryButton = document.getElementById('clear-history-button');
+        const themeToggleButton = document.getElementById('theme-toggle'); // Reference to the new theme toggle button
 
         // Global flag to track if Ctrl/Cmd is pressed
         let isCtrlPressed = false;
 
+        // Function to apply theme
+        function applyTheme(theme) {
+            const body = document.body;
+            if (theme === 'anime') {
+                body.classList.add('anime-mode');
+                themeToggleButton.textContent = 'Dark Mode';
+            } else {
+                body.classList.remove('anime-mode');
+                themeToggleButton.textContent = 'Anime Mode';
+            }
+            localStorage.setItem('themePreference', theme);
+        }
 
         // --- Event Listeners and Initial Calls ---
 
@@ -1706,6 +1808,22 @@
             setInterval(updateDayProgress, 60 * 1000);
             setInterval(updateGoalTimeSince, 60 * 1000);
             setInterval(updateTimeOfDayInfo, 60 * 1000);
+
+            // Initial theme application on load
+            const savedTheme = localStorage.getItem('themePreference');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else {
+                // Default to dark mode if no preference is saved
+                applyTheme('dark');
+            }
+
+            // Event listener for theme toggle button
+            themeToggleButton.addEventListener('click', () => {
+                const currentTheme = document.body.classList.contains('anime-mode') ? 'anime' : 'dark';
+                const newTheme = currentTheme === 'dark' ? 'anime' : 'dark';
+                applyTheme(newTheme);
+            });
         });
 
         // Fix for blank screen on browser back button
@@ -1720,4 +1838,3 @@
     </script>
 </body>
 </html>
-

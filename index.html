@@ -3,218 +3,90 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Minimal Search</title>
+    <title>Minimal Search</title>   
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Phosphor Icons CDN for filled icons -->
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
-    <style>
-        /* Define CSS variables for colors, updated to black and white palette */
-        :root {
-            --bg-dark: #1a1a1a; /* Very dark gray, almost black */
-            --bg-medium: #2a2a2a; /* Dark gray */
-            --border-dark: #444444; /* Medium dark gray for borders */
-            --text-light: #f0f0f0; /* Off-white for main text */
-            --text-medium: #cccccc; /* Light gray for secondary text/hover */
-            --text-dark: #888888; /* Medium gray for placeholders/hints */
-            --focus-border: #ffffff; /* White for focus/highlight */
-            --selected-bg: #555555; /* Dark gray for selected radio background */
-            --selected-dot: #ffffff; /* White for radio dot */
-            --active-line-color: #ffffff; /* Directly use white for active line */
-        }
+    <!-- Tailwind CSS CDN with custom config to match existing colors -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Enable dark mode based on 'dark' class on html element
+            theme: {
+                extend: {
+                    colors: {
+                        // Default (Light) Mode Colors
+                        'primary-bg': '#f0f0f0',
+                        'secondary-bg': '#e0e0e0',
+                        'border-color': '#bbbbbb',
+                        'text-primary': '#1a1a1a',
+                        'text-secondary': '#444444',
+                        'text-placeholder': '#777777',
+                        'accent': '#888888', // Light mode accent/focus
+                        'radio-selected-bg': '#dddddd',
+                        'radio-selected-dot': '#1a1a1a',
 
-        /* Light Mode specific variables (Anime Mode) */
-        body.anime-mode {
-            --bg-dark: #f0f0f0; /* Off-white */
-            --bg-medium: #e0e0e0; /* Slightly darker off-white */
-            --border-dark: #bbbbbb; /* Light gray for borders */
-            --text-light: #1a1a1a; /* Dark text */
-            --text-medium: #444444; /* Medium dark text */
-            --text-dark: #777777; /* Even darker text for placeholders */
-            --focus-border: #888888; /* Darker gray for focus/highlight */
-            --selected-bg: #dddddd; /* Light background for selected radio */
-            --selected-dot: #1a1a1a; /* Dark dot for radio */
-            --active-line-color: #1a1a1a; /* Darker color for active line */
-        }
-
-        /* Global transition for all elements for smoother UI */
-        * {
-            transition: all 0.2s ease-out;
-        }
-
-        /* Base styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-
-        /* Theme Toggle Button */
-        .theme-toggle-button {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            background-color: var(--bg-medium);
-            color: var(--text-light);
-            border: 1px solid var(--border-dark);
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
-            z-index: 10001; /* Above other overlays */
-            transition: all 0.2s ease-out;
-            white-space: nowrap; /* Prevent text wrapping */
-        }
-
-        .theme-toggle-button:hover {
-            background-color: var(--border-dark);
-            color: var(--focus-border);
-        }
-
-        /* Adjustments for light mode elements */
-        body.anime-mode .time-icon {
-            background-color: var(--focus-border); /* Icon background should be focus border color */
-            color: var(--bg-dark); /* Icon color should be dark background color */
-        }
-
-        body.anime-mode .clear-history-button:hover {
-            background-color: var(--text-medium); /* Darker on hover */
-            color: var(--bg-dark); /* Text color becomes dark background */
-        }
-
-        body.anime-mode .edit-goal-modal button {
-            background-color: var(--text-light); /* Light mode buttons are dark text */
-            color: var(--bg-dark); /* Text color is dark background */
-        }
-
-        body.anime-mode .edit-goal-modal button.delete-button {
-            background-color: var(--border-dark);
-            color: var(--text-light);
-        }
-
-        body.anime-mode .edit-goal-modal button:hover {
-            background-color: var(--text-medium); /* Darker on hover */
-            color: var(--bg-dark);
-        }
-
-        body.anime-mode .edit-goal-modal button.delete-button:hover {
-            background-color: #ff4d4d;
-            color: white;
-        }
-
-        body.anime-mode #loading-indicator {
-            background-color: var(--focus-border); /* Loading indicator should be focus border color */
-        }
-
-        /* Ensure scrollbar colors adapt */
-        body.anime-mode .history-list::-webkit-scrollbar-thumb {
-            background-color: var(--border-dark);
-            border: 1px solid var(--bg-medium);
-        }
-        body.anime-mode .history-list {
-            scrollbar-color: var(--border-dark) transparent;
-        }
-
-
-        /* Container Wrapper */
-        .container-wrapper {
-            width: 100%;
-            max-width: 40rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            position: relative;
-        }
-
-        /* Top Row */
-        .top-row {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start; /* Default to left-align */
-            width: 100%;
-        }
-
-        @media (min-width: 640px) {
-            .top-row {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center; /* Center for desktop */
+                        // Dark Mode Overrides (used with dark: prefix)
+                        dark: {
+                            'primary-bg': '#1a1a1a',
+                            'secondary-bg': '#2a2a2a',
+                            'border-color': '#444444',
+                            'text-primary': '#f0f0f0',
+                            'text-secondary': '#cccccc',
+                            'text-placeholder': '#888888',
+                            'accent': '#ffffff', // Dark mode accent/focus
+                            'radio-selected-bg': '#555555',
+                            'radio-selected-dot': '#ffffff',
+                        },
+                    },
+                    transitionProperty: {
+                        'all': 'all',
+                    },
+                    transitionTimingFunction: {
+                        'ease-out': 'ease-out',
+                    },
+                    transitionDuration: {
+                        '200': '0.2s',
+                        '300': '0.3s',
+                        '400': '0.4s',
+                        '50': '0.05s',
+                    },
+                    animation: {
+                        'slide-fade': 'slide-fade 1s infinite cubic-bezier(0.65, 0.05, 0.36, 1)',
+                    },
+                    keyframes: {
+                        'slide-fade': {
+                            '0%': { opacity: '0', transform: 'translateX(-50px)' },
+                            '25%': { opacity: '1', transform: 'translateX(0)' },
+                            '75%': { opacity: '1', transform: 'translateX(50px)' },
+                            '100%': { opacity: '0', transform: 'translateX(100px)' },
+                        }
+                    }
+                }
             }
         }
-
-        /* Time Info */
-        .time-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-medium);
-            font-size: 0.875rem;
-            font-weight: 500;
-            padding-left: 0;
-            white-space: nowrap;
+    </script>
+    <style type="text/css">
+        /* Global transition for all elements for smoother UI */
+        * {
+            transition-property: all;
+            transition-timing-function: ease-out;
+            transition-duration: 0.2s;
         }
 
-        .time-icon {
-            width: 1.5rem;
-            height: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background-color: var(--focus-border);
-            color: var(--bg-dark);
-        }
-
-        .current-time {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-light);
-        }
-
-        /* Engine Selection */
-        .engine-selection {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding-left: 0.5rem;
-            position: relative; /* Added for active-line positioning */
-        }
-
-        .engine-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-            cursor: pointer;
-            position: relative; /* Needed for radio button positioning */
-            padding: 0.2rem 0;
-            min-width: 4rem;
-        }
-
-        .engine-label .radio-text {
-            font-weight: 500;
-            color: var(--text-medium);
-            white-space: nowrap;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            padding: 0 0.25rem;
-        }
-
-        .engine-label:hover .radio-text {
-            color: var(--text-light);
+        /* Specific styles not easily replaced by Tailwind without breaking design */
+        /* Active line indicator - now a single element */
+        #active-line {
+            position: absolute;
+            bottom: 0;
+            height: 2px;
+            /* Background color set by JS based on theme */
+            border-radius: 1px;
+            transition: left 0.3s ease-out, width 0.3s ease-out; /* Sliding animation */
+            z-index: 10; /* Ensure it's on top */
         }
 
         /* Hide the actual radio button visually */
@@ -224,360 +96,6 @@
             width: 0;
             height: 0;
             pointer-events: none;
-        }
-
-        /* Active line indicator - now a single element */
-        #active-line {
-            position: absolute;
-            bottom: 0;
-            height: 2px;
-            background-color: var(--active-line-color);
-            border-radius: 1px;
-            transition: left 0.3s ease-out, width 0.3s ease-out; /* Sliding animation */
-        }
-
-        /* Remove individual active lines from labels */
-        .engine-label .active-line {
-            display: none;
-        }
-
-        /* Search Area Wrapper */
-        .search-area-wrapper {
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-medium);
-            border: 2px solid var(--border-dark);
-            border-radius: 0.125rem;
-            padding: 0.25rem; /* Made more compact */
-            position: relative;
-        }
-
-        .search-area-wrapper:focus-within {
-            border-color: var(--focus-border);
-        }
-
-        .search-form {
-            width: 100%;
-            flex-grow: 1;
-            margin-top: 0;
-        }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-
-        .search-input {
-            width: 100%;
-            background-color: transparent;
-            border: none;
-            border-radius: 0;
-            padding-top: 0.3rem; /* Made more compact */
-            padding-bottom: 0.3rem; /* Made more compact */
-            padding-left: 0.5rem;
-            padding-right: 2.5rem; /* Adjusted for smaller button area */
-            color: var(--text-light);
-            font-size: 1rem;
-            line-height: 1.5rem;
-        }
-
-        .search-input::placeholder {
-            color: var(--text-dark);
-        }
-
-        .search-input:focus {
-            outline: none;
-        }
-
-        .search-button {
-            position: absolute;
-            right: 0;
-            margin-right: 0.5rem; /* Made more compact */
-            color: var(--text-medium);
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .search-button:hover {
-            color: var(--text-light);
-        }
-
-        .search-icon {
-            width: 1.2rem; /* Slightly smaller icon */
-            height: 1.2rem; /* Slightly smaller icon */
-        }
-
-        /* Bottom Section */
-        .bottom-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start; /* Default to left-align */
-            width: 100%;
-        }
-
-        @media (min-width: 640px) {
-            .bottom-section {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center; /* Center for desktop */
-            }
-        }
-
-        /* Goals Container */
-        .goals-container {
-            width: 100%;
-            flex-grow: 1;
-            max-width: none;
-            padding-right: 0; /* Removed horizontal padding */
-            display: grid; /* Use grid for layout */
-            grid-template-columns: 1fr 1fr; /* Two equal columns */
-            gap: 1rem; /* Keep gap for spacing */
-            align-items: flex-start; /* Align items to the start of their grid area */
-        }
-
-        /* Unified styling for both actual goal items and add-goal-prompt */
-        .goal-item,
-        .add-goal-prompt {
-            display: flex;
-            /* Changed to row for icon + text alignment */
-            flex-direction: row;
-            align-items: center; /* Vertically center icon and text */
-            gap: 0.5rem; /* Space between icon and text */
-            padding: 0.3rem 0; /* Removed horizontal padding */
-            border: 1px solid var(--border-dark); /* Solid border for actual goals, dashed for add-goal-prompt */
-            border-radius: 0.125rem;
-            color: var(--text-light); /* Default text color */
-            font-size: 0.75rem; /* Smaller font size */
-            font-weight: 500;
-            min-height: 2.2rem; /* Ensure a minimum height */
-            box-sizing: border-box; /* Include padding and border in the element's total width and height */
-            white-space: nowrap; /* Prevent text wrapping */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            cursor: pointer;
-            justify-content: flex-start; /* Default to left-align text */
-        }
-
-        .goal-item:hover,
-        .add-goal-prompt:hover {
-            border-color: var(--focus-border);
-            background-color: var(--bg-medium); /* Slightly darker on hover */
-            color: var(--text-light);
-        }
-
-        /* Specific style for the add-goal-prompt to have a dashed border */
-        .add-goal-prompt {
-            border-style: dashed; /* Dashed border for the add goal prompt */
-            color: var(--text-medium); /* Muted color for prompt */
-        }
-
-        /* Style for the icon within goal cards */
-        .goal-icon {
-            font-size: 1.1em; /* Slightly larger than text for visibility */
-            color: var(--text-medium); /* Muted color for the icon */
-            flex-shrink: 0; /* Prevent icon from shrinking */
-            margin-left: 0.6rem; /* Add left margin to icon for visual spacing */
-        }
-
-        .goal-item:hover .goal-icon,
-        .add-goal-prompt:hover .goal-icon {
-            color: var(--text-light); /* Icon brightens on hover */
-        }
-
-        .goal-title {
-            font-size: 0.75rem; /* Match parent font size */
-            font-weight: 500;
-            color: var(--text-light); /* Ensure light text color */
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex-grow: 1; /* Allow title to take remaining space */
-        }
-
-        .time-since {
-            font-size: 0.7rem;
-            font-weight: 400;
-            color: var(--text-medium);
-            white-space: nowrap;
-            margin-left: auto; /* Push time-since to the right */
-            flex-shrink: 0; /* Prevent time-since from shrinking */
-            margin-right: 0.6rem; /* Add right margin to time-since for visual spacing */
-        }
-
-
-        /* Daily Progress Container */
-        .daily-progress-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            width: 100%;
-            padding-left: 0.5rem;
-        }
-
-        @media (min-width: 640px) {
-            .daily-progress-container {
-                width: auto;
-                padding-left: 0;
-            }
-        }
-
-        .progress-label {
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-medium);
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        .progress-bar-wrapper {
-            background-color: var(--border-dark);
-            border-radius: 0.125rem;
-            height: 0.5rem;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            background-color: var(--focus-border);
-            height: 100%;
-            width: 0%;
-            border-radius: 1px;
-        }
-
-        /* Blank Screen Overlay */
-        #blank-screen-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 9999;
-            transition: opacity 0.05s ease-out; /* Made transition super fast */
-            display: flex; /* Added for centering content */
-            align-items: center; /* Added for centering content */
-            justify-content: center; /* Added for centering content */
-        }
-
-        @media (prefers-color-scheme: dark) {
-            #blank-screen-overlay {
-                background-color: var(--bg-dark);
-            }
-        }
-
-        @media (prefers-color-scheme: light) {
-            #blank-screen-overlay {
-                background-color: white;
-            }
-        }
-
-        /* Loading Indicator */
-        #loading-indicator {
-            width: 50px; /* Small width */
-            height: 4px; /* Thin line */
-            background-color: var(--focus-border); /* White color */
-            border-radius: 2px; /* Rounded corners */
-            opacity: 0; /* Start invisible */
-            transform: translateX(-50px); /* Start off-screen to the left */
-            animation: slide-fade 1s infinite cubic-bezier(0.65, 0.05, 0.36, 1); /* Fast, smooth animation */
-        }
-
-        @keyframes slide-fade {
-            0% {
-                opacity: 0;
-                transform: translateX(-50px);
-            }
-            25% {
-                opacity: 1;
-                transform: translateX(0);
-            }
-            75% {
-                opacity: 1;
-                transform: translateX(50px);
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(100px);
-            }
-        }
-
-
-        /* Search History Section */
-        #search-history-section {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            background-color: transparent;
-            border: none;
-            border-top: 2px solid var(--focus-border);
-            border-radius: 0;
-            padding-top: 1rem;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-            padding-bottom: 0.5rem;
-            overflow: hidden;
-            max-height: 0;
-            opacity: 0;
-            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-            box-sizing: border-box;
-            margin-top: 1rem;
-        }
-
-        #search-history-section.show {
-            max-height: 20rem;
-            opacity: 1;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border-dark);
-            margin-bottom: 0.5rem;
-        }
-
-        .history-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-light);
-            text-transform: uppercase;
-        }
-
-        .clear-history-button {
-            background: none;
-            border: 1px solid var(--border-dark);
-            color: var(--text-medium);
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.125rem;
-            cursor: pointer;
-            font-size: 0.75rem;
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-        }
-
-        .clear-history-button:hover {
-            background-color: var(--border-dark);
-            color: var(--text-light);
-        }
-
-        .history-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: calc(20rem - 3rem);
-            overflow-y: auto;
-            /* Minimalistic Scrollbar Styles */
-            scrollbar-width: thin; /* Firefox */
-            scrollbar-color: var(--border-dark) transparent; /* Firefox: thumb color track color */
         }
 
         /* Webkit browsers (Chrome, Safari) scrollbar styles */
@@ -590,484 +108,175 @@
         }
 
         .history-list::-webkit-scrollbar-thumb {
-            background-color: var(--border-dark); /* color of the scroll thumb */
+            background-color: #bbbbbb; /* Light mode thumb color */
             border-radius: 10px; /* roundness of the scroll thumb */
-            border: 1px solid var(--bg-medium); /* creates padding around scroll thumb */
+            border: 1px solid #e0e0e0; /* Light mode border color */
         }
 
-
-        .history-item {
-            display: flex;
-            align-items: center;
-            padding: 0.4rem 0;
-            border-bottom: 1px dashed var(--border-dark);
-            font-size: 0.9rem;
-            color: var(--text-light);
-            cursor: pointer;
-            gap: 0.5rem;
+        /* Dark mode scrollbar thumb */
+        html.dark .history-list::-webkit-scrollbar-thumb {
+            background-color: #444444; /* Dark mode thumb color */
+            border: 1px solid #2a2a2a; /* Dark mode border color */
         }
 
-        .history-item:last-child {
-            border-bottom: none;
+        /* Firefox scrollbar styles */
+        .history-list {
+            scrollbar-width: thin;
+            scrollbar-color: #bbbbbb transparent; /* Light mode thumb and track color */
         }
 
-        .history-item:hover {
-            background-color: var(--bg-dark);
+        /* Dark mode Firefox scrollbar */
+        html.dark .history-list {
+            scrollbar-color: #444444 transparent; /* Dark mode thumb and track color */
         }
 
-        .history-query {
-            flex-grow: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .history-engine-tag {
-            font-size: 0.65rem;
-            background-color: var(--border-dark);
-            color: var(--text-light);
-            padding: 0.1rem 0.4rem;
-            border-radius: 0.125rem;
-            text-transform: uppercase;
-            flex-shrink: 0;
-        }
-
-        .history-timestamp {
-            font-size: 0.7rem;
-            color: var(--text-medium);
-            margin-left: auto;
-            flex-shrink: 0;
-        }
-
-        .open-link-button {
-            background: none;
-            border: none;
-            color: var(--text-medium);
-            cursor: pointer;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 0.5rem;
-            flex-shrink: 0;
-        }
-
-        .open-link-button:hover {
-            color: var(--text-light);
-        }
-
-        /* Goal Input Popup (Modal) - Original for 2 goals - HIDDEN BY DEFAULT */
-        #goal-input-overlay {
-            display: none; /* Hide this modal by default */
-        }
-
-        /* New Edit Goal Section (like history) */
-        #edit-goal-section {
-            position: fixed; /* Fixed position at the top */
-            top: 0;
-            left: 0;
-            width: 100vw; /* Full viewport width */
-            height: 100vh; /* Full viewport height for overlay effect */
-            background-color: rgba(0, 0, 0, 0.3); /* Subtle dark overlay */
-            display: flex;
-            justify-content: center; /* Center horizontally */
-            align-items: flex-start; /* Align inner modal to the top */
-            z-index: 10000;
+        /* More Menu specific styles for visibility transition */
+        #more-menu {
+            display: flex; /* Keep flex display always */
+            visibility: hidden; /* Start hidden for transitions */
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease-out; /* Only opacity transition for the section */
-            padding: 0; /* No padding on the section itself */
-            margin: 0; /* No margin on the section itself */
-            box-sizing: border-box;
+            transform: translateY(10px);
+            pointer-events: none; /* Prevent clicks when hidden */
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out, visibility 0.2s ease-out;
         }
 
+        #more-menu.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto; /* Allow clicks when shown */
+        }
+
+        /* Goal Context Menu specific styles for visibility transition */
+        #goal-context-menu {
+            display: flex; /* Keep flex display always */
+            visibility: hidden; /* Start hidden for transitions */
+            opacity: 0;
+            pointer-events: none; /* Prevent clicks when hidden */
+            transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+        }
+
+        #goal-context-menu.show {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Edit Goal Section (Modal Overlay) specific styles for visibility transition */
+        #edit-goal-section {
+            transition: opacity 0.15s ease-out; /* Fast fade for overlay */
+        }
         #edit-goal-section.show {
             opacity: 1;
             pointer-events: auto;
-            /* No transform here, handled by inner modal */
         }
-
-        /* Inner modal content for the goal editor */
-        .edit-goal-modal {
-            background-color: var(--bg-medium); /* Background for the editor itself */
-            border: 1px solid var(--border-dark); /* Less bright default border */
-            border-radius: 0.125rem;
-            padding: 0.5rem; /* Reduced padding for a more minimalistic look */
-            display: flex;
-            flex-direction: row; /* Horizontal layout for input and buttons */
-            align-items: center;
-            gap: 0.5rem; /* Reduced gap between input and buttons */
-            width: 90%; /* Take full width of its container */
-            max-width: 40rem; /* Max width for the editor */
-            box-shadow: none; /* Remove default shadow */
-            margin-top: 1rem; /* Margin from the top of the fixed section */
-            transform: translateY(-20px); /* Initial off-screen position for the modal */
-            transition: transform 0.3s ease-out, border-color 0.2s ease, box-shadow 0.2s ease; /* Transition for modal */
+        /* Modal inside edit goal section for slide effect */
+        #edit-goal-section .edit-goal-modal {
+            transform: translateY(-100%); /* Start completely off-screen top */
+            transition: transform 0.15s ease-out; /* Fast slide */
         }
-
         #edit-goal-section.show .edit-goal-modal {
-            transform: translateY(1rem); /* Slide into view */
+            transform: translateY(0); /* Slide into view */
         }
 
-        /* Highlight when the input within the modal is focused */
-        .edit-goal-modal:focus-within {
-            border-color: var(--focus-border); /* White border on focus */
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2); /* Subtle glow */
+
+        /* Search History Section visibility and transition */
+        #search-history-section {
+            transition: max-height 0.15s ease-out, opacity 0.15s ease-out; /* Fast expand/collapse and fade */
+        }
+        #search-history-section.show {
+            max-height: 500px; /* Sufficient height to show content */
+            opacity: 1;
         }
 
-        .edit-goal-modal h3 {
-            display: none; /* Hide the title in this compact editor */
+        /* When engine-selection is at the top, ensure flex-item behavior */
+        #top-elements.with-engine #time-info {
+            flex-shrink: 0;
+            flex-grow: 0;
         }
-
-        .edit-goal-modal label {
-            color: var(--text-medium);
-            font-size: 0.875rem;
-            display: flex;
-            flex-direction: column; /* Keep label and input stacked if needed, but flex-grow will make input take space */
-            gap: 0.25rem;
-            flex-grow: 1; /* Allow input to grow */
-        }
-
-        .edit-goal-modal input[type="text"] {
-            background-color: var(--bg-dark);
-            border: 1px solid var(--border-dark);
-            border-radius: 0.125rem;
-            padding: 0.4rem 0.6rem; /* Reduced padding for input */
-            color: var(--text-light);
-            font-size: 0.9rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .edit-goal-modal input[type="text"]:focus {
-            outline: none;
-            border-color: var(--focus-border);
-        }
-
-        .edit-goal-modal .button-group {
-            display: flex;
-            flex-direction: row; /* Horizontal buttons */
-            gap: 0.25rem; /* Reduced gap between buttons */
-            margin-top: 0;
-            align-items: center; /* Align buttons vertically in the row */
-            margin-left: auto; /* Push buttons to the right */
-        }
-
-        .edit-goal-modal button {
-            background-color: var(--focus-border);
-            color: var(--bg-dark);
-            padding: 0.3rem 0.6rem; /* Reduced padding for compact buttons */
-            border: none;
-            border-radius: 0.125rem;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.75rem; /* Smaller font size for buttons */
-            transition: background-color 0.2s ease;
-            white-space: nowrap; /* Prevent text wrapping */
-        }
-
-        .edit-goal-modal button.delete-button {
-            background-color: var(--border-dark);
-            color: var(--text-light);
-        }
-
-        .edit-goal-modal button:hover {
-            background-color: var(--text-medium);
-        }
-
-        .edit-goal-modal button.delete-button:hover {
-            background-color: #ff4d4d;
-            color: white;
-        }
-
-        /* Goal Context Menu */
-        .context-menu {
-            position: absolute;
-            background-color: var(--bg-medium);
-            border: 1px solid var(--border-dark);
-            border-radius: 0.125rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            min-width: 120px;
-            padding: 0.25rem 0;
-        }
-
-        .context-menu.show {
-            display: flex;
-        }
-
-        .context-menu-item {
-            padding: 0.5rem 1rem;
-            color: var(--text-light);
-            font-size: 0.875rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .context-menu-item:hover {
-            background-color: var(--border-dark);
-        }
-
-        /* --- Mobile Specific Styles (max-width: 640px) --- */
-        @media (max-width: 640px) {
-            body {
-                padding: 0.5rem; /* Reduce overall padding */
-            }
-
-            .theme-toggle-button {
-                padding: 0.3rem 0.7rem; /* Smaller padding for mobile button */
-                font-size: 0.7rem; /* Smaller font for mobile button */
-                top: 0.5rem; /* Adjust position for mobile */
-                left: 0.5rem; /* Adjust position for mobile */
-            }
-
-            .container-wrapper {
-                gap: 0.75rem; /* Smaller gap between sections */
-            }
-
-            .top-row {
-                flex-direction: column; /* Stack elements vertically */
-                align-items: flex-start; /* ALIGN TO LEFT ON MOBILE */
-                gap: 0.75rem; /* Smaller gap */
-            }
-
-            .time-info {
-                font-size: 0.75rem; /* Smaller font for time info */
-                padding-left: 0.5rem; /* Add small left padding to time info */
-            }
-
-            .time-icon {
-                width: 1.2rem; /* Smaller icon */
-                height: 1.2rem; /* Smaller icon */
-            }
-
-            .current-time {
-                font-size: 0.65rem; /* Even smaller font for current time */
-            }
-
-            .engine-selection {
-                gap: 0.5rem; /* Smaller gap between engine labels */
-                padding-left: 0.5rem; /* Align group of radios to the left */
-                justify-content: flex-start; /* Align group of radios to the left */
-            }
-
-            .engine-label {
-                min-width: 3rem; /* Smaller min-width for labels */
-                padding: 0.1rem 0; /* Reduced padding */
-            }
-
-            .engine-label .radio-text {
-                font-size: 0.65rem; /* Smaller font for radio text */
-                padding: 0 0.1rem; /* Reduced padding */
-            }
-
-            .search-area-wrapper {
-                padding: 0.15rem; /* Even more compact search bar */
-            }
-
-            .search-input {
-                padding-top: 0.2rem;
-                padding-bottom: 0.2rem;
-                padding-left: 0.4rem;
-                padding-right: 2rem; /* Adjusted for smaller button area */
-                font-size: 0.9rem; /* Smaller font for search input */
-            }
-
-            .search-button {
-                margin-right: 0.3rem; /* More compact button margin */
-            }
-
-            .search-icon {
-                width: 1rem; /* Even smaller icon */
-                height: 1rem; /* Even smaller icon */
-            }
-
-            .bottom-section {
-                flex-direction: column; /* Stack elements vertically */
-                align-items: flex-start; /* ALIGN TO LEFT ON MOBILE */
-                gap: 0.75rem; /* Smaller gap */
-            }
-
-            .goals-container {
-                grid-template-columns: 1fr; /* Single column on mobile for goals */
-                gap: 0.75rem; /* Smaller gap */
-                padding-right: 0;
-            }
-
-            .goal-item,
-            .add-goal-prompt {
-                padding: 0.2rem 0; /* Reduced padding */
-                min-height: 2rem; /* Smaller min-height */
-                justify-content: flex-start; /* ALIGN TEXT TO LEFT ON MOBILE */
-            }
-
-            .goal-icon {
-                font-size: 1em; /* Slightly smaller icon */
-                margin-left: 0.4rem; /* Reduced margin */
-            }
-
-            .goal-title {
-                font-size: 0.7rem; /* Smaller font for goal title */
-            }
-
-            .time-since {
-                font-size: 0.6rem; /* Smaller font for time since */
-                margin-right: 0.4rem; /* Reduced margin */
-            }
-
-            .daily-progress-container {
-                padding-left: 0.5rem; /* Keep left padding for alignment with other left-aligned items */
-                width: 100%; /* Ensure full width */
-            }
-
-            .progress-label {
-                font-size: 0.7rem; /* Smaller font for progress label */
-            }
-
-            .progress-bar-wrapper {
-                height: 0.4rem; /* Thinner progress bar */
-            }
-
-            #search-history-section {
-                padding-top: 0.75rem; /* Reduced padding */
-                padding-left: 0.5rem; /* Maintain left padding */
-                padding-right: 0.5rem; /* Maintain right padding */
-                padding-bottom: 0.25rem;
-                margin-top: 0.75rem; /* Reduced margin */
-            }
-
-            .history-header {
-                padding-bottom: 0.3rem; /* Reduced padding */
-                margin-bottom: 0.3rem; /* Reduced margin */
-            }
-
-            .history-title {
-                font-size: 0.8rem; /* Smaller font for history title */
-            }
-
-            .clear-history-button {
-                padding: 0.2rem 0.5rem; /* Reduced padding */
-                font-size: 0.7rem; /* Smaller font */
-            }
-
-            .history-item {
-                padding: 0.3rem 0; /* Reduced padding */
-                font-size: 0.8rem; /* Smaller font */
-            }
-
-            .history-engine-tag {
-                font-size: 0.55rem; /* Even smaller font */
-                padding: 0.05rem 0.3rem; /* Reduced padding */
-            }
-
-            .history-timestamp {
-                font-size: 0.6rem; /* Even smaller font */
-                margin-left: 0.3rem; /* Reduced margin */
-            }
-
-            .open-link-button {
-                margin-left: 0.3rem; /* Reduced margin */
-            }
-
-            .edit-goal-modal {
-                padding: 0.4rem; /* Reduced padding */
-                gap: 0.4rem; /* Reduced gap */
-                margin-top: 0.5rem; /* Reduced margin */
-            }
-
-            .edit-goal-modal input[type="text"] {
-                padding: 0.3rem 0.5rem; /* Reduced padding */
-                font-size: 0.8rem; /* Smaller font */
-            }
-
-            .edit-goal-modal button {
-                padding: 0.25rem 0.5rem; /* Reduced padding */
-                font-size: 0.65rem; /* Smaller font */
-            }
+        #top-elements.with-engine #engine-selection {
+            flex-shrink: 0;
+            flex-grow: 0;
         }
     </style>
+    <!-- Inline script to prevent theme flicker -->
+    <script>
+        (function() {
+            const themePreference = localStorage.getItem('themePreference');
+            if (themePreference === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                // Default to light mode if no preference or preference is 'light'
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
 </head>
-<body>
-    <button id="theme-toggle" class="theme-toggle-button">Anime Mode</button>
-
+<body class="font-inter bg-primary-bg text-text-primary flex items-center justify-center min-h-screen p-4 antialiased
+             dark:bg-dark-primary-bg dark:text-dark-text-primary">
     <!-- Blank screen overlay for transition -->
-    <div id="blank-screen-overlay">
-        <div id="loading-indicator"></div>
+    <div id="blank-screen-overlay" class="fixed inset-0 opacity-0 pointer-events-none z-[9999] transition-opacity duration-50 flex items-center justify-center
+             bg-primary-bg dark:bg-dark-primary-bg">
+        <div id="loading-indicator" class="w-[50px] h-1 bg-accent rounded-sm opacity-0 animate-slide-fade dark:bg-dark-accent"></div>
     </div>
 
     <!-- Goal Context Menu (Right-click) -->
-    <div id="goal-context-menu" class="context-menu">
-        <div class="context-menu-item" data-action="completed">Completed</div>
-        <div class="context-menu-item" data-action="delete">Delete</div>
+    <div id="goal-context-menu" class="context-menu absolute bg-secondary-bg border border-border-color rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
+             dark:bg-dark-secondary-bg dark:border-dark-border-color">
+        <div class="context-menu-item px-4 py-2 text-text-primary text-sm cursor-pointer whitespace-nowrap hover:bg-border-color
+                    dark:text-dark-text-primary dark:hover:bg-dark-border-color" data-action="completed">Completed</div>
+        <div class="context-menu-item px-4 py-2 text-text-primary text-sm cursor-pointer whitespace-nowrap hover:bg-border-color
+                    dark:text-dark-text-primary dark:hover:bg-dark-border-color" data-action="delete">Delete</div>
     </div>
 
-    <div class="container-wrapper">
+    <div class="container-wrapper w-full max-w-xl flex flex-col gap-4 relative">
         <!-- New Edit Goal Section - For single goal edit, appears from top -->
-        <div id="edit-goal-section" class="edit-goal-section">
-            <div class="edit-goal-modal">
-                <label for="edit-goal-input">
-                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title">
+        <div id="edit-goal-section" class="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none">
+            <div class="edit-goal-modal bg-secondary-bg border border-border-color rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-accent focus-within:shadow-md
+                        dark:bg-dark-secondary-bg dark:border-dark-border-color dark:focus-within:border-dark-accent">
+                <label for="edit-goal-input" class="text-text-secondary text-sm flex flex-col gap-1 flex-grow
+                                            dark:text-dark-text-secondary">
+                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title" class="bg-primary-bg border border-border-color rounded-sm px-2 py-1.5 text-text-primary text-base w-full box-border focus:outline-none focus:border-accent
+                                            dark:bg-dark-primary-bg dark:border-dark-border-color dark:text-dark-text-primary dark:focus:border-dark-accent">
                 </label>
-                <div class="button-group">
-                    <button id="edit-goal-action-button"></button> <!-- This will be Save or Completed -->
-                    <button id="edit-goal-delete-button" class="delete-button">Delete</button>
+                <div class="button-group flex flex-row gap-1 items-center ml-auto">
+                    <button id="edit-goal-action-button" class="bg-accent text-primary-bg px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-text-secondary
+                                            dark:bg-dark-accent dark:text-dark-primary-bg dark:hover:bg-dark-text-secondary"></button> <!-- This will be Save or Completed -->
+                    <button id="edit-goal-delete-button" class="delete-button bg-border-color text-text-primary px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
+                                            dark:bg-dark-border-color dark:text-dark-text-primary">Delete</button>
                 </div>
             </div>
         </div>
 
-        <!-- Top row for time info and engine selection -->
-        <div class="top-row">
-            <div id="time-info" class="time-info">
+        <!-- Top elements: Time Info and dynamically moved Engine Selection -->
+        <div id="top-elements" class="flex flex-col gap-4 items-start w-full">
+            <div id="time-info" class="time-info flex items-center gap-2 text-text-secondary text-sm font-medium whitespace-nowrap
+                                dark:text-dark-text-secondary">
                 <!-- Phosphor Icon element -->
-                <i id="time-icon" class="ph"></i>
-                <span id="current-time" class="current-time"></span>
+                <i id="time-icon" class="ph w-6 h-6 flex items-center justify-center rounded-full bg-accent text-primary-bg
+                                   dark:bg-dark-accent dark:text-dark-primary-bg"></i>
+                <span id="current-time" class="current-time text-xs font-semibold text-text-primary
+                                       dark:text-dark-text-primary"></span>
             </div>
-            <!-- Search Engine Selection -->
-            <div id="engine-selection" class="engine-selection">
-                <label class="engine-label" title="Switch to Google search (G)">
-                    <input type="radio" name="engine" value="google" class="custom-radio" checked>
-                    <span class="radio-text">Google</span>
-                    <!-- <div class="active-line"></div> Removed individual active lines -->
-                </label>
-                <label class="engine-label" title="Switch to Perplexity search (P)">
-                    <input type="radio" name="engine" value="perplexity" class="custom-radio">
-                    <span class="radio-text">Perplexity</span>
-                    <!-- <div class="active-line"></div> -->
-                </label>
-                <label class="engine-label" title="Switch to YouTube search (Y)">
-                    <input type="radio" name="engine" value="youtube" class="custom-radio">
-                    <span class="radio-text">YouTube</span>
-                    <!-- <div class="active-line"></div> -->
-                </label>
-                <label class="engine-label" title="Switch to ChatGPT search (C)">
-                    <input type="radio" name="engine" value="chatgpt" class="custom-radio">
-                    <span class="radio-text">ChatGPT</span>
-                    <!-- <div class="active-line"></div> -->
-                </label>
-                <label class="engine-label" title="View search history (H)">
-                    <input type="radio" name="engine" value="history" class="custom-radio">
-                    <span class="radio-text">History</span>
-                    <!-- <div class="active-line"></div> -->
-                </label>
-                <div id="active-line"></div> <!-- Single active line for sliding effect -->
-            </div>
+            <!-- The engine-selection element will be dynamically moved here or in main-content-bottom -->
         </div>
 
-        <div class="search-area-wrapper" title="Press / to focus, Esc to unfocus">
-            <form id="search-form" class="search-form">
-                <div class="input-wrapper">
+        <div class="search-area-wrapper flex flex-col bg-secondary-bg border-2 border-border-color rounded-sm p-1 relative focus-within:border-accent
+                    dark:bg-dark-secondary-bg dark:border-dark-border-color dark:focus-within:border-dark-accent">
+            <form id="search-form" class="search-form w-full flex-grow mt-0">
+                <div class="input-wrapper relative flex items-center w-full">
                     <input
                         type="text"
                         id="search-input"
                         name="query"
-                        class="search-input"
+                        class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-text-primary text-base leading-relaxed placeholder:text-text-placeholder focus:outline-none
+                                dark:text-dark-text-primary dark:placeholder:text-dark-text-placeholder"
                         placeholder="Search the web..."
                         autocomplete="off"
                     />
-                    <button type="submit" class="search-button" aria-label="Search">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                    <button type="submit" class="search-button absolute right-0 mr-2 text-text-secondary cursor-pointer bg-none border-none p-0 flex items-center justify-center hover:text-text-primary
+                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary" aria-label="Search">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon w-5 h-5">
                             <path d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.5 6.5a7.5 7.5 0 0 0 10.2 10.2Z"/>
                         </svg>
                     </button>
@@ -1075,30 +284,76 @@
             </form>
         </div>
 
-        <div class="bottom-section">
-            <!-- Goals section -->
-            <div class="goals-container" id="goals-container">
+        <!-- Main content bottom: Engine Selection (if goals hidden), Goals, Daily Progress -->
+        <div id="main-content-bottom" class="flex gap-4 w-full flex-row justify-between items-center">
+            <div id="engine-selection" class="engine-selection flex flex-row flex-wrap items-start gap-3 pl-1 relative">
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to Google search (G)">
+                    <input type="radio" name="engine" value="google" class="custom-radio" checked>
+                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
+                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">Google</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to Perplexity search (P)">
+                    <input type="radio" name="engine" value="perplexity" class="custom-radio">
+                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
+                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">Perplexity</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to YouTube search (Y)">
+                    <input type="radio" name="engine" value="youtube" class="custom-radio">
+                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
+                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">YouTube</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to ChatGPT search (C)">
+                    <input type="radio" name="engine" value="chatgpt" class="custom-radio">
+                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
+                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">ChatGPT</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="View search history (H)">
+                    <input type="radio" name="engine" value="history" class="custom-radio">
+                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
+                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">History</span>
+                </label>
+                <div id="active-line"></div> <!-- Single active line for sliding effect -->
+            </div>
+
+            <div class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start" id="goals-container">
                 <!-- Goals or "Click here to set up" message will be rendered here -->
             </div>
-            <!-- Existing section for "DAY REMAINING" progress bar -->
-            <div class="daily-progress-container">
-                <div class="progress-label">DAY REMAINING: <span id="day-remaining-percent"></span>%</div>
-                <div class="progress-bar-wrapper">
-                    <div id="day-progress-bar" class="progress-bar"></div>
+            <div class="daily-progress-container flex flex-col gap-2 w-full pl-1 sm:w-auto sm:pl-0">
+                <div class="progress-label text-xs font-medium text-text-secondary uppercase whitespace-nowrap
+                            dark:text-dark-text-secondary">DAY REMAINing: <span id="day-remaining-percent"></span>%</div>
+                <div class="progress-bar-wrapper bg-border-color rounded-sm h-2 w-full overflow-hidden
+                            dark:bg-dark-border-color">
+                    <div id="day-progress-bar" class="progress-bar bg-accent h-full w-0 rounded-sm
+                                dark:bg-dark-accent"></div>
                 </div>
             </div>
         </div>
 
         <!-- New Search History Section -->
-        <div id="search-history-section" class="history-section">
-            <div class="history-header">
-                <span class="history-title">Search History</span>
-                <button id="clear-history-button" class="clear-history-button">Clear All</button>
+        <div id="search-history-section" class="history-section flex flex-col gap-3 bg-transparent border-t-2 border-accent rounded-none pt-4 pl-1 pr-1 pb-2 overflow-hidden max-h-0 opacity-0 transition-all duration-300 box-border mt-4
+                    dark:border-dark-accent">
+            <div class="history-header flex justify-between items-center pb-2 border-b border-border-color mb-2
+                        dark:border-dark-border-color">
+                <span class="history-title text-sm font-semibold text-text-primary uppercase
+                            dark:text-dark-text-primary">Search History</span>
+                <button id="clear-history-button" class="clear-history-button bg-none border border-border-color text-text-secondary px-3 py-1 rounded-sm cursor-pointer text-xs transition-all duration-200 hover:bg-border-color hover:text-text-primary
+                            dark:border-dark-border-color dark:text-dark-text-secondary dark:hover:bg-dark-border-color dark:hover:text-dark-text-primary">Clear All</button>
             </div>
-            <ul id="history-list" class="history-list">
+            <ul id="history-list" class="history-list list-none p-0 m-0 max-h-[calc(20rem-3rem)] overflow-y-auto">
                 <!-- History items will be dynamically added here by JavaScript -->
             </ul>
         </div>
+    </div>
+
+    <!-- More Button and Menu -->
+    <button id="more-button" class="fixed bottom-4 right-4 bg-secondary-bg text-text-primary border border-border-color px-4 py-2 rounded-md cursor-pointer text-sm font-medium z-[10001] transition-all duration-200 whitespace-nowrap hover:bg-border-color hover:text-accent
+                dark:bg-dark-secondary-bg dark:text-dark-text-primary dark:border-dark-border-color dark:hover:bg-dark-border-color dark:hover:text-dark-accent">More</button>
+    <div id="more-menu" class="fixed bottom-[calc(1rem+2.5rem+0.5rem)] right-4 bg-secondary-bg border border-border-color rounded-md invisible flex-col p-2 gap-2 z-[10000] shadow-lg opacity-0 translate-y-2 transition-all duration-200
+                dark:bg-dark-secondary-bg dark:border-dark-border-color">
+        <button id="theme-toggle" class="menu-item bg-transparent text-text-primary border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-border-color hover:text-accent
+                    dark:text-dark-text-primary dark:hover:bg-dark-border-color dark:hover:text-dark-accent"></button>
+        <button id="tasks-toggle" class="menu-item bg-transparent text-text-primary border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-border-color hover:text-accent
+                    dark:text-dark-text-primary dark:hover:bg-dark-border-color dark:hover:text-dark-accent"></button>
     </div>
 
     <script>
@@ -1176,8 +431,20 @@
             const currentMonth = now.getMonth();
             const currentDay = now.getDate();
 
-            const startOfActiveDay = new Date(currentYear, currentMonth, currentDay, 6, 0, 0); // 6 AM
-            const endOfActiveDay = new Date(currentYear, currentMonth, currentDay, 22, 0, 0); // 10 PM
+            // Use stored wake/sleep times or fall back to defaults
+            const wakeTime = localStorage.getItem('wakeTime') || '06:00';
+            const sleepTime = localStorage.getItem('sleepTime') || '22:00';
+
+            const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
+            const [sleepHour, sleepMinute] = sleepTime.split(':').map(Number);
+
+            const startOfActiveDay = new Date(currentYear, currentMonth, currentDay, wakeHour, wakeMinute, 0);
+            const endOfActiveDay = new Date(currentYear, currentMonth, currentDay, sleepHour, sleepMinute, 0);
+
+            // Handle cases where sleep time might be on the next day (e.g., wake 6 AM, sleep 2 AM next day)
+            if (sleepHour < wakeHour) {
+                endOfActiveDay.setDate(endOfActiveDay.getDate() + 1);
+            }
 
             if (now < startOfActiveDay) {
                 updateProgressBar('day', 100); // Before active day, show 100% remaining
@@ -1245,22 +512,32 @@
                 if (userGoals[i]) {
                     // Render existing user goal
                     const goalItem = document.createElement('div');
-                    goalItem.className = 'goal-item'; /* Apply unified styling */
+                    goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-accent hover:bg-secondary-bg hover:text-text-primary ' +
+                                        'border-border-color text-text-primary ' +
+                                        'dark:border-dark-border-color dark:hover:border-dark-accent dark:hover:bg-dark-secondary-bg dark:hover:text-dark-text-primary'; /* Apply unified styling */
                     goalItem.dataset.index = i;
                     goalItem.innerHTML = `
-                        <i class="ph-fill ph-clipboard-text goal-icon"></i>
-                        <span class="goal-title">${userGoals[i].text}</span>
-                        <span class="time-since">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-text-primary ' +
+                                        'text-text-secondary dark:text-dark-text-secondary dark:group-hover:text-dark-text-primary"></i>
+                        <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow ' +
+                                        'text-text-primary dark:text-dark-text-primary">${userGoals[i].text}</span>
+                        <span class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 ' +
+                                        'text-text-secondary dark:text-dark-text-secondary">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
                     `;
-                    goalItem.addEventListener('click', (e) => showEditGoalPopup(e, i, false));
+                    goalItem.addEventListener('click', (e) => {
+                        showEditGoalPopup(e, i, false);
+                    });
                     goalItem.addEventListener('contextmenu', (e) => showGoalContextMenu(e, i, false));
                     goalsContainer.appendChild(goalItem);
                 } else {
                     // Render "Click here to add goal" card
                     const setupPrompt = document.createElement('div');
-                    setupPrompt.className = 'add-goal-prompt'; /* Apply unified styling */
+                    setupPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-accent hover:bg-secondary-bg hover:text-text-primary ' +
+                                            'border-border-color text-text-secondary ' +
+                                            'dark:border-dark-border-color dark:hover:border-dark-accent dark:hover:bg-dark-secondary-bg dark:hover:text-dark-text-primary'; /* Apply unified styling */
                     setupPrompt.innerHTML = `
-                        <i class="ph-fill ph-clipboard-text goal-icon"></i>
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-text-primary ' +
+                                        'text-text-secondary dark:text-dark-text-secondary dark:group-hover:text-dark-text-primary"></i>
                         <span>Click here to add your next goal</span>
                     `;
                     setupPrompt.addEventListener('click', (e) => {
@@ -1385,11 +662,19 @@
             goalContextMenu.style.left = `${e.clientX}px`;
             goalContextMenu.style.top = `${e.clientY}px`;
             goalContextMenu.dataset.goalIndex = index;
+            // Set visibility immediately for context menu
+            goalContextMenu.style.visibility = 'visible';
+            goalContextMenu.style.pointerEvents = 'auto';
         }
 
         function hideGoalContextMenu() {
             goalContextMenu.classList.remove('show');
             goalContextMenu.removeAttribute('data-goal-index');
+            // Use a timeout to hide visibility after transition completes
+            setTimeout(() => {
+                goalContextMenu.style.visibility = 'hidden';
+                goalContextMenu.style.pointerEvents = 'none';
+            }, 200); // Match transition-duration of opacity/transform
         }
 
         function handleContextMenuAction(action) {
@@ -1411,7 +696,8 @@
             try {
                 const history = localStorage.getItem('searchHistory');
                 return history ? JSON.parse(history) : [];
-            } catch (e) {
+            }
+            catch (e) {
                 console.error("Error parsing search history from localStorage:", e);
                 return [];
             }
@@ -1444,31 +730,35 @@
             if (history.length === 0) {
                 const li = document.createElement('li');
                 li.textContent = 'No search history yet.';
-                li.style.color = 'var(--text-dark)';
-                li.style.textAlign = 'center';
-                li.style.padding = '1rem';
+                li.classList.add('text-text-placeholder', 'text-center', 'p-4');
                 historyList.appendChild(li);
                 return;
             }
 
             history.forEach(item => {
                 const li = document.createElement('li');
-                li.className = 'history-item';
+                li.className = 'history-item flex items-center py-1.5 border-b border-dashed text-base cursor-pointer gap-2 hover:bg-primary-bg ' +
+                               'border-border-color text-text-primary ' +
+                               'dark:border-dark-border-color dark:hover:bg-dark-primary-bg dark:text-dark-text-primary';
 
                 const engineTag = document.createElement('span');
-                engineTag.className = 'history-engine-tag';
+                engineTag.className = 'history-engine-tag text-[0.65rem] px-1.5 py-0.5 rounded-sm uppercase flex-shrink-0 ' +
+                                      'bg-border-color text-text-primary ' +
+                                      'dark:bg-dark-border-color dark:text-dark-text-primary';
                 engineTag.textContent = item.engine;
 
                 const querySpan = document.createElement('span');
-                querySpan.className = 'history-query';
+                querySpan.className = 'history-query flex-grow whitespace-nowrap overflow-hidden text-ellipsis';
                 querySpan.textContent = item.query;
 
                 const timestampSpan = document.createElement('span');
-                timestampSpan.className = 'history-timestamp';
+                timestampSpan.className = 'history-timestamp text-[0.7rem] ml-auto flex-shrink-0 ' +
+                                          'text-text-secondary dark:text-dark-text-secondary';
                 timestampSpan.textContent = formatTimeAgo(item.timestamp);
 
                 const openLinkButton = document.createElement('button');
-                openLinkButton.className = 'open-link-button';
+                openLinkButton.className = 'open-link-button bg-none border-none cursor-pointer p-0 flex items-center justify-center ml-2 flex-shrink-0 hover:text-text-primary ' +
+                                           'text-text-secondary dark:text-dark-text-secondary dark:hover:text-dark-text-primary';
                 openLinkButton.setAttribute('title', `Open in ${item.engine}`);
                 openLinkButton.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="open-link-icon">
@@ -1508,7 +798,10 @@
         }
 
         function updateGoalTimeSince() {
-            renderGoals();
+            // Only render goals if they are enabled
+            if (goalsEnabled) {
+                renderGoals();
+            }
         }
 
         function updateActiveLinePosition() {
@@ -1521,8 +814,11 @@
                     const parentRect = engineSelection.getBoundingClientRect();
                     const labelRect = parentLabel.getBoundingClientRect();
 
-                    activeLineElement.style.left = `${labelRect.left - parentRect.left}px`;
-                    activeLineElement.style.width = `${labelRect.width}px`;
+                    const newLeft = `${labelRect.left - parentRect.left}px`;
+                    const newWidth = `${labelRect.width}px`;
+
+                    activeLineElement.style.left = newLeft;
+                    activeLineElement.style.width = newWidth;
                 }
             }
         }
@@ -1539,7 +835,8 @@
                 }
             });
 
-            updateActiveLinePosition(); // Call this to update the sliding line
+            // Defer updateActiveLinePosition to ensure layout is stable
+            setTimeout(updateActiveLinePosition, 0); 
 
             if (searchHistorySection) {
                 if (historySelected) {
@@ -1551,8 +848,7 @@
             }
         }
 
-
-        // --- Element References (Declared after functions) ---
+        // --- Element References ---
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const radioButtons = document.querySelectorAll('input[name="engine"]');
@@ -1569,29 +865,74 @@
         const editGoalActionButton = document.getElementById('edit-goal-action-button');
         const editGoalDeleteButton = document.getElementById('edit-goal-delete-button');
 
-
         const searchHistorySection = document.getElementById('search-history-section');
         const historyList = document.getElementById('history-list');
         const clearHistoryButton = document.getElementById('clear-history-button');
-        const themeToggleButton = document.getElementById('theme-toggle'); // Reference to the new theme toggle button
+
+        // Elements for More menu and theme toggle
+        const moreButton = document.getElementById('more-button');
+        const moreMenu = document.getElementById('more-menu');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const tasksToggleButton = document.getElementById('tasks-toggle'); // New tasks toggle button
+
+        const topElementsContainer = document.getElementById('top-elements');
+        const mainContentBottomContainer = document.getElementById('main-content-bottom');
 
         // Global flag to track if Ctrl/Cmd is pressed
         let isCtrlPressed = false;
+        let goalsEnabled = false; // State variable for goals visibility
+
 
         // Function to apply theme
         function applyTheme(theme) {
-            const body = document.body;
-            if (theme === 'anime') {
-                body.classList.add('anime-mode');
+            const html = document.documentElement; // Target the html element for dark mode class
+            const activeLine = document.getElementById('active-line'); // Get the active line element
+
+            if (theme === 'light') {
+                html.classList.remove('dark');
                 themeToggleButton.textContent = 'Dark Mode';
-            } else {
-                body.classList.remove('anime-mode');
-                themeToggleButton.textContent = 'Anime Mode';
+                // Set active line color for light mode explicitly
+                if (activeLine) activeLine.style.backgroundColor = '#1a1a1a'; // Dark color for light mode
+            } else { // 'dark' theme
+                html.classList.add('dark');
+                themeToggleButton.textContent = 'Light Mode';
+                // Set active line color for dark mode explicitly
+                if (activeLine) activeLine.style.backgroundColor = '#ffffff'; // White for dark mode
             }
             localStorage.setItem('themePreference', theme);
         }
 
-        // --- Event Listeners and Initial Calls ---
+        // Function to toggle goals visibility and update layout
+        function toggleGoals() {
+            goalsEnabled = !goalsEnabled;
+            localStorage.setItem('goalsEnabled', goalsEnabled);
+            updateLayout(); // Call updateLayout to handle DOM changes and button text
+            moreMenu.classList.remove('show'); // Close menu after selection
+            setTimeout(() => {
+                moreMenu.style.visibility = 'hidden';
+                moreMenu.style.pointerEvents = 'none';
+            }, 200);
+        }
+
+        function updateLayout() {
+            if (goalsEnabled) {
+                goalsContainer.classList.remove('hidden');
+                tasksToggleButton.textContent = 'Disable Tasks';
+                // Move engine-selection to top-elements
+                topElementsContainer.appendChild(engineSelection);
+                topElementsContainer.classList.add('with-engine');
+            } else {
+                goalsContainer.classList.add('hidden');
+                tasksToggleButton.textContent = 'Enable Tasks';
+                // Move engine-selection to main-content-bottom
+                mainContentBottomContainer.prepend(engineSelection); // Add to the beginning of bottom section
+                topElementsContainer.classList.remove('with-engine');
+            }
+            renderGoals(); // Re-render goals based on new visibility state
+            // Ensure updateActiveLinePosition runs after DOM changes are processed
+            setTimeout(updateActiveLinePosition, 0); 
+        }
+
 
         // Event listener for context menu items
         goalContextMenu.addEventListener('click', (e) => {
@@ -1601,22 +942,40 @@
             }
         });
 
-        // Hide context menu and edit goal popup if clicked anywhere outside the modal
+        // Hide context menu, edit goal popup if clicked anywhere outside them
         document.addEventListener('click', (e) => {
             if (!goalContextMenu.contains(e.target) && goalContextMenu.classList.contains('show')) {
                 hideGoalContextMenu();
             }
-            // If editGoalSection is shown and the click target is the editGoalSection itself (the overlay)
-            // or if the click is outside the editGoalModal but within the editGoalSection
+            // Check if the click is outside the edit goal modal and it's currently shown
             if (editGoalSection.classList.contains('show') && !editGoalModal.contains(e.target)) {
                 hideEditGoalPopup();
+            }
+            // Hide more menu if clicked outside
+            if (moreMenu.classList.contains('show') && !moreMenu.contains(e.target) && e.target !== moreButton) {
+                moreMenu.classList.remove('show');
+                // Use a timeout to hide visibility after transition completes
+                setTimeout(() => {
+                    moreMenu.style.visibility = 'hidden';
+                    moreMenu.style.pointerEvents = 'none';
+                }, 200); // Match transition-duration of opacity/transform
             }
         });
 
         // Add escape key listener
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && editGoalSection.classList.contains('show')) {
-                hideEditGoalPopup();
+            if (e.key === 'Escape') {
+                if (editGoalSection.classList.contains('show')) {
+                    hideEditGoalPopup();
+                }
+                if (moreMenu.classList.contains('show')) {
+                    moreMenu.classList.remove('show');
+                    // Use a timeout to hide visibility after transition completes
+                    setTimeout(() => {
+                        moreMenu.style.visibility = 'hidden';
+                        moreMenu.style.pointerEvents = 'none';
+                    }, 200); // Match transition-duration of opacity/transform
+                }
             }
         });
 
@@ -1777,15 +1136,8 @@
             }
         });
 
-
-        // Initial calls when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            updateDayProgress();
-            updateGoalTimeSince();
-            updateActiveLineAndSections(); // This will also set the initial placeholder
-            updateTimeOfDayInfo();
-            renderSearchHistory();
-
+        // Function to initialize the app
+        function initializeApp() {
             // Element reference for editGoalModal
             window.editGoalModal = document.querySelector('#edit-goal-section .edit-goal-modal');
 
@@ -1806,24 +1158,63 @@
             window.addEventListener('resize', updateActiveLinePosition);
 
             setInterval(updateDayProgress, 60 * 1000);
-            setInterval(updateGoalTimeSince, 60 * 1000);
+            setInterval(updateGoalTimeSince, 60 * 1000); // This will now conditionally render goals
             setInterval(updateTimeOfDayInfo, 60 * 1000);
 
-            // Initial theme application on load
-            const savedTheme = localStorage.getItem('themePreference');
-            if (savedTheme) {
-                applyTheme(savedTheme);
-            } else {
-                // Default to dark mode if no preference is saved
-                applyTheme('dark');
-            }
+            // Apply saved preferences directly
+            // This ensures theme-dependent elements like active-line color and theme-toggle text are set.
+            applyTheme(localStorage.getItem('themePreference') || 'light'); // Default to light if not set
 
-            // Event listener for theme toggle button
+            goalsEnabled = localStorage.getItem('goalsEnabled') === 'true'; // Default to false if not set
+            updateLayout();
+            updateDayProgress();
+            updateTimeOfDayInfo();
+            renderSearchHistory();
+            updateActiveLineAndSections(); // Initial setup for engine selector
+            
+            // Ensure loading overlay is off
+            blankScreenOverlay.style.opacity = '0'; 
+            blankScreenOverlay.style.pointerEvents = 'none';
+
+
+            // Event listener for theme toggle button (now inside the more menu)
             themeToggleButton.addEventListener('click', () => {
-                const currentTheme = document.body.classList.contains('anime-mode') ? 'anime' : 'dark';
-                const newTheme = currentTheme === 'dark' ? 'anime' : 'dark';
+                const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 applyTheme(newTheme);
+                moreMenu.classList.remove('show'); // Close menu after selection
+                // Use a timeout to hide visibility after transition completes
+                setTimeout(() => {
+                    moreMenu.style.visibility = 'hidden';
+                    moreMenu.style.pointerEvents = 'none';
+                }, 200); // Match transition-duration of opacity/transform
             });
+
+            // Event listener for Tasks toggle button
+            tasksToggleButton.addEventListener('click', toggleGoals);
+
+            // Event listener for More button
+            moreButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent document click from immediately closing it
+                moreMenu.classList.toggle('show');
+                // Toggle visibility to allow transitions
+                if (moreMenu.classList.contains('show')) {
+                    moreMenu.style.visibility = 'visible';
+                    moreMenu.style.pointerEvents = 'auto';
+                } else {
+                    // Use a timeout to hide visibility after transition completes
+                    setTimeout(() => {
+                        moreMenu.style.visibility = 'hidden';
+                        moreMenu.style.pointerEvents = 'none';
+                    }, 200); // Match transition-duration of opacity/transform
+                }
+            });
+        }
+
+
+        // Initial call when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp(); // Call directly without delay
         });
 
         // Fix for blank screen on browser back button

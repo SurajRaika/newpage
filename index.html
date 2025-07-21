@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Casual Font CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+    <!-- Schoolbell Font CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap" rel="stylesheet">
     <!-- Phosphor Icons CDN for filled icons -->
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
     <!-- Tailwind CSS CDN with custom config to match existing colors -->
@@ -64,6 +68,11 @@
                             '75%': { opacity: '1', transform: 'translateX(50px)' },
                             '100%': { opacity: '0', transform: 'translateX(100px)' },
                         }
+                    },
+                    fontFamily: {
+                        // Add 'Schoolbell' to the extended font families
+                        'schoolbell': ['"Schoolbell"', 'cursive'],
+                        'inter': ['Inter', 'sans-serif'], // Keep Inter if it's the default
                     }
                 }
             }
@@ -108,26 +117,26 @@
         }
 
         .history-list::-webkit-scrollbar-thumb {
-            background-color: #bbbbbb; /* Light mode thumb color */
+            background-color: '#bbbbbb'; /* Light mode thumb color */
             border-radius: 10px; /* roundness of the scroll thumb */
-            border: 1px solid #e0e0e0; /* Light mode border color */
+            border: 1px solid '#e0e0e0'; /* Light mode border color */
         }
 
         /* Dark mode scrollbar thumb */
         html.dark .history-list::-webkit-scrollbar-thumb {
-            background-color: #444444; /* Dark mode thumb color */
-            border: 1px solid #2a2a2a; /* Dark mode border color */
+            background-color: '#444444'; /* Dark mode thumb color */
+            border: 1px solid '#2a2a2a'; /* Dark mode border color */
         }
 
         /* Firefox scrollbar styles */
         .history-list {
             scrollbar-width: thin;
-            scrollbar-color: #bbbbbb transparent; /* Light mode thumb and track color */
+            scrollbar-color: '#bbbbbb' transparent; /* Light mode thumb and track color */
         }
 
         /* Dark mode Firefox scrollbar */
         html.dark .history-list {
-            scrollbar-color: #444444 transparent; /* Dark mode thumb and track color */
+            scrollbar-color: '#444444' transparent; /* Dark mode thumb and track color */
         }
 
         /* More Menu specific styles for visibility transition */
@@ -202,13 +211,20 @@
     <!-- Inline script to prevent theme flicker -->
     <script>
         (function() {
+            const html = document.documentElement;
             const themePreference = localStorage.getItem('themePreference');
             if (themePreference === 'dark') {
-                document.documentElement.classList.add('dark');
+                html.classList.add('dark');
             } else {
                 // Default to light mode if no preference or preference is 'light'
-                document.documentElement.classList.remove('dark');
+                html.classList.remove('dark');
             }
+
+            // Handle initial goalsEnabled state and engine-selection placement
+            const goalsEnabledInitial = localStorage.getItem('goalsEnabled') === 'true';
+            // These elements might not be fully parsed yet, so we need to wait for them.
+            // This part will be handled in DOMContentLoaded to ensure elements exist.
+            // The flicker fix for theme is handled above.
         })();
     </script>
 </head>
@@ -229,7 +245,7 @@
                     dark:text-dark-text-primary dark:hover:bg-dark-border-color" data-action="delete">Delete</div>
     </div>
 
-    <div class="container-wrapper w-full max-w-xl flex flex-col gap-4 relative">
+    <div class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative">
         <!-- New Edit Goal Section - For single goal edit, appears from top -->
         <div id="edit-goal-section" class="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none">
             <div class="edit-goal-modal bg-secondary-bg border border-border-color rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-accent focus-within:shadow-md
@@ -250,6 +266,8 @@
 
         <!-- Top elements: Time Info and dynamically moved Engine Selection -->
         <div id="top-elements" class="flex flex-col gap-4 items-start w-full">
+
+
             <div id="time-info" class="time-info flex items-center gap-2 text-text-secondary text-sm font-medium whitespace-nowrap
                                 dark:text-dark-text-secondary">
                 <!-- Phosphor Icon element -->
@@ -258,6 +276,9 @@
                 <span id="current-time" class="current-time text-xs font-semibold text-text-primary
                                        dark:text-dark-text-primary"></span>
             </div>
+
+
+
             <!-- The engine-selection element will be dynamically moved here or in main-content-bottom -->
         </div>
 
@@ -269,7 +290,7 @@
                         type="text"
                         id="search-input"
                         name="query"
-                        class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-text-primary text-base leading-relaxed placeholder:text-text-placeholder focus:outline-none
+                        class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-text-primary text-base md:text-lg leading-relaxed placeholder:text-text-placeholder focus:outline-none
                                 dark:text-dark-text-primary dark:placeholder:text-dark-text-placeholder"
                         placeholder="Search the web..."
                         autocomplete="off"
@@ -285,29 +306,29 @@
         </div>
 
         <!-- Main content bottom: Engine Selection (if goals hidden), Goals, Daily Progress -->
-        <div id="main-content-bottom" class="flex gap-4 w-full flex-row justify-between items-center">
-            <div id="engine-selection" class="engine-selection flex flex-row flex-wrap items-start gap-3 pl-1 relative">
-                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to Google search (G)">
+        <div id="main-content-bottom" class="flex flex-col sm:flex-row gap-4 w-full justify-between items-center">
+            <div id="engine-selection" class="engine-selection flex flex-row flex-wrap items-start gap-2 sm:gap-3 pl-1 relative">
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to Google search (G)">
                     <input type="radio" name="engine" value="google" class="custom-radio" checked>
                     <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
                                 dark:text-dark-text-secondary dark:hover:text-dark-text-primary">Google</span>
                 </label>
-                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to Perplexity search (P)">
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to Perplexity search (P)">
                     <input type="radio" name="engine" value="perplexity" class="custom-radio">
                     <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
                                 dark:text-dark-text-secondary dark:hover:text-dark-text-primary">Perplexity</span>
                 </label>
-                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to YouTube search (Y)">
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to YouTube search (Y)">
                     <input type="radio" name="engine" value="youtube" class="custom-radio">
                     <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
                                 dark:text-dark-text-secondary dark:hover:text-dark-text-primary">YouTube</span>
                 </label>
-                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="Switch to ChatGPT search (C)">
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to ChatGPT search (C)">
                     <input type="radio" name="engine" value="chatgpt" class="custom-radio">
                     <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
                                 dark:text-dark-text-secondary dark:hover:text-dark-text-primary">ChatGPT</span>
                 </label>
-                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[4rem]" title="View search history (H)">
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="View search history (H)">
                     <input type="radio" name="engine" value="history" class="custom-radio">
                     <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
                                 dark:text-dark-text-secondary dark:hover:text-dark-text-primary">History</span>
@@ -737,7 +758,7 @@
 
             history.forEach(item => {
                 const li = document.createElement('li');
-                li.className = 'history-item flex items-center py-1.5 border-b border-dashed text-base cursor-pointer gap-2 hover:bg-primary-bg ' +
+                li.className = 'history-item flex items-center py-1.5 border-b border-dashed cursor-pointer gap-2 hover:bg-primary-bg ' +
                                'border-border-color text-text-primary ' +
                                'dark:border-dark-border-color dark:hover:bg-dark-primary-bg dark:text-dark-text-primary';
 
@@ -748,7 +769,7 @@
                 engineTag.textContent = item.engine;
 
                 const querySpan = document.createElement('span');
-                querySpan.className = 'history-query flex-grow whitespace-nowrap overflow-hidden text-ellipsis';
+                querySpan.className = 'history-query flex-grow whitespace-nowrap overflow-hidden text-ellipsis text-sm sm:text-base';
                 querySpan.textContent = item.query;
 
                 const timestampSpan = document.createElement('span');
@@ -882,6 +903,46 @@
         let isCtrlPressed = false;
         let goalsEnabled = false; // State variable for goals visibility
 
+        // Image related elements and variables
+        let inactivityTimer; // Timer for inactivity detection
+        const INACTIVITY_THRESHOLD = 20000; // 20 seconds in milliseconds
+        let currentImageElement = null; // To keep track of the currently displayed image container
+
+        // Array of images with their positions, sizes, and associated text (for inactivity)
+        const inactivityImages = [
+            { src: 'https://i.pinimg.com/736x/20/6c/1d/206c1d2674e08f28e84cf781290ccf8c.jpg', position: 'bottom-left', size: 'medium', text: 'You sure are More Lazy Then i am' },
+            { src: 'https://i.pinimg.com/736x/1f/50/27/1f50270d8661c9ca8d714ef9a10ccb97.jpg', position: 'top-left', size: 'small', text: 'Bro are Sure You are Awake Now!' },
+            { src: 'https://i.pinimg.com/736x/45/52/19/45521939c45d96ce82c3175fbf1703fd.jpg', position: 'bottom-right', size: 'large', text: 'Oh My God , what should i do now ' },
+        ];
+
+        // New JSON variable for random quotes on page load
+        const randomQuoteJson = [
+ { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-left', size: 'medium', text: 'The only way to do great work is to love what you do.' },
+    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-right', size: 'medium', text: 'So... are we actually getting somewhere, or...?' },
+    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-left', size: 'medium', text: 'Uhh, you’re working, right? Or just... zoning out?' },
+    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-right', size: 'medium', text: 'I mean, I’m trying... but, I dunno.' },
+    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-left', size: 'medium', text: 'Guess we should get moving... or not, I guess.' },
+    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-right', size: 'medium', text: 'I’m... kinda focused. Are you?' },
+    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-left', size: 'medium', text: 'No rush or anything, but... are we doing this?' },
+    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-right', size: 'medium', text: 'Just checking... you good with this or...?' }        ];
+
+
+        // Mapping for size to Tailwind max-height classes
+        const imageSizeClasses = {
+            'small': 'max-h-[20vh]',
+            'medium': 'max-h-[25vh]',
+            'large': 'max-h-[40vh]'
+        };
+
+        // Debounce function for scroll events (kept for general utility if needed later, but not used by scrollImagesJson anymore)
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
 
         // Function to apply theme
         function applyTheme(theme) {
@@ -975,6 +1036,10 @@
                         moreMenu.style.visibility = 'hidden';
                         moreMenu.style.pointerEvents = 'none';
                     }, 200); // Match transition-duration of opacity/transform
+                }
+                // If escape is pressed and the search input is focused, blur it
+                if (document.activeElement === searchInput) {
+                    searchInput.blur();
                 }
             }
         });
@@ -1131,9 +1196,10 @@
                 searchInput.focus();
             }
 
-            if (key === 'escape' && document.activeElement === searchInput) {
-                searchInput.blur();
-            }
+            // The existing escape key handling is now part of the general keydown listener above
+            // if (key === 'escape' && document.activeElement === searchInput) {
+            //     searchInput.blur();
+            // }
         });
 
         // Function to initialize the app
@@ -1176,6 +1242,131 @@
             blankScreenOverlay.style.opacity = '0'; 
             blankScreenOverlay.style.pointerEvents = 'none';
 
+            // Focus on the search input when the app initializes
+            searchInput.focus();
+
+            // Inactivity detection for image display
+            function showRandomImage(imagesArray) { // Modified to accept imagesArray
+                // Synchronously remove any existing image before displaying a new one
+                if (currentImageElement && currentImageElement.parentNode) {
+                    currentImageElement.remove();
+                    currentImageElement = null;
+                }
+
+                // Select a random image from the provided imagesArray
+                const randomIndex = Math.floor(Math.random() * imagesArray.length);
+                const selectedImage = imagesArray[randomIndex];
+
+                // Create the image container div (outer wrapper for positioning)
+                const imageContainer = document.createElement('div');
+                // Base classes for fixed positioning, transition. Added p-4 for padding from screen edges.
+                imageContainer.className = 'fixed overflow-visible opacity-0 pointer-events-none transition-opacity duration-50 z-20 ';
+                imageContainer.dataset.position = selectedImage.position;
+
+                // Add click listener to hide the image
+                imageContainer.addEventListener('click', hideImage);
+
+                // Apply position-specific classes to the outer container
+                if (selectedImage.position.includes('bottom')) {
+                    imageContainer.classList.add('bottom-0');
+                } else { // top
+                    imageContainer.classList.add('top-0');
+                }
+
+                if (selectedImage.position.includes('left')) {
+                    imageContainer.classList.add('left-0');
+                } else { // right
+                    imageContainer.classList.add('right-0');
+                }
+
+                // Create an inner wrapper for the image and text to control their internal layout
+                const contentWrapper = document.createElement('div');
+                // This wrapper will use flex to arrange image and text horizontally.
+                // items-end/items-start will align them vertically within this flex container.
+                contentWrapper.className = 'flex items-center  flex-row gap-2'; // Added gap for spacing
+
+                // Adjust vertical alignment within the contentWrapper based on image position (top/bottom)
+                if (selectedImage.position.includes('bottom')) {
+                    contentWrapper.classList.add('items-center'); // Align items to the bottom of the flex container
+                } else {
+                    contentWrapper.classList.add('items-center'); // Align items to the top of the flex container
+                }
+
+
+                // Create the img element
+                const imgElement = document.createElement('img');
+                imgElement.id = 'random-image';
+                imgElement.src = selectedImage.src;
+                imgElement.alt = 'Random Inactivity Image';
+                // Apply common image styles and the specific size class, removed shadow-lg
+                imgElement.className = `w-auto object-contain rounded-md ${imageSizeClasses[selectedImage.size] || 'max-h-[30vh]'}`; // Default to max-h-[30vh] if size is not recognized
+
+                // Create the text element
+                const textElement = document.createElement('div');
+                // Added font-bold and italic for the text, changed text-sm to text-base, added font-schoolbell, and removed shadow-md
+                textElement.className = 'text-text-primary text-base font-bold  font-schoolbell p-2 rounded-md max-w-[200px] dark:text-dark-text-primary dark:bg-dark-secondary-bg';
+                textElement.textContent = selectedImage.text;
+
+                // Determine order based on horizontal position
+                if (selectedImage.position.includes('left')) {
+                    // Image on left, text on right
+                    contentWrapper.appendChild(imgElement);
+                    contentWrapper.appendChild(textElement);
+                } else {
+                    // Image on right, text on left
+                    contentWrapper.appendChild(textElement);
+                    contentWrapper.appendChild(imgElement);
+                }
+
+                imageContainer.appendChild(contentWrapper);
+                document.body.appendChild(imageContainer);
+
+                // Fade in the image
+                setTimeout(() => {
+                    imageContainer.style.opacity = '1';
+                    imageContainer.style.pointerEvents = 'auto';
+                }, 10); // Small delay to ensure DOM attachment before transition
+
+                currentImageElement = imageContainer; // Store reference to the current image container
+            }
+
+            function hideImage() {
+                if (currentImageElement && currentImageElement.parentNode) { // Add null check for parentNode
+                    currentImageElement.style.opacity = '0';
+                    currentImageElement.style.pointerEvents = 'none';
+                    // Remove after transition
+                    setTimeout(() => {
+                        if (currentImageElement && currentImageElement.parentNode) { // Check again before removing
+                            currentImageElement.remove();
+                            currentImageElement = null;
+                        }
+                    }, 50); // Match transition duration
+                }
+            }
+
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    showRandomImage(inactivityImages); // Pass the inactivityImages array
+                }, INACTIVITY_THRESHOLD);
+            }
+
+            // Initial call to set up the timer
+            resetInactivityTimer();
+               // hideImage(); // Hide image immediately on any activity
+
+            // Listen for any user activity (mouse movement, key presses) to reset the timer
+            document.addEventListener('mousemove', resetInactivityTimer);
+            document.addEventListener('keydown', resetInactivityTimer);
+
+            // Event for probabilistic quote on page load
+            setTimeout(() => {
+                const probability = 0.39; // 20% chance
+                if (Math.random() < probability) {
+                    showRandomImage(randomQuoteJson);
+                }
+            }, 2000); // 2-second delay
+
 
             // Event listener for theme toggle button (now inside the more menu)
             themeToggleButton.addEventListener('click', () => {
@@ -1214,6 +1405,24 @@
 
         // Initial call when the DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
+            // This part ensures engine-selection is moved early based on goalsEnabled
+            const goalsEnabledInitial = localStorage.getItem('goalsEnabled') === 'true';
+            const engineSelectionElement = document.getElementById('engine-selection');
+            const topElementsContainerElement = document.getElementById('top-elements');
+            const mainContentBottomContainerElement = document.getElementById('main-content-bottom');
+
+            if (goalsEnabledInitial) {
+                if (engineSelectionElement && topElementsContainerElement) {
+                    topElementsContainerElement.appendChild(engineSelectionElement);
+                    topElementsContainerElement.classList.add('with-engine');
+                }
+            } else {
+                if (engineSelectionElement && mainContentBottomContainerElement) {
+                    mainContentBottomContainerElement.prepend(engineSelectionElement);
+                    topElementsContainerElement.classList.remove('with-engine');
+                }
+            }
+
             initializeApp(); // Call directly without delay
         });
 

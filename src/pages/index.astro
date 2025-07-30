@@ -1,3 +1,9 @@
+---
+import "../styles/global.css";
+
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,75 +21,43 @@
     <!-- Phosphor Icons CDN for filled icons -->
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
     <!-- Tailwind CSS CDN with custom config to match existing colors -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class', // Enable dark mode based on 'dark' class on html element
-            theme: {
-                extend: {
-                    colors: {
-                        // Default (Light) Mode Colors
-                        'primary-bg': '#f0f0f0',
-                        'secondary-bg': '#e0e0e0',
-                        'border-color': '#bbbbbb',
-                        'text-primary': '#1a1a1a',
-                        'text-secondary': '#444444',
-                        'text-placeholder': '#777777',
-                        'accent': '#888888', // Light mode accent/focus
-                        'radio-selected-bg': '#dddddd',
-                        'radio-selected-dot': '#1a1a1a',
-
-                        // Dark Mode Overrides (used with dark: prefix)
-                        dark: {
-                            'primary-bg': '#1a1a1a',
-                            'secondary-bg': '#2a2a2a',
-                            'border-color': '#444444',
-                            'text-primary': '#f0f0f0',
-                            'text-secondary': '#cccccc',
-                            'text-placeholder': '#888888',
-                            'accent': '#ffffff', // Dark mode accent/focus
-                            'radio-selected-bg': '#555555',
-                            'radio-selected-dot': '#ffffff',
-                        },
-                    },
-                    transitionProperty: {
-                        'all': 'all',
-                    },
-                    transitionTimingFunction: {
-                        'ease-out': 'ease-out',
-                    },
-                    transitionDuration: {
-                        '200': '0.2s',
-                        '300': '0.3s',
-                        '400': '0.4s',
-                        '50': '0.05s',
-                    },
-                    animation: {
-                        'slide-fade': 'slide-fade 1s infinite cubic-bezier(0.65, 0.05, 0.36, 1)',
-                    },
-                    keyframes: {
-                        'slide-fade': {
-                            '0%': { opacity: '0', transform: 'translateX(-50px)' },
-                            '25%': { opacity: '1', transform: 'translateX(0)' },
-                            '75%': { opacity: '1', transform: 'translateX(50px)' },
-                            '100%': { opacity: '0', transform: 'translateX(100px)' },
-                        }
-                    },
-                    fontFamily: {
-                        // Add 'Schoolbell' to the extended font families
-                        'schoolbell': ['"Schoolbell"', 'cursive'],
-                        'inter': ['Inter', 'sans-serif'], // Keep Inter if it's the default
-                    }
-                }
-            }
-        }
-    </script>
+  
     <style type="text/css">
+        /* CSS Variables for theming */
+        :root {
+            --color-primary-bg: 240 240 240;
+            --color-secondary-bg: 224 224 224;
+            --color-border-color: 187 187 187;
+            --color-text-primary: 26 26 26;
+            --color-text-secondary: 68 68 68;
+            --color-text-placeholder: 119 119 119;
+            --color-accent: 136 136 136;
+            --color-radio-selected-bg: 221 221 221;
+            --color-radio-selected-dot: 26 26 26;
+        }
+
+        html.dark {
+            --color-primary-bg: 26 26 26;
+            --color-secondary-bg: 42 42 42;
+            --color-border-color: 68 68 68;
+            --color-text-primary: 240 240 240;
+            --color-text-secondary: 204 204 204;
+            --color-text-placeholder: 136 136 136;
+            --color-accent: 255 255 255;
+            --color-radio-selected-bg: 85 85 85;
+            --color-radio-selected-dot: 255 255 255;
+        }
+
         /* Global transition for all elements for smoother UI */
         * {
             transition-property: all;
             transition-timing-function: ease-out;
             transition-duration: 0.2s;
+        }
+
+        /* Body font */
+        body {
+            font-family: 'Inter', sans-serif;
         }
 
         /* Specific styles not easily replaced by Tailwind without breaking design */
@@ -92,10 +66,22 @@
             position: absolute;
             bottom: 0;
             height: 2px;
-            /* Background color set by JS based on theme */
             border-radius: 1px;
             transition: left 0.3s ease-out, width 0.3s ease-out; /* Sliding animation */
             z-index: 10; /* Ensure it's on top */
+        }
+
+        /* Loading indicator animation */
+        #loading-indicator {
+            animation: slide-fade 1s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+        }
+
+        /* Keyframes for slide-fade animation */
+        @keyframes slide-fade {
+            0% { opacity: 0; transform: translateX(-50px); }
+            25% { opacity: 1; transform: translateX(0); }
+            75% { opacity: 1; transform: translateX(50px); }
+            100% { opacity: 0; transform: translateX(100px); }
         }
 
         /* Hide the actual radio button visually */
@@ -117,26 +103,26 @@
         }
 
         .history-list::-webkit-scrollbar-thumb {
-            background-color: '#bbbbbb'; /* Light mode thumb color */
+            background-color: rgb(var(--color-border-color)); /* Light mode thumb color */
             border-radius: 10px; /* roundness of the scroll thumb */
-            border: 1px solid '#e0e0e0'; /* Light mode border color */
+            border: 1px solid rgb(var(--color-secondary-bg)); /* Light mode border color */
         }
 
         /* Dark mode scrollbar thumb */
         html.dark .history-list::-webkit-scrollbar-thumb {
-            background-color: '#444444'; /* Dark mode thumb color */
-            border: 1px solid '#2a2a2a'; /* Dark mode border color */
+            background-color: rgb(var(--color-border-color)); /* Dark mode thumb color */
+            border: 1px solid rgb(var(--color-secondary-bg)); /* Dark mode border color */
         }
 
         /* Firefox scrollbar styles */
         .history-list {
             scrollbar-width: thin;
-            scrollbar-color: '#bbbbbb' transparent; /* Light mode thumb and track color */
+            scrollbar-color: rgb(var(--color-border-color)) transparent; /* Light mode thumb and track color */
         }
 
         /* Dark mode Firefox scrollbar */
         html.dark .history-list {
-            scrollbar-color: '#444444' transparent; /* Dark mode thumb and track color */
+            scrollbar-color: rgb(var(--color-border-color)) transparent; /* Dark mode thumb and track color */
         }
 
         /* More Menu specific styles for visibility transition */
@@ -207,6 +193,11 @@
             flex-shrink: 0;
             flex-grow: 0;
         }
+
+        /* Custom font for image text */
+        .font-casual-style {
+            font-family: 'Schoolbell', cursive;
+        }
     </style>
     <!-- Inline script to prevent theme flicker -->
     <script>
@@ -228,38 +219,38 @@
         })();
     </script>
 </head>
-<body class="font-inter bg-primary-bg text-text-primary flex items-center justify-center min-h-screen p-4 antialiased
-             dark:bg-dark-primary-bg dark:text-dark-text-primary">
+<body class="bg-[rgb(var(--color-primary-bg))] text-[rgb(var(--color-text-primary))] flex items-center justify-center min-h-screen p-4 antialiased
+             dark:bg-[rgb(var(--color-primary-bg))] dark:text-[rgb(var(--color-text-primary))]">
     <!-- Blank screen overlay for transition -->
     <div id="blank-screen-overlay" class="fixed inset-0 opacity-0 pointer-events-none z-[9999] transition-opacity duration-50 flex items-center justify-center
-             bg-primary-bg dark:bg-dark-primary-bg">
-        <div id="loading-indicator" class="w-[50px] h-1 bg-accent rounded-sm opacity-0 animate-slide-fade dark:bg-dark-accent"></div>
+             bg-[rgb(var(--color-primary-bg))] dark:bg-[rgb(var(--color-primary-bg))]">
+        <div id="loading-indicator" class="w-[50px] h-1 bg-[rgb(var(--color-accent))] rounded-sm opacity-0 dark:bg-[rgb(var(--color-accent))]"></div>
     </div>
 
     <!-- Goal Context Menu (Right-click) -->
-    <div id="goal-context-menu" class="context-menu absolute bg-secondary-bg border border-border-color rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
-             dark:bg-dark-secondary-bg dark:border-dark-border-color">
-        <div class="context-menu-item px-4 py-2 text-text-primary text-sm cursor-pointer whitespace-nowrap hover:bg-border-color
-                    dark:text-dark-text-primary dark:hover:bg-dark-border-color" data-action="completed">Completed</div>
-        <div class="context-menu-item px-4 py-2 text-text-primary text-sm cursor-pointer whitespace-nowrap hover:bg-border-color
-                    dark:text-dark-text-primary dark:hover:bg-dark-border-color" data-action="delete">Delete</div>
+    <div id="goal-context-menu" class="context-menu absolute bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
+             dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
+        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="completed">Completed</div>
+        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="delete">Delete</div>
     </div>
 
     <div class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative">
         <!-- New Edit Goal Section - For single goal edit, appears from top -->
         <div id="edit-goal-section" class="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none">
-            <div class="edit-goal-modal bg-secondary-bg border border-border-color rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-accent focus-within:shadow-md
-                        dark:bg-dark-secondary-bg dark:border-dark-border-color dark:focus-within:border-dark-accent">
-                <label for="edit-goal-input" class="text-text-secondary text-sm flex flex-col gap-1 flex-grow
-                                            dark:text-dark-text-secondary">
-                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title" class="bg-primary-bg border border-border-color rounded-sm px-2 py-1.5 text-text-primary text-base w-full box-border focus:outline-none focus:border-accent
-                                            dark:bg-dark-primary-bg dark:border-dark-border-color dark:text-dark-text-primary dark:focus:border-dark-accent">
+            <div class="edit-goal-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-[rgb(var(--color-accent))] focus-within:shadow-md
+                        dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
+                <label for="edit-goal-input" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
+                                            dark:text-[rgb(var(--color-text-secondary))]">
+                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5 text-[rgb(var(--color-text-primary))] text-base w-full box-border focus:outline-none focus:border-[rgb(var(--color-accent))]
+                                            dark:bg-[rgb(var(--color-primary-bg))] dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))] dark:focus:border-[rgb(var(--color-accent))]">
                 </label>
                 <div class="button-group flex flex-row gap-1 items-center ml-auto">
-                    <button id="edit-goal-action-button" class="bg-accent text-primary-bg px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-text-secondary
-                                            dark:bg-dark-accent dark:text-dark-primary-bg dark:hover:bg-dark-text-secondary"></button> <!-- This will be Save or Completed -->
-                    <button id="edit-goal-delete-button" class="delete-button bg-border-color text-text-primary px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
-                                            dark:bg-dark-border-color dark:text-dark-text-primary">Delete</button>
+                    <button id="edit-goal-action-button" class="bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-[rgb(var(--color-text-secondary))]
+                                            dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))] dark:hover:bg-[rgb(var(--color-text-secondary))]"></button> <!-- This will be Save or Completed -->
+                    <button id="edit-goal-delete-button" class="delete-button bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
+                                            dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]">Delete</button>
                 </div>
             </div>
         </div>
@@ -268,13 +259,13 @@
         <div id="top-elements" class="flex flex-col gap-4 items-start w-full">
 
 
-            <div id="time-info" class="time-info flex items-center gap-2 text-text-secondary text-sm font-medium whitespace-nowrap
-                                dark:text-dark-text-secondary">
+            <div id="time-info" class="time-info flex items-center gap-2 text-[rgb(var(--color-text-secondary))] text-sm font-medium whitespace-nowrap
+                                dark:text-[rgb(var(--color-text-secondary))]">
                 <!-- Phosphor Icon element -->
-                <i id="time-icon" class="ph w-6 h-6 flex items-center justify-center rounded-full bg-accent text-primary-bg
-                                   dark:bg-dark-accent dark:text-dark-primary-bg"></i>
-                <span id="current-time" class="current-time text-xs font-semibold text-text-primary
-                                       dark:text-dark-text-primary"></span>
+                <i id="time-icon" class="ph w-6 h-6 flex items-center justify-center rounded-full bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))]
+                                   dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))]"></i>
+                <span id="current-time" class="current-time text-xs font-semibold text-[rgb(var(--color-text-primary))]
+                                       dark:text-[rgb(var(--color-text-primary))]"></span>
             </div>
 
 
@@ -282,21 +273,21 @@
             <!-- The engine-selection element will be dynamically moved here or in main-content-bottom -->
         </div>
 
-        <div class="search-area-wrapper flex flex-col bg-secondary-bg border-2 border-border-color rounded-sm p-1 relative focus-within:border-accent
-                    dark:bg-dark-secondary-bg dark:border-dark-border-color dark:focus-within:border-dark-accent">
+        <div class="search-area-wrapper flex flex-col bg-[rgb(var(--color-secondary-bg))] border-2 border-[rgb(var(--color-border-color))] rounded-sm p-1 relative focus-within:border-[rgb(var(--color-accent))]
+                    dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
             <form id="search-form" class="search-form w-full flex-grow mt-0">
                 <div class="input-wrapper relative flex items-center w-full">
                     <input
                         type="text"
                         id="search-input"
                         name="query"
-                        class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-text-primary text-base md:text-lg leading-relaxed placeholder:text-text-placeholder focus:outline-none
-                                dark:text-dark-text-primary dark:placeholder:text-dark-text-placeholder"
+                        class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-[rgb(var(--color-text-primary))] text-base md:text-lg leading-relaxed placeholder:text-[rgb(var(--color-text-placeholder))] focus:outline-none
+                                dark:text-[rgb(var(--color-text-primary))] dark:placeholder:text-[rgb(var(--color-text-placeholder))]"
                         placeholder="Search the web..."
                         autocomplete="off"
                     />
-                    <button type="submit" class="search-button absolute right-0 mr-2 text-text-secondary cursor-pointer bg-none border-none p-0 flex items-center justify-center hover:text-text-primary
-                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary" aria-label="Search">
+                    <button type="submit" class="search-button absolute right-0 mr-2 text-[rgb(var(--color-text-secondary))] cursor-pointer bg-none border-none p-0 flex items-center justify-center hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]" aria-label="Search">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon w-5 h-5">
                             <path d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.5 6.5a7.5 7.5 0 0 0 10.2 10.2Z"/>
                         </svg>
@@ -310,28 +301,28 @@
             <div id="engine-selection" class="engine-selection flex flex-row flex-wrap items-start gap-2 sm:gap-3 pl-1 relative">
                 <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to Google search (G)">
                     <input type="radio" name="engine" value="google" class="custom-radio" checked>
-                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
-                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">Google</span>
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">Google</span>
                 </label>
                 <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to Perplexity search (P)">
                     <input type="radio" name="engine" value="perplexity" class="custom-radio">
-                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
-                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">Perplexity</span>
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">Perplexity</span>
                 </label>
                 <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to YouTube search (Y)">
                     <input type="radio" name="engine" value="youtube" class="custom-radio">
-                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
-                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">YouTube</span>
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">YouTube</span>
                 </label>
                 <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to ChatGPT search (C)">
                     <input type="radio" name="engine" value="chatgpt" class="custom-radio">
-                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
-                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">ChatGPT</span>
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">ChatGPT</span>
                 </label>
                 <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="View search history (H)">
                     <input type="radio" name="engine" value="history" class="custom-radio">
-                    <span class="radio-text font-medium text-text-secondary whitespace-nowrap uppercase text-xs px-0.5 hover:text-text-primary
-                                dark:text-dark-text-secondary dark:hover:text-dark-text-primary">History</span>
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">History</span>
                 </label>
                 <div id="active-line"></div> <!-- Single active line for sliding effect -->
             </div>
@@ -340,25 +331,25 @@
                 <!-- Goals or "Click here to set up" message will be rendered here -->
             </div>
             <div class="daily-progress-container flex flex-col gap-2 w-full pl-1 sm:w-auto sm:pl-0">
-                <div class="progress-label text-xs font-medium text-text-secondary uppercase whitespace-nowrap
-                            dark:text-dark-text-secondary">DAY REMAINing: <span id="day-remaining-percent"></span>%</div>
-                <div class="progress-bar-wrapper bg-border-color rounded-sm h-2 w-full overflow-hidden
-                            dark:bg-dark-border-color">
-                    <div id="day-progress-bar" class="progress-bar bg-accent h-full w-0 rounded-sm
-                                dark:bg-dark-accent"></div>
+                <div class="progress-label text-xs font-medium text-[rgb(var(--color-text-secondary))] uppercase whitespace-nowrap
+                            dark:text-[rgb(var(--color-text-secondary))]">DAY REMAINing: <span id="day-remaining-percent"></span>%</div>
+                <div class="progress-bar-wrapper bg-[rgb(var(--color-border-color))] rounded-sm h-2 w-full overflow-hidden
+                            dark:bg-[rgb(var(--color-border-color))]">
+                    <div id="day-progress-bar" class="progress-bar bg-[rgb(var(--color-accent))] h-full w-0 rounded-sm
+                                dark:bg-[rgb(var(--color-accent))]"></div>
                 </div>
             </div>
         </div>
 
         <!-- New Search History Section -->
-        <div id="search-history-section" class="history-section flex flex-col gap-3 bg-transparent border-t-2 border-accent rounded-none pt-4 pl-1 pr-1 pb-2 overflow-hidden max-h-0 opacity-0 transition-all duration-300 box-border mt-4
-                    dark:border-dark-accent">
-            <div class="history-header flex justify-between items-center pb-2 border-b border-border-color mb-2
-                        dark:border-dark-border-color">
-                <span class="history-title text-sm font-semibold text-text-primary uppercase
-                            dark:text-dark-text-primary">Search History</span>
-                <button id="clear-history-button" class="clear-history-button bg-none border border-border-color text-text-secondary px-3 py-1 rounded-sm cursor-pointer text-xs transition-all duration-200 hover:bg-border-color hover:text-text-primary
-                            dark:border-dark-border-color dark:text-dark-text-secondary dark:hover:bg-dark-border-color dark:hover:text-dark-text-primary">Clear All</button>
+        <div id="search-history-section" class="history-section flex flex-col gap-3 bg-transparent border-t-2 border-[rgb(var(--color-accent))] rounded-none pt-4 pl-1 pr-1 pb-2 overflow-hidden max-h-0 opacity-0 transition-all duration-300 box-border mt-4
+                    dark:border-[rgb(var(--color-accent))]">
+            <div class="history-header flex justify-between items-center pb-2 border-b border-[rgb(var(--color-border-color))] mb-2
+                        dark:border-[rgb(var(--color-border-color))]">
+                <span class="history-title text-sm font-semibold text-[rgb(var(--color-text-primary))] uppercase
+                            dark:text-[rgb(var(--color-text-primary))]">Search History</span>
+                <button id="clear-history-button" class="clear-history-button bg-none border border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] px-3 py-1 rounded-sm cursor-pointer text-xs transition-all duration-200 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-text-primary))]
+                            dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-secondary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-text-primary))]">Clear All</button>
             </div>
             <ul id="history-list" class="history-list list-none p-0 m-0 max-h-[calc(20rem-3rem)] overflow-y-auto">
                 <!-- History items will be dynamically added here by JavaScript -->
@@ -367,14 +358,14 @@
     </div>
 
     <!-- More Button and Menu -->
-    <button id="more-button" class="fixed bottom-4 right-4 bg-secondary-bg text-text-primary border border-border-color px-4 py-2 rounded-md cursor-pointer text-sm font-medium z-[10001] transition-all duration-200 whitespace-nowrap hover:bg-border-color hover:text-accent
-                dark:bg-dark-secondary-bg dark:text-dark-text-primary dark:border-dark-border-color dark:hover:bg-dark-border-color dark:hover:text-dark-accent">More</button>
-    <div id="more-menu" class="fixed bottom-[calc(1rem+2.5rem+0.5rem)] right-4 bg-secondary-bg border border-border-color rounded-md invisible flex-col p-2 gap-2 z-[10000] shadow-lg opacity-0 translate-y-2 transition-all duration-200
-                dark:bg-dark-secondary-bg dark:border-dark-border-color">
-        <button id="theme-toggle" class="menu-item bg-transparent text-text-primary border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-border-color hover:text-accent
-                    dark:text-dark-text-primary dark:hover:bg-dark-border-color dark:hover:text-dark-accent"></button>
-        <button id="tasks-toggle" class="menu-item bg-transparent text-text-primary border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-border-color hover:text-accent
-                    dark:text-dark-text-primary dark:hover:bg-dark-border-color dark:hover:text-dark-accent"></button>
+    <button id="more-button" class="fixed bottom-4 right-4 bg-[rgb(var(--color-secondary-bg))] text-[rgb(var(--color-text-primary))] border border-[rgb(var(--color-border-color))] px-4 py-2 rounded-md cursor-pointer text-sm font-medium z-[10001] transition-all duration-200 whitespace-nowrap hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
+                dark:bg-[rgb(var(--color-secondary-bg))] dark:text-[rgb(var(--color-text-primary))] dark:border-[rgb(var(--color-border-color))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]">More</button>
+    <div id="more-menu" class="fixed bottom-[calc(1rem+2.5rem+0.5rem)] right-4 bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-md invisible flex-col p-2 gap-2 z-[10000] shadow-lg opacity-0 translate-y-2 transition-all duration-200
+                dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
+        <button id="theme-toggle" class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"></button>
+        <button id="tasks-toggle" class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"></button>
     </div>
 
     <script>
@@ -533,17 +524,16 @@
                 if (userGoals[i]) {
                     // Render existing user goal
                     const goalItem = document.createElement('div');
-                    goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-accent hover:bg-secondary-bg hover:text-text-primary ' +
-                                        'border-border-color text-text-primary ' +
-                                        'dark:border-dark-border-color dark:hover:border-dark-accent dark:hover:bg-dark-secondary-bg dark:hover:text-dark-text-primary'; /* Apply unified styling */
+                    goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] '; /* Apply unified styling */
                     goalItem.dataset.index = i;
                     goalItem.innerHTML = `
-                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-text-primary ' +
-                                        'text-text-secondary dark:text-dark-text-secondary dark:group-hover:text-dark-text-primary"></i>
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'text-[rgb(var(--color-text-secondary))]"></i>
                         <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow ' +
-                                        'text-text-primary dark:text-dark-text-primary">${userGoals[i].text}</span>
+                                        'text-[rgb(var(--color-text-primary))]">${userGoals[i].text}</span>
                         <span class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 ' +
-                                        'text-text-secondary dark:text-dark-text-secondary">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
+                                        'text-[rgb(var(--color-text-secondary))]">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
                     `;
                     goalItem.addEventListener('click', (e) => {
                         showEditGoalPopup(e, i, false);
@@ -553,12 +543,11 @@
                 } else {
                     // Render "Click here to add goal" card
                     const setupPrompt = document.createElement('div');
-                    setupPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-accent hover:bg-secondary-bg hover:text-text-primary ' +
-                                            'border-border-color text-text-secondary ' +
-                                            'dark:border-dark-border-color dark:hover:border-dark-accent dark:hover:bg-dark-secondary-bg dark:hover:text-dark-text-primary'; /* Apply unified styling */
+                    setupPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
+                                            'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] '; /* Apply unified styling */
                     setupPrompt.innerHTML = `
-                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-text-primary ' +
-                                        'text-text-secondary dark:text-dark-text-secondary dark:group-hover:text-dark-text-primary"></i>
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'text-[rgb(var(--color-text-secondary))]"></i>
                         <span>Click here to add your next goal</span>
                     `;
                     setupPrompt.addEventListener('click', (e) => {
@@ -751,21 +740,19 @@
             if (history.length === 0) {
                 const li = document.createElement('li');
                 li.textContent = 'No search history yet.';
-                li.classList.add('text-text-placeholder', 'text-center', 'p-4');
+                li.classList.add('text-[rgb(var(--color-text-placeholder))]', 'text-center', 'p-4');
                 historyList.appendChild(li);
                 return;
             }
 
             history.forEach(item => {
                 const li = document.createElement('li');
-                li.className = 'history-item flex items-center py-1.5 border-b border-dashed cursor-pointer gap-2 hover:bg-primary-bg ' +
-                               'border-border-color text-text-primary ' +
-                               'dark:border-dark-border-color dark:hover:bg-dark-primary-bg dark:text-dark-text-primary';
+                li.className = 'history-item flex items-center py-1.5 border-b border-dashed cursor-pointer gap-2 hover:bg-[rgb(var(--color-primary-bg))] ' +
+                               'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] ';
 
                 const engineTag = document.createElement('span');
                 engineTag.className = 'history-engine-tag text-[0.65rem] px-1.5 py-0.5 rounded-sm uppercase flex-shrink-0 ' +
-                                      'bg-border-color text-text-primary ' +
-                                      'dark:bg-dark-border-color dark:text-dark-text-primary';
+                                      'bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] ';
                 engineTag.textContent = item.engine;
 
                 const querySpan = document.createElement('span');
@@ -774,12 +761,12 @@
 
                 const timestampSpan = document.createElement('span');
                 timestampSpan.className = 'history-timestamp text-[0.7rem] ml-auto flex-shrink-0 ' +
-                                          'text-text-secondary dark:text-dark-text-secondary';
+                                          'text-[rgb(var(--color-text-secondary))]';
                 timestampSpan.textContent = formatTimeAgo(item.timestamp);
 
                 const openLinkButton = document.createElement('button');
-                openLinkButton.className = 'open-link-button bg-none border-none cursor-pointer p-0 flex items-center justify-center ml-2 flex-shrink-0 hover:text-text-primary ' +
-                                           'text-text-secondary dark:text-dark-text-secondary dark:hover:text-dark-text-primary';
+                openLinkButton.className = 'open-link-button bg-none border-none cursor-pointer p-0 flex items-center justify-center ml-2 flex-shrink-0 hover:text-[rgb(var(--color-text-primary))] ' +
+                                           'text-[rgb(var(--color-text-secondary))]';
                 openLinkButton.setAttribute('title', `Open in ${item.engine}`);
                 openLinkButton.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="open-link-icon">
@@ -912,19 +899,25 @@
         const inactivityImages = [
             { src: 'https://i.pinimg.com/736x/20/6c/1d/206c1d2674e08f28e84cf781290ccf8c.jpg', position: 'bottom-left', size: 'medium', text: 'You sure are More Lazy Then i am' },
             { src: 'https://i.pinimg.com/736x/1f/50/27/1f50270d8661c9ca8d714ef9a10ccb97.jpg', position: 'top-left', size: 'small', text: 'Bro are Sure You are Awake Now!' },
-            { src: 'https://i.pinimg.com/736x/45/52/19/45521939c45d96ce82c3175fbf1703fd.jpg', position: 'bottom-right', size: 'large', text: 'Oh My God , what should i do now ' },
+            { src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'bottom-right', size: 'large', text: 'Oh My God , what should i do now ' },
         ];
 
-        // New JSON variable for random quotes on page load
-        const randomQuoteJson = [
- { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-left', size: 'medium', text: 'The only way to do great work is to love what you do.' },
-    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-right', size: 'medium', text: 'So... are we actually getting somewhere, or...?' },
-    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-left', size: 'medium', text: 'Uhh, you’re working, right? Or just... zoning out?' },
-    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-right', size: 'medium', text: 'I mean, I’m trying... but, I dunno.' },
-    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-left', size: 'medium', text: 'Guess we should get moving... or not, I guess.' },
-    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'bottom-right', size: 'medium', text: 'I’m... kinda focused. Are you?' },
-    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-left', size: 'medium', text: 'No rush or anything, but... are we doing this?' },
-    { src: 'https://i.pinimg.com/736x/1f/bc/e1/1fbce1611f2cc207893027a63e9c7158.jpg', position: 'top-right', size: 'medium', text: 'Just checking... you good with this or...?' }        ];
+        // New JSON variable for daily greetings (time-based, day-of-week)
+        const dailyGreetingImagesJson = [
+            { id: 'morning_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Good Morning! Make it a productive day.' },
+            { id: 'afternoon_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Good Afternoon! Keep up the great work.' },
+            { id: 'evening_greeting', src: 'https://i.pinimg.com/originals/a2/51/f1/a251f1e49fd85745edccac5b18887269.jpg', position: 'bottom-right', size: 'large', text: 'Good Evening! Time to wind down.' },
+            { id: 'night_greeting', src: 'https://pm1.aminoapps.com/7208/7d3d3fe9806fb2cc89bf764cb8c31236c74c831cr1-604-568v2_hq.jpg', position: 'bottom-left', size: 'medium', text: 'Good Night! Sweet dreams.' },
+            { id: 'sunday_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Happy Sunday! Enjoy your day off.' },
+        ];
+
+        // New JSON variable for holiday greetings (date-based)
+        const holidayGreetingImagesJson = [
+            { id: 'christmas_greeting', src: 'https://placehold.co/300x200/e83e8c/FFFFFF?text=Christmas', position: 'center', size: 'large', text: 'Merry Christmas! Hope you have a wonderful holiday!' },
+            { id: 'newyear_greeting', src: 'https://placehold.co/300x200/6f42c1/FFFFFF?text=NewYear', position: 'center', size: 'large', text: 'Happy New Year! Wishing you a fantastic year ahead!' },
+            { id: 'halloween_greeting', src: 'https://placehold.co/300x200/fd7e14/FFFFFF?text=Halloween', position: 'center', size: 'large', text: 'Happy Halloween! Have a spooky fun time!' },
+            { id: 'independence_day_greeting', src: 'https://placehold.co/300x200/20c997/FFFFFF?text=Independence', position: 'center', size: 'large', text: 'Happy Independence Day! Celebrate freedom!' },
+        ];
 
 
         // Mapping for size to Tailwind max-height classes
@@ -952,13 +945,13 @@
             if (theme === 'light') {
                 html.classList.remove('dark');
                 themeToggleButton.textContent = 'Dark Mode';
-                // Set active line color for light mode explicitly
-                if (activeLine) activeLine.style.backgroundColor = '#1a1a1a'; // Dark color for light mode
+                // Set active line color for light mode explicitly using CSS variable
+                if (activeLine) activeLine.style.backgroundColor = 'rgb(var(--color-text-primary))'; 
             } else { // 'dark' theme
                 html.classList.add('dark');
                 themeToggleButton.textContent = 'Light Mode';
-                // Set active line color for dark mode explicitly
-                if (activeLine) activeLine.style.backgroundColor = '#ffffff'; // White for dark mode
+                // Set active line color for dark mode explicitly using CSS variable
+                if (activeLine) activeLine.style.backgroundColor = 'rgb(var(--color-accent))'; 
             }
             localStorage.setItem('themePreference', theme);
         }
@@ -1079,12 +1072,8 @@
         });
 
         // --- Form Submission Logic ---
-        searchForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            let query = searchInput.value.trim();
+        function performSearch(query, selectedEngine, openInNewTab = false) {
             if (!query) return;
-
-            let selectedEngine = document.querySelector('input[name="engine"]:checked').value;
 
             // If history is active, switch to Google before searching
             if (selectedEngine === 'history') {
@@ -1097,7 +1086,6 @@
             }
 
             let url = '';
-
             switch (selectedEngine) {
                 case 'google':
                     url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
@@ -1118,89 +1106,329 @@
                 addSearchToHistory(query, selectedEngine);
             }
 
-            blankScreenOverlay.style.opacity = '1';
-            blankScreenOverlay.style.pointerEvents = 'auto';
-
-            // Check if Ctrl key (or Cmd key on Mac) was pressed using the global flag
-            if (isCtrlPressed) {
-                window.open(url, '_blank');
-            } else {
+            // Only show blank screen overlay if not opening in a new tab
+            if (!openInNewTab) {
+                blankScreenOverlay.style.opacity = '1';
+                blankScreenOverlay.style.pointerEvents = 'auto';
                 setTimeout(() => {
                     window.location.href = url;
                 }, 200);
+            } else {
+                window.open(url, '_blank');
             }
+        }
+
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            let query = searchInput.value.trim();
+            let selectedEngine = document.querySelector('input[name="engine"]:checked').value;
+            performSearch(query, selectedEngine, isCtrlPressed); // Use isCtrlPressed for new tab behavior
         });
+
+        // New helper function for engine switching logic
+        function handleEngineSwitch(key) {
+            let targetEngine = null;
+            if (key === 'p') {
+                targetEngine = 'perplexity';
+            } else if (key === 'g') {
+                targetEngine = 'google';
+            } else if (key === 'y') {
+                targetEngine = 'youtube';
+            } else if (key === 'c') {
+                targetEngine = 'chatgpt';
+            } else if (key === 'h') {
+                targetEngine = 'history';
+            } else if (key === 'arrowleft' || key === 'arrowright') {
+                const currentRadio = document.querySelector('input[name="engine"]:checked');
+                let currentIndex = -1;
+                const engineLabels = Array.from(document.querySelectorAll('.engine-label input[name="engine"]'));
+
+                for (let i = 0; i < engineLabels.length; i++) {
+                    if (engineLabels[i] === currentRadio) {
+                        currentIndex = i;
+                        break;
+                    }
+                }
+
+                let newIndex = currentIndex;
+                if (key === 'arrowright') {
+                    newIndex = (currentIndex + 1) % engineLabels.length;
+                } else if (key === 'arrowleft') {
+                    newIndex = (currentIndex - 1 + engineLabels.length) % engineLabels.length;
+                }
+
+                if (newIndex !== currentIndex) {
+                    engineLabels[newIndex].checked = true;
+                    engineLabels[newIndex].dispatchEvent(new Event('change'));
+                }
+                return; // Exit to prevent other keydown logic from interfering
+            }
+
+            if (targetEngine) {
+                const radioToSelect = document.querySelector(`input[name="engine"][value="${targetEngine}"]`);
+                if (radioToSelect) {
+                    radioToSelect.checked = true;
+                    radioToSelect.dispatchEvent(new Event('change'));
+                }
+            }
+        }
 
         // --- Keyboard Shortcut Logic ---
         document.addEventListener('keydown', function(e) {
             const key = e.key.toLowerCase();
-
             const isInputActive = document.activeElement.tagName === 'INPUT' ||
                                   document.activeElement.tagName === 'TEXTAREA' ||
                                   document.activeElement.tagName === 'SELECT';
 
-            if (!isInputActive && key !== '/' && key !== 'escape') {
-                let targetEngine = null;
+            // Define the keys that trigger engine switching
+            const engineSwitchKeys = ['p', 'g', 'y', 'c', 'h', 'arrowleft', 'arrowright'];
 
-                if (key === 'p') {
-                    targetEngine = 'perplexity';
-                } else if (key === 'g') {
-                    targetEngine = 'google';
-                } else if (key === 'y') {
-                    targetEngine = 'youtube';
-                } else if (key === 'c') {
-                    targetEngine = 'chatgpt';
-                } else if (key === 'h') {
-                    targetEngine = 'history';
-                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                    e.preventDefault(); // Prevent default browser scrolling
-
-                    const currentRadio = document.querySelector('input[name="engine"]:checked');
-                    let currentIndex = -1;
-                    // Get all engine labels to determine order for arrow key navigation
-                    const engineLabels = Array.from(document.querySelectorAll('.engine-label input[name="engine"]'));
-
-                    for (let i = 0; i < engineLabels.length; i++) {
-                        if (engineLabels[i] === currentRadio) {
-                            currentIndex = i;
-                            break;
-                        }
+            // Check if an engine switch key is pressed
+            if (engineSwitchKeys.includes(key)) {
+                // If search input is active, require Alt key for engine switching
+                if (isInputActive) {
+                    if (e.altKey) {
+                        e.preventDefault(); // Prevent default browser behavior
+                        handleEngineSwitch(key);
                     }
-
-                    let newIndex = currentIndex;
-                    if (e.key === 'ArrowRight') {
-                        newIndex = (currentIndex + 1) % engineLabels.length;
-                    } else if (e.key === 'ArrowLeft') {
-                        newIndex = (currentIndex - 1 + engineLabels.length) % engineLabels.length;
-                    }
-
-                    if (newIndex !== currentIndex) {
-                        engineLabels[newIndex].checked = true;
-                        engineLabels[newIndex].dispatchEvent(new Event('change')); // Trigger change event
-                    }
-                    return; // Exit to prevent other keydown logic from interfering
-                }
-
-                if (targetEngine) {
-                    e.preventDefault();
-                    const radioToSelect = document.querySelector(`input[name="engine"][value="${targetEngine}"]`);
-                    if (radioToSelect) {
-                        radioToSelect.checked = true;
-                        radioToSelect.dispatchEvent(new Event('change'));
-                    }
+                } else { // If search input is NOT active, allow engine switching without Alt key
+                    e.preventDefault(); // Prevent default browser behavior (e.g., 'h' for help)
+                    handleEngineSwitch(key);
                 }
             }
 
-            if (key === '/') {
+            // Handle Ctrl/Cmd + Enter (always active, opens in new tab)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault(); // Prevent default browser behavior
+                let query = searchInput.value.trim();
+                if (query) {
+                    let selectedEngine = document.querySelector('input[name="engine"]:checked').value;
+                    performSearch(query, selectedEngine, true); // Force open in new tab
+                }
+                return; // Exit to prevent other Enter key logic from interfering
+            }
+
+            // Handle Enter key (when search input is not active, search if content exists)
+            if (e.key === 'Enter' && !isInputActive) {
+                e.preventDefault(); // Prevent default browser behavior
+                let query = searchInput.value.trim();
+                if (query) {
+                    let selectedEngine = document.querySelector('input[name="engine"]:checked').value;
+                    performSearch(query, selectedEngine, false); // Regular search in current tab
+                }
+                return; // Exit
+            }
+
+            // Handle '/' for focusing search input (when not active)
+            if (!isInputActive && key === '/') {
                 e.preventDefault();
                 searchInput.focus();
             }
 
-            // The existing escape key handling is now part of the general keydown listener above
-            // if (key === 'escape' && document.activeElement === searchInput) {
-            //     searchInput.blur();
-            // }
+            // Handle Escape for blurring search input (when active)
+            if (e.key === 'Escape' && isInputActive) {
+                searchInput.blur();
+            }
         });
+
+        // Inactivity detection for image display
+        function showRandomImage(imagesArray) { // Modified to accept imagesArray
+            // Ensure imagesArray is not empty
+            if (!imagesArray || imagesArray.length === 0) {
+                console.warn("showRandomImage called with an empty or invalid imagesArray.");
+                return; // Exit if no images to display
+            }
+
+            // Synchronously remove any existing image before displaying a new one
+            if (currentImageElement && currentImageElement.parentNode) {
+                currentImageElement.remove();
+                currentImageElement = null;
+            }
+
+            // Select a random image from the provided imagesArray
+            const randomIndex = Math.floor(Math.random() * imagesArray.length);
+            const selectedImage = imagesArray[randomIndex];
+
+            // Crucial check: Ensure selectedImage is actually an object before proceeding
+            if (!selectedImage || typeof selectedImage !== 'object') {
+                console.error("Error: Selected image is undefined or not an object.", selectedImage);
+                return; // Exit if the selected image is not valid
+            }
+
+            // Create the image container div (outer wrapper for positioning)
+            const imageContainer = document.createElement('div');
+            // Base classes for fixed positioning, transition. Added p-4 for padding from screen edges.
+            imageContainer.className = 'fixed overflow-visible opacity-0 pointer-events-none z-20 transition-opacity duration-50 flex items-center '; // Removed transform classes
+            imageContainer.dataset.position = selectedImage.position;
+
+            // Add click listener to hide the image
+            imageContainer.addEventListener('click', hideImage);
+
+            // If this is a greeting image, store its ID for dismissal tracking
+            if (selectedImage.id) { 
+                imageContainer.dataset.greetingId = selectedImage.id;
+            }
+
+            // Apply position-specific classes to the outer container
+            if (selectedImage.position.includes('bottom')) {
+                imageContainer.classList.add('bottom-0');
+            } else { // top
+                imageContainer.classList.add('top-0');
+            }
+
+            if (selectedImage.position.includes('left')) {
+                imageContainer.classList.add('left-0');
+            } else { // right
+                imageContainer.classList.add('right-0');
+            }
+
+            // Create an inner wrapper for the image and text to control their internal layout
+            const contentWrapper = document.createElement('div');
+            // This wrapper will use flex to arrange image and text horizontally.
+            // items-end/items-start will align them vertically within this flex container.
+            contentWrapper.className = 'flex items-center  flex-row gap-2'; // Added gap for spacing
+
+            // Adjust vertical alignment within the contentWrapper based on image position (top/bottom)
+            if (selectedImage.position.includes('bottom')) {
+                contentWrapper.classList.add('items-center'); // Align items to the bottom of the flex container
+            } else {
+                contentWrapper.classList.add('items-center'); // Align items to the top of the flex container
+            }
+
+
+            // Create the img element
+            const imgElement = document.createElement('img');
+            imgElement.id = 'random-image';
+            imgElement.src = selectedImage.src;
+            imgElement.alt = 'Random Inactivity Image';
+            // Apply common image styles and the specific size class, removed shadow-lg
+            imgElement.className = `w-auto object-contain rounded-md ${imageSizeClasses[selectedImage.size] || 'max-h-[30vh]'}`; // Default to max-h-[30vh] if size is not recognized
+
+            // Create the text element
+            const textElement = document.createElement('div');
+            // Reverted to original styling for dark mode
+            textElement.className = 'text-base font-bold font-casual-style p-2 rounded-md max-w-[200px] text-[rgb(var(--color-text-primary))] bg-[rgb(var(--color-secondary-bg))] ';
+            textElement.textContent = selectedImage.text;
+
+            // Determine order based on horizontal position
+            if (selectedImage.position.includes('left')) {
+                // Image on left, text on right
+                contentWrapper.appendChild(imgElement);
+                contentWrapper.appendChild(textElement);
+            } else {
+                // Image on right, text on left
+                contentWrapper.appendChild(textElement);
+                contentWrapper.appendChild(imgElement);
+            }
+
+            imageContainer.appendChild(contentWrapper);
+            document.body.appendChild(imageContainer);
+
+            // Fade in the image
+            setTimeout(() => {
+                imageContainer.style.opacity = '1';
+                imageContainer.style.pointerEvents = 'auto';
+            }, 10); // Small delay to ensure DOM attachment before transition
+
+            currentImageElement = imageContainer; // Store reference to the current image container
+        }
+
+        function hideImage() {
+            if (currentImageElement && currentImageElement.parentNode) { // Add null check for parentNode
+                const greetingId = currentImageElement.dataset.greetingId;
+                if (greetingId) {
+                    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                    const sessionStorageKey = `dismissedGreetings_${today}`; // Changed to sessionStorage
+                    let dismissedGreetings = JSON.parse(sessionStorage.getItem(sessionStorageKey) || '[]'); // Changed to sessionStorage
+                    if (!dismissedGreetings.includes(greetingId)) {
+                        dismissedGreetings.push(greetingId);
+                        sessionStorage.setItem(sessionStorageKey, JSON.stringify(dismissedGreetings)); // Changed to sessionStorage
+                    }
+                }
+                currentImageElement.style.opacity = '0';
+                currentImageElement.style.pointerEvents = 'none';
+                // Remove after transition
+                setTimeout(() => {
+                    if (currentImageElement && currentImageElement.parentNode) { // Check again before removing
+                        currentImageElement.remove();
+                        currentImageElement = null;
+                    }
+                }, 50); // Match transition duration
+            }
+        }
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                showRandomImage(inactivityImages); // Pass the inactivityImages array
+            }, INACTIVITY_THRESHOLD);
+        }
+
+        // --- Greeting Function ---
+        function displayGreeting() {
+            const now = new Date();
+            const month = now.getMonth() + 1; // getMonth() is 0-indexed
+            const day = now.getDate();
+            const hour = now.getHours();
+            const dayOfWeek = now.getDay(); // Sunday - 0, Monday - 1, etc.
+
+            const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
+            let dismissedGreetingsForToday = JSON.parse(sessionStorage.getItem(`dismissedGreetings_${today}`) || '[]'); // Changed to sessionStorage
+
+            let availableHolidayGreetings = holidayGreetingImagesJson.filter(g => !dismissedGreetingsForToday.includes(g.id));
+            let availableDailyGreetings = dailyGreetingImagesJson.filter(g => !dismissedGreetingsForToday.includes(g.id));
+
+            let greetingToShow = null;
+
+            // 1. Determine the most relevant greeting for the current moment
+            // Check for date-based greetings (holidays) first
+            if (month === 12 && day === 25) { // December 25th
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'christmas_greeting');
+            } else if (month === 1 && day === 1) { // January 1st
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'newyear_greeting');
+            } else if (month === 10 && day === 31) { // October 31st
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'halloween_greeting');
+            } else if (month === 7 && day === 4) { // July 4th (US Independence Day)
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'independence_day_greeting');
+            }
+
+            // If no holiday, check for day of week specific greetings
+            if (!greetingToShow) {
+                if (dayOfWeek === 0) { // Sunday
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'sunday_greeting');
+                }
+            }
+
+            // If no holiday or special day, check for time-based greetings
+            if (!greetingToShow) {
+                if (hour >= 5 && hour < 12) {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'morning_greeting');
+                } else if (hour >= 12 && hour < 18) {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'afternoon_greeting');
+                } else if (hour >= 18 && hour < 21) {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'evening_greeting');
+                } else {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'night_greeting');
+                }
+            }
+
+            // Now, check if the determined greeting (if any) has been dismissed
+            const isGreetingDismissed = greetingToShow && dismissedGreetingsForToday.includes(greetingToShow.id);
+
+            if (greetingToShow && !isGreetingDismissed) {
+                // If a relevant, non-dismissed greeting is found, show it directly.
+                showRandomImage([greetingToShow]);
+            } else {
+                // If no relevant greeting is found, OR if the relevant one was dismissed,
+                // then consider showing a random inactivity image with a specific probability.
+                const fallbackProbability = 0.20; // Reverted to default 20% probability
+
+                if (Math.random() < fallbackProbability) {
+                    showRandomImage(inactivityImages); // Show a random inactivity image
+                }
+            }
+        }
+
 
         // Function to initialize the app
         function initializeApp() {
@@ -1245,128 +1473,13 @@
             // Focus on the search input when the app initializes
             searchInput.focus();
 
-            // Inactivity detection for image display
-            function showRandomImage(imagesArray) { // Modified to accept imagesArray
-                // Synchronously remove any existing image before displaying a new one
-                if (currentImageElement && currentImageElement.parentNode) {
-                    currentImageElement.remove();
-                    currentImageElement = null;
-                }
-
-                // Select a random image from the provided imagesArray
-                const randomIndex = Math.floor(Math.random() * imagesArray.length);
-                const selectedImage = imagesArray[randomIndex];
-
-                // Create the image container div (outer wrapper for positioning)
-                const imageContainer = document.createElement('div');
-                // Base classes for fixed positioning, transition. Added p-4 for padding from screen edges.
-                imageContainer.className = 'fixed overflow-visible opacity-0 pointer-events-none transition-opacity duration-50 z-20 ';
-                imageContainer.dataset.position = selectedImage.position;
-
-                // Add click listener to hide the image
-                imageContainer.addEventListener('click', hideImage);
-
-                // Apply position-specific classes to the outer container
-                if (selectedImage.position.includes('bottom')) {
-                    imageContainer.classList.add('bottom-0');
-                } else { // top
-                    imageContainer.classList.add('top-0');
-                }
-
-                if (selectedImage.position.includes('left')) {
-                    imageContainer.classList.add('left-0');
-                } else { // right
-                    imageContainer.classList.add('right-0');
-                }
-
-                // Create an inner wrapper for the image and text to control their internal layout
-                const contentWrapper = document.createElement('div');
-                // This wrapper will use flex to arrange image and text horizontally.
-                // items-end/items-start will align them vertically within this flex container.
-                contentWrapper.className = 'flex items-center  flex-row gap-2'; // Added gap for spacing
-
-                // Adjust vertical alignment within the contentWrapper based on image position (top/bottom)
-                if (selectedImage.position.includes('bottom')) {
-                    contentWrapper.classList.add('items-center'); // Align items to the bottom of the flex container
-                } else {
-                    contentWrapper.classList.add('items-center'); // Align items to the top of the flex container
-                }
-
-
-                // Create the img element
-                const imgElement = document.createElement('img');
-                imgElement.id = 'random-image';
-                imgElement.src = selectedImage.src;
-                imgElement.alt = 'Random Inactivity Image';
-                // Apply common image styles and the specific size class, removed shadow-lg
-                imgElement.className = `w-auto object-contain rounded-md ${imageSizeClasses[selectedImage.size] || 'max-h-[30vh]'}`; // Default to max-h-[30vh] if size is not recognized
-
-                // Create the text element
-                const textElement = document.createElement('div');
-                // Added font-bold and italic for the text, changed text-sm to text-base, added font-schoolbell, and removed shadow-md
-                textElement.className = 'text-text-primary text-base font-bold  font-schoolbell p-2 rounded-md max-w-[200px] dark:text-dark-text-primary dark:bg-dark-secondary-bg';
-                textElement.textContent = selectedImage.text;
-
-                // Determine order based on horizontal position
-                if (selectedImage.position.includes('left')) {
-                    // Image on left, text on right
-                    contentWrapper.appendChild(imgElement);
-                    contentWrapper.appendChild(textElement);
-                } else {
-                    // Image on right, text on left
-                    contentWrapper.appendChild(textElement);
-                    contentWrapper.appendChild(imgElement);
-                }
-
-                imageContainer.appendChild(contentWrapper);
-                document.body.appendChild(imageContainer);
-
-                // Fade in the image
-                setTimeout(() => {
-                    imageContainer.style.opacity = '1';
-                    imageContainer.style.pointerEvents = 'auto';
-                }, 10); // Small delay to ensure DOM attachment before transition
-
-                currentImageElement = imageContainer; // Store reference to the current image container
-            }
-
-            function hideImage() {
-                if (currentImageElement && currentImageElement.parentNode) { // Add null check for parentNode
-                    currentImageElement.style.opacity = '0';
-                    currentImageElement.style.pointerEvents = 'none';
-                    // Remove after transition
-                    setTimeout(() => {
-                        if (currentImageElement && currentImageElement.parentNode) { // Check again before removing
-                            currentImageElement.remove();
-                            currentImageElement = null;
-                        }
-                    }, 50); // Match transition duration
-                }
-            }
-
-            function resetInactivityTimer() {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => {
-                    showRandomImage(inactivityImages); // Pass the inactivityImages array
-                }, INACTIVITY_THRESHOLD);
-            }
-
-            // Initial call to set up the timer
+            // Initial call to set up the inactivity timer
             resetInactivityTimer();
                // hideImage(); // Hide image immediately on any activity
 
             // Listen for any user activity (mouse movement, key presses) to reset the timer
             document.addEventListener('mousemove', resetInactivityTimer);
             document.addEventListener('keydown', resetInactivityTimer);
-
-            // Event for probabilistic quote on page load
-            setTimeout(() => {
-                const probability = 0.39; // 20% chance
-                if (Math.random() < probability) {
-                    showRandomImage(randomQuoteJson);
-                }
-            }, 2000); // 2-second delay
-
 
             // Event listener for theme toggle button (now inside the more menu)
             themeToggleButton.addEventListener('click', () => {
@@ -1424,6 +1537,9 @@
             }
 
             initializeApp(); // Call directly without delay
+
+            // Call displayGreeting directly on load; it handles its own logic and probability for fallbacks
+            displayGreeting();
         });
 
         // Fix for blank screen on browser back button

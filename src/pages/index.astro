@@ -1,3 +1,10 @@
+---
+import "../styles/global.css";
+import "@phosphor-icons/web/fill";
+
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,20 +19,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <!-- Schoolbell Font CDN -->
     <link href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap" rel="stylesheet">
-    <!-- Phosphor Icons CDN for filled icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
     <!-- Tailwind CSS CDN with custom config to match existing colors -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class', // Enable dark mode based on 'dark' class on html element
-            theme: {
-                extend: {
-                    // All custom extensions removed from Tailwind config
-                }
-            }
-        }
-    </script>
+  
     <style type="text/css">
         /* CSS Variables for theming */
         :root {

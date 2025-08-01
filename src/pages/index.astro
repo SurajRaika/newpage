@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import Menu from "../components/Menu.astro";
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -129,23 +130,7 @@ import "../styles/global.css";
             scrollbar-color: rgb(var(--color-border-color)) transparent; /* Dark mode thumb and track color */
         }
 
-        /* More Menu specific styles for visibility transition */
-        #more-menu {
-            display: flex; /* Keep flex display always */
-            visibility: hidden; /* Start hidden for transitions */
-            opacity: 0;
-            transform: translateY(10px);
-            pointer-events: none; /* Prevent clicks when hidden */
-            transition: opacity 0.2s ease-out, transform 0.2s ease-out, visibility 0.2s ease-out;
-        }
-
-        #more-menu.show {
-            visibility: visible;
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto; /* Allow clicks when shown */
-        }
-
+      
         /* Goal Context Menu specific styles for visibility transition */
         #goal-context-menu {
             display: flex; /* Keep flex display always */
@@ -344,16 +329,7 @@ import "../styles/global.css";
         </div>
     </div>
 
-    <!-- More Button and Menu -->
-    <button id="more-button" class="fixed bottom-4 right-4 bg-[rgb(var(--color-secondary-bg))] text-[rgb(var(--color-text-primary))] border border-[rgb(var(--color-border-color))] px-4 py-2 rounded-md cursor-pointer text-sm font-medium z-[10001] transition-all duration-200 whitespace-nowrap hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
-                dark:bg-[rgb(var(--color-secondary-bg))] dark:text-[rgb(var(--color-text-primary))] dark:border-[rgb(var(--color-border-color))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]">More</button>
-    <div id="more-menu" class="fixed bottom-[calc(1rem+2.5rem+0.5rem)] right-4 bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-md invisible flex-col p-2 gap-2 z-[10000] shadow-lg opacity-0 translate-y-2 transition-all duration-200
-                dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
-        <button id="theme-toggle" class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
-                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"></button>
-        <button id="tasks-toggle" class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
-                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"></button>
-    </div>
+        <Menu />
 
     <script>
         // --- Function Definitions (All moved to top for scope) ---
@@ -864,11 +840,7 @@ import "../styles/global.css";
         const historyList = document.getElementById('history-list');
         const clearHistoryButton = document.getElementById('clear-history-button');
 
-        // Elements for More menu and theme toggle
-        const moreButton = document.getElementById('more-button');
-        const moreMenu = document.getElementById('more-menu');
-        const themeToggleButton = document.getElementById('theme-toggle');
-        const tasksToggleButton = document.getElementById('tasks-toggle'); // New tasks toggle button
+        
 
         const topElementsContainer = document.getElementById('top-elements');
         const mainContentBottomContainer = document.getElementById('main-content-bottom');
@@ -924,47 +896,19 @@ import "../styles/global.css";
             };
         }
 
-        // Function to apply theme
-        function applyTheme(theme) {
-            const html = document.documentElement; // Target the html element for dark mode class
-            const activeLine = document.getElementById('active-line'); // Get the active line element
+        
 
-            if (theme === 'light') {
-                html.classList.remove('dark');
-                themeToggleButton.textContent = 'Dark Mode';
-                // Set active line color for light mode explicitly using CSS variable
-                if (activeLine) activeLine.style.backgroundColor = 'rgb(var(--color-text-primary))'; 
-            } else { // 'dark' theme
-                html.classList.add('dark');
-                themeToggleButton.textContent = 'Light Mode';
-                // Set active line color for dark mode explicitly using CSS variable
-                if (activeLine) activeLine.style.backgroundColor = 'rgb(var(--color-accent))'; 
-            }
-            localStorage.setItem('themePreference', theme);
-        }
+        
 
-        // Function to toggle goals visibility and update layout
-        function toggleGoals() {
-            goalsEnabled = !goalsEnabled;
-            localStorage.setItem('goalsEnabled', goalsEnabled);
-            updateLayout(); // Call updateLayout to handle DOM changes and button text
-            moreMenu.classList.remove('show'); // Close menu after selection
-            setTimeout(() => {
-                moreMenu.style.visibility = 'hidden';
-                moreMenu.style.pointerEvents = 'none';
-            }, 200);
-        }
 
         function updateLayout() {
             if (goalsEnabled) {
                 goalsContainer.classList.remove('hidden');
-                tasksToggleButton.textContent = 'Disable Tasks';
                 // Move engine-selection to top-elements
                 topElementsContainer.appendChild(engineSelection);
                 topElementsContainer.classList.add('with-engine');
             } else {
                 goalsContainer.classList.add('hidden');
-                tasksToggleButton.textContent = 'Enable Tasks';
                 // Move engine-selection to main-content-bottom
                 mainContentBottomContainer.prepend(engineSelection); // Add to the beginning of bottom section
                 topElementsContainer.classList.remove('with-engine');
@@ -992,15 +936,7 @@ import "../styles/global.css";
             if (editGoalSection.classList.contains('show') && !editGoalModal.contains(e.target)) {
                 hideEditGoalPopup();
             }
-            // Hide more menu if clicked outside
-            if (moreMenu.classList.contains('show') && !moreMenu.contains(e.target) && e.target !== moreButton) {
-                moreMenu.classList.remove('show');
-                // Use a timeout to hide visibility after transition completes
-                setTimeout(() => {
-                    moreMenu.style.visibility = 'hidden';
-                    moreMenu.style.pointerEvents = 'none';
-                }, 200); // Match transition-duration of opacity/transform
-            }
+            
         });
 
         // Add escape key listener
@@ -1009,14 +945,7 @@ import "../styles/global.css";
                 if (editGoalSection.classList.contains('show')) {
                     hideEditGoalPopup();
                 }
-                if (moreMenu.classList.contains('show')) {
-                    moreMenu.classList.remove('show');
-                    // Use a timeout to hide visibility after transition completes
-                    setTimeout(() => {
-                        moreMenu.style.visibility = 'hidden';
-                        moreMenu.style.pointerEvents = 'none';
-                    }, 200); // Match transition-duration of opacity/transform
-                }
+                
                 // If escape is pressed and the search input is focused, blur it
                 if (document.activeElement === searchInput) {
                     searchInput.blur();
@@ -1435,6 +1364,8 @@ import "../styles/global.css";
                 editGoalInput.addEventListener('input', updateActionButtonText);
             }
 
+            document.addEventListener('toggle-tasks', updateLayout);
+
             // Also update active line on window resize to handle responsive changes
             window.addEventListener('resize', updateActiveLinePosition);
 
@@ -1467,38 +1398,7 @@ import "../styles/global.css";
             document.addEventListener('mousemove', resetInactivityTimer);
             document.addEventListener('keydown', resetInactivityTimer);
 
-            // Event listener for theme toggle button (now inside the more menu)
-            themeToggleButton.addEventListener('click', () => {
-                const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                applyTheme(newTheme);
-                moreMenu.classList.remove('show'); // Close menu after selection
-                // Use a timeout to hide visibility after transition completes
-                setTimeout(() => {
-                    moreMenu.style.visibility = 'hidden';
-                    moreMenu.style.pointerEvents = 'none';
-                }, 200); // Match transition-duration of opacity/transform
-            });
-
-            // Event listener for Tasks toggle button
-            tasksToggleButton.addEventListener('click', toggleGoals);
-
-            // Event listener for More button
-            moreButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent document click from immediately closing it
-                moreMenu.classList.toggle('show');
-                // Toggle visibility to allow transitions
-                if (moreMenu.classList.contains('show')) {
-                    moreMenu.style.visibility = 'visible';
-                    moreMenu.style.pointerEvents = 'auto';
-                } else {
-                    // Use a timeout to hide visibility after transition completes
-                    setTimeout(() => {
-                        moreMenu.style.visibility = 'hidden';
-                        moreMenu.style.pointerEvents = 'none';
-                    }, 200); // Match transition-duration of opacity/transform
-                }
-            });
+            
         }
 
 

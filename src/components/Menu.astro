@@ -1,0 +1,347 @@
+---
+// Astro component script (runs at build time)
+---
+
+<!-- More Button and Menu -->
+<button 
+  id="more-button" 
+  class="fixed bottom-4 right-4 bg-[rgb(var(--color-secondary-bg))] text-[rgb(var(--color-text-primary))] border border-[rgb(var(--color-border-color))] px-4 py-2 rounded-md cursor-pointer text-sm font-medium z-[10001] transition-all duration-200 whitespace-nowrap hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))] dark:bg-[rgb(var(--color-secondary-bg))] dark:text-[rgb(var(--color-text-primary))] dark:border-[rgb(var(--color-border-color))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"
+>
+  More
+</button>
+
+<div 
+  id="more-menu" 
+  class="fixed bottom-[calc(1rem+2.5rem+0.5rem)] right-4 bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-md invisible flex-col p-2 gap-2 z-[10000] shadow-lg opacity-0 translate-y-2 transition-all duration-200 dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]"
+>
+  <button 
+    id="theme-toggle" 
+    class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"
+  >
+  </button>
+  
+  <button 
+    id="tasks-toggle" 
+    class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"
+  >
+  </button>
+</div>
+
+<style>
+  /* More Menu specific styles for visibility transition */
+  #more-menu {
+    display: flex;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out, visibility 0.2s ease-out;
+  }
+
+  #more-menu.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+</style>
+
+<script>
+  /**
+   * Theme Management Class
+   * Handles theme switching and persistence
+   */
+  class ThemeManager {
+    constructor() {
+      this.themes = {
+        LIGHT: 'light',
+        DARK: 'dark'
+      };
+      this.storageKey = 'themePreference';
+    }
+
+    /**
+     * Get current theme from DOM
+     * @returns {string} Current theme
+     */
+    getCurrentTheme() {
+      return document.documentElement.classList.contains('dark') 
+        ? this.themes.DARK 
+        : this.themes.LIGHT;
+    }
+
+    /**
+     * Apply theme to the document
+     * @param {string} theme - Theme to apply
+     */
+    applyTheme(theme) {
+      const html = document.documentElement;
+      const activeLine = document.getElementById('active-line');
+
+      if (theme === this.themes.LIGHT) {
+        html.classList.remove('dark');
+        if (activeLine) {
+          activeLine.style.backgroundColor = 'rgb(var(--color-text-primary))';
+        }
+      } else {
+        html.classList.add('dark');
+        if (activeLine) {
+          activeLine.style.backgroundColor = 'rgb(var(--color-accent))';
+        }
+      }
+
+      this.saveThemePreference(theme);
+    }
+
+    /**
+     * Toggle between light and dark themes
+     */
+    toggleTheme() {
+      const currentTheme = this.getCurrentTheme();
+      const newTheme = currentTheme === this.themes.DARK 
+        ? this.themes.LIGHT 
+        : this.themes.DARK;
+      this.applyTheme(newTheme);
+    }
+
+    /**
+     * Get theme button text based on current theme
+     * @returns {string} Button text
+     */
+    getThemeButtonText() {
+      return this.getCurrentTheme() === this.themes.LIGHT 
+        ? 'Dark Mode' 
+        : 'Light Mode';
+    }
+
+    /**
+     * Save theme preference to localStorage
+     * @param {string} theme - Theme to save
+     */
+    saveThemePreference(theme) {
+      localStorage.setItem(this.storageKey, theme);
+    }
+
+    /**
+     * Load theme preference from localStorage
+     * @returns {string} Saved theme or default
+     */
+    loadThemePreference() {
+      return localStorage.getItem(this.storageKey) || this.themes.LIGHT;
+    }
+  }
+
+  /**
+   * Tasks Management Class
+   * Handles tasks/goals visibility toggle
+   */
+  class TasksManager {
+    constructor() {
+      this.storageKey = 'goalsEnabled';
+      this.eventName = 'toggle-tasks';
+    }
+
+    /**
+     * Check if tasks are currently enabled
+     * @returns {boolean} Tasks enabled status
+     */
+    isTasksEnabled() {
+      return localStorage.getItem(this.storageKey) === 'true';
+    }
+
+    /**
+     * Toggle tasks visibility
+     */
+    toggleTasks() {
+      const newState = !this.isTasksEnabled();
+      localStorage.setItem(this.storageKey, newState.toString());
+      
+      // Dispatch custom event for other components
+      const event = new CustomEvent(this.eventName);
+      document.dispatchEvent(event);
+    }
+
+    /**
+     * Get tasks button text based on current state
+     * @returns {string} Button text
+     */
+    getTasksButtonText() {
+      return this.isTasksEnabled() ? 'Disable Tasks' : 'Enable‎  Tasks';
+    }
+  }
+
+  /**
+   * More Menu Class
+   * Handles menu visibility and interactions
+   */
+  class MoreMenu {
+    constructor() {
+      this.transitionDuration = 200; // milliseconds
+      this.showClass = 'show';
+      
+      // Get DOM elements
+      this.elements = {
+        button: document.getElementById('more-button'),
+        menu: document.getElementById('more-menu'),
+        themeToggle: document.getElementById('theme-toggle'),
+        tasksToggle: document.getElementById('tasks-toggle')
+      };
+
+      // Initialize managers
+      this.themeManager = new ThemeManager();
+      this.tasksManager = new TasksManager();
+
+      // Bind methods to preserve context
+      this.show = this.show.bind(this);
+      this.hide = this.hide.bind(this);
+      this.toggle = this.toggle.bind(this);
+      this.handleOutsideClick = this.handleOutsideClick.bind(this);
+      this.handleEscapeKey = this.handleEscapeKey.bind(this);
+      this.handleThemeToggle = this.handleThemeToggle.bind(this);
+      this.handleTasksToggle = this.handleTasksToggle.bind(this);
+    }
+
+    /**
+     * Initialize the menu system
+     */
+    init() {
+      this.updateButtonTexts();
+      this.attachEventListeners();
+    }
+
+    /**
+     * Update button texts based on current states
+     */
+    updateButtonTexts() {
+      this.elements.themeToggle.textContent = this.themeManager.getThemeButtonText();
+      this.elements.tasksToggle.textContent = this.tasksManager.getTasksButtonText();
+    }
+
+    /**
+     * Attach all event listeners
+     */
+    attachEventListeners() {
+      // More button click
+      this.elements.button.addEventListener('click', this.handleButtonClick.bind(this));
+      
+      // Theme toggle
+      this.elements.themeToggle.addEventListener('click', this.handleThemeToggle);
+      
+      // Tasks toggle
+      this.elements.tasksToggle.addEventListener('click', this.handleTasksToggle);
+      
+      // Outside click
+      document.addEventListener('click', this.handleOutsideClick);
+      
+      // Escape key
+      document.addEventListener('keydown', this.handleEscapeKey);
+    }
+
+    /**
+     * Handle more button click
+     * @param {Event} e - Click event
+     */
+    handleButtonClick(e) {
+      e.stopPropagation();
+      this.toggle();
+    }
+
+    /**
+     * Handle theme toggle click
+     */
+    handleThemeToggle() {
+      this.themeManager.toggleTheme();
+      this.updateButtonTexts();
+      this.hide();
+    }
+
+    /**
+     * Handle tasks toggle click
+     */
+    handleTasksToggle() {
+      this.tasksManager.toggleTasks();
+      this.updateButtonTexts();
+      this.hide();
+    }
+
+    /**
+     * Handle clicks outside the menu
+     * @param {Event} e - Click event
+     */
+    handleOutsideClick(e) {
+      if (this.isVisible() && 
+          !this.elements.menu.contains(e.target) && 
+          e.target !== this.elements.button) {
+        this.hide();
+      }
+    }
+
+    /**
+     * Handle escape key press
+     * @param {Event} e - Keyboard event
+     */
+    handleEscapeKey(e) {
+      if (e.key === 'Escape' && this.isVisible()) {
+        this.hide();
+      }
+    }
+
+    /**
+     * Check if menu is currently visible
+     * @returns {boolean} Visibility state
+     */
+    isVisible() {
+      return this.elements.menu.classList.contains(this.showClass);
+    }
+
+    /**
+     * Show the menu
+     */
+    show() {
+      this.elements.menu.classList.add(this.showClass);
+      this.elements.menu.style.visibility = 'visible';
+      this.elements.menu.style.pointerEvents = 'auto';
+    }
+
+    /**
+     * Hide the menu
+     */
+    hide() {
+      this.elements.menu.classList.remove(this.showClass);
+      
+      setTimeout(() => {
+        this.elements.menu.style.visibility = 'hidden';
+        this.elements.menu.style.pointerEvents = 'none';
+      }, this.transitionDuration);
+    }
+
+    /**
+     * Toggle menu visibility
+     */
+    toggle() {
+      this.isVisible() ? this.hide() : this.show();
+    }
+
+    /**
+     * Destroy the menu and clean up event listeners
+     */
+    destroy() {
+      this.elements.button.removeEventListener('click', this.handleButtonClick);
+      this.elements.themeToggle.removeEventListener('click', this.handleThemeToggle);
+      this.elements.tasksToggle.removeEventListener('click', this.handleTasksToggle);
+      document.removeEventListener('click', this.handleOutsideClick);
+      document.removeEventListener('keydown', this.handleEscapeKey);
+    }
+  }
+
+  /**
+   * Initialize the More Menu when DOM is loaded
+   */
+  document.addEventListener('DOMContentLoaded', () => {
+    const moreMenu = new MoreMenu();
+    moreMenu.init();
+
+    // Make available globally if needed for debugging
+    window.moreMenu = moreMenu;
+  });
+</script>

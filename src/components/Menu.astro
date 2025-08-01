@@ -76,18 +76,13 @@
      */
     applyTheme(theme) {
       const html = document.documentElement;
-      const activeLine = document.getElementById('active-line');
 
       if (theme === this.themes.LIGHT) {
         html.classList.remove('dark');
-        if (activeLine) {
-          activeLine.style.backgroundColor = 'rgb(var(--color-text-primary))';
-        }
+      
       } else {
         html.classList.add('dark');
-        if (activeLine) {
-          activeLine.style.backgroundColor = 'rgb(var(--color-accent))';
-        }
+      
       }
 
       this.saveThemePreference(theme);

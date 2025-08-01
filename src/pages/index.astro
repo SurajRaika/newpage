@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import Menu from "../components/Menu.astro";
+import SearchHistory from "../components/SearchHistory.astro";
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -74,6 +75,7 @@ import Menu from "../components/Menu.astro";
             border-radius: 1px;
             transition: left 0.3s ease-out, width 0.3s ease-out; /* Sliding animation */
             z-index: 10; /* Ensure it's on top */
+            background-color: rgb(var(--color-text-primary)); /* Use theme variable for color */
         }
 
         /* Loading indicator animation */
@@ -164,14 +166,7 @@ import Menu from "../components/Menu.astro";
         }
 
 
-        /* Search History Section visibility and transition */
-        #search-history-section {
-            transition: max-height 0.15s ease-out, opacity 0.15s ease-out; /* Fast expand/collapse and fade */
-        }
-        #search-history-section.show {
-            max-height: 500px; /* Sufficient height to show content */
-            opacity: 1;
-        }
+     
 
         /* When engine-selection is at the top, ensure flex-item behavior */
         #top-elements.with-engine #time-info {
@@ -296,7 +291,7 @@ import Menu from "../components/Menu.astro";
                     <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
                                 dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">History</span>
                 </label>
-                <div id="active-line"></div> <!-- Single active line for sliding effect -->
+                <div id="active-line" class="bg-[rgb(var(--color-text-primary))]"></div> <!-- Single active line for sliding effect -->
             </div>
 
             <div class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start" id="goals-container">
@@ -313,20 +308,7 @@ import Menu from "../components/Menu.astro";
             </div>
         </div>
 
-        <!-- New Search History Section -->
-        <div id="search-history-section" class="history-section flex flex-col gap-3 bg-transparent border-t-2 border-[rgb(var(--color-accent))] rounded-none pt-4 pl-1 pr-1 pb-2 overflow-hidden max-h-0 opacity-0 transition-all duration-300 box-border mt-4
-                    dark:border-[rgb(var(--color-accent))]">
-            <div class="history-header flex justify-between items-center pb-2 border-b border-[rgb(var(--color-border-color))] mb-2
-                        dark:border-[rgb(var(--color-border-color))]">
-                <span class="history-title text-sm font-semibold text-[rgb(var(--color-text-primary))] uppercase
-                            dark:text-[rgb(var(--color-text-primary))]">Search History</span>
-                <button id="clear-history-button" class="clear-history-button bg-none border border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] px-3 py-1 rounded-sm cursor-pointer text-xs transition-all duration-200 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-text-primary))]
-                            dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-secondary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-text-primary))]">Clear All</button>
-            </div>
-            <ul id="history-list" class="history-list list-none p-0 m-0 max-h-[calc(20rem-3rem)] overflow-y-auto">
-                <!-- History items will be dynamically added here by JavaScript -->
-            </ul>
-        </div>
+        <SearchHistory />
     </div>
 
         <Menu />
@@ -440,23 +422,7 @@ import Menu from "../components/Menu.astro";
             updateProgressBar('day', remainingPercent);
         }
 
-        function formatTimeAgo(timestamp) {
-            const date = new Date(timestamp);
-            const now = new Date();
-            const seconds = Math.floor((now - date) / 1000);
-
-            if (seconds < 60) return `${seconds}s ago`;
-            const minutes = Math.floor(seconds / 60);
-            if (minutes < 60) return `${minutes}m ago`;
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return `${hours}h ago`;
-            const days = Math.floor(hours / 24);
-            if (days < 30) return `${days}d ago`;
-            const months = Math.floor(days / 30.44);
-            if (months < 12) return `${months}mo ago`;
-            const years = Math.floor(months / 12);
-            return `${years}y ago`;
-        }
+    
 
         function getGoals() {
             try {
@@ -665,108 +631,7 @@ import Menu from "../components/Menu.astro";
             hideGoalContextMenu();
         }
 
-        function getSearchHistory() {
-            try {
-                const history = localStorage.getItem('searchHistory');
-                return history ? JSON.parse(history) : [];
-            }
-            catch (e) {
-                console.error("Error parsing search history from localStorage:", e);
-                return [];
-            }
-        }
-
-        function saveSearchHistory(history) {
-            try {
-                localStorage.setItem('searchHistory', JSON.stringify(history));
-            } catch (e) {
-                console.error("Error saving search history to localStorage:", e);
-            }
-        }
-
-        function addSearchToHistory(query, engine) {
-            const history = getSearchHistory();
-            const now = new Date();
-            const timestamp = now.toISOString();
-            history.unshift({ query, engine, timestamp });
-            if (history.length > 20) {
-                history.pop();
-            }
-            saveSearchHistory(history);
-            renderSearchHistory();
-        }
-
-        function renderSearchHistory() {
-            const history = getSearchHistory();
-            historyList.innerHTML = '';
-
-            if (history.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'No search history yet.';
-                li.classList.add('text-[rgb(var(--color-text-placeholder))]', 'text-center', 'p-4');
-                historyList.appendChild(li);
-                return;
-            }
-
-            history.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'history-item flex items-center py-1.5 border-b border-dashed cursor-pointer gap-2 hover:bg-[rgb(var(--color-primary-bg))] ' +
-                               'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] ';
-
-                const engineTag = document.createElement('span');
-                engineTag.className = 'history-engine-tag text-[0.65rem] px-1.5 py-0.5 rounded-sm uppercase flex-shrink-0 ' +
-                                      'bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] ';
-                engineTag.textContent = item.engine;
-
-                const querySpan = document.createElement('span');
-                querySpan.className = 'history-query flex-grow whitespace-nowrap overflow-hidden text-ellipsis text-sm sm:text-base';
-                querySpan.textContent = item.query;
-
-                const timestampSpan = document.createElement('span');
-                timestampSpan.className = 'history-timestamp text-[0.7rem] ml-auto flex-shrink-0 ' +
-                                          'text-[rgb(var(--color-text-secondary))]';
-                timestampSpan.textContent = formatTimeAgo(item.timestamp);
-
-                const openLinkButton = document.createElement('button');
-                openLinkButton.className = 'open-link-button bg-none border-none cursor-pointer p-0 flex items-center justify-center ml-2 flex-shrink-0 hover:text-[rgb(var(--color-text-primary))] ' +
-                                           'text-[rgb(var(--color-text-secondary))]';
-                openLinkButton.setAttribute('title', `Open in ${item.engine}`);
-                openLinkButton.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="open-link-icon">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/>
-                    </svg>
-                `;
-                openLinkButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    let url = '';
-                    switch (item.engine) {
-                        case 'google':
-                            url = `https://www.google.com/search?q=${encodeURIComponent(item.query)}`;
-                            break;
-                        case 'perplexity':
-                            url = `https://www.perplexity.ai/search?q=${encodeURIComponent(item.query)}`;
-                            break;
-                        case 'youtube':
-                            url = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`;
-                            break;
-                        case 'chatgpt':
-                            url = `https://chat.openai.com/chat?q=${encodeURIComponent(item.query)}`;
-                            break;
-                        default:
-                            url = `https://www.google.com/search?q=${encodeURIComponent(item.query)}`;
-                            break;
-                    }
-                    window.open(url, '_blank');
-                });
-
-                li.appendChild(engineTag);
-                li.appendChild(querySpan);
-                li.appendChild(timestampSpan);
-                li.appendChild(openLinkButton);
-
-                historyList.appendChild(li);
-            });
-        }
+        
 
         function updateGoalTimeSince() {
             // Only render goals if they are enabled
@@ -807,15 +672,13 @@ import Menu from "../components/Menu.astro";
             });
 
             // Defer updateActiveLinePosition to ensure layout is stable
-            setTimeout(updateActiveLinePosition, 0); 
+            setTimeout(updateActiveLinePosition, 0);
 
-            if (searchHistorySection) {
-                if (historySelected) {
-                    searchHistorySection.classList.add('show');
-                    renderSearchHistory();
-                } else {
-                    searchHistorySection.classList.remove('show');
-                }
+            // Dispatch custom events to control the search history component's visibility
+            if (historySelected) {
+                document.dispatchEvent(new CustomEvent('show-history'));
+            } else {
+                document.dispatchEvent(new CustomEvent('hide-history'));
             }
         }
 
@@ -827,6 +690,7 @@ import Menu from "../components/Menu.astro";
         const currentTimeSpan = document.getElementById('current-time');
         const blankScreenOverlay = document.getElementById('blank-screen-overlay');
         const engineSelection = document.getElementById('engine-selection'); // Reference to the engine selection container
+        const searchHistorySection = document.getElementById('search-history-section');
 
         const goalsContainer = document.getElementById('goals-container');
         const goalContextMenu = document.getElementById('goal-context-menu');
@@ -836,9 +700,7 @@ import Menu from "../components/Menu.astro";
         const editGoalActionButton = document.getElementById('edit-goal-action-button');
         const editGoalDeleteButton = document.getElementById('edit-goal-delete-button');
 
-        const searchHistorySection = document.getElementById('search-history-section');
-        const historyList = document.getElementById('history-list');
-        const clearHistoryButton = document.getElementById('clear-history-button');
+        
 
         
 
@@ -967,12 +829,7 @@ import Menu from "../components/Menu.astro";
         });
 
         // Clear history button listener
-        if (clearHistoryButton) {
-            clearHistoryButton.addEventListener('click', () => {
-                localStorage.removeItem('searchHistory');
-                renderSearchHistory();
-            });
-        }
+       
 
         // Track Ctrl/Cmd key state
         document.addEventListener('keydown', (e) => {
@@ -1019,8 +876,11 @@ import Menu from "../components/Menu.astro";
             }
 
             if (selectedEngine !== 'history') { // Only add to history if it's an actual search engine
-                addSearchToHistory(query, selectedEngine);
-            }
+                document.dispatchEvent(new CustomEvent('add-to-history', {
+                detail: { query, selectedEngine }
+                }));
+
+}
 
             // Only show blank screen overlay if not opening in a new tab
             if (!openInNewTab) {
@@ -1380,7 +1240,6 @@ import Menu from "../components/Menu.astro";
             updateLayout();
             updateDayProgress();
             updateTimeOfDayInfo();
-            renderSearchHistory();
             updateActiveLineAndSections(); // Initial setup for engine selector
             
             // Ensure loading overlay is off

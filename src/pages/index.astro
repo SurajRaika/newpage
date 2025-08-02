@@ -2,6 +2,8 @@
 import "../styles/global.css";
 import Menu from "../components/Menu.astro";
 import SearchHistory from "../components/SearchHistory.astro";
+import DailyProgressBar from "../components/DailyProgressBar.astro";
+import TimeInfo from "../components/TimeInfo.astro";
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -168,11 +170,7 @@ import SearchHistory from "../components/SearchHistory.astro";
 
      
 
-        /* When engine-selection is at the top, ensure flex-item behavior */
-        #top-elements.with-engine #time-info {
-            flex-shrink: 0;
-            flex-grow: 0;
-        }
+        
         #top-elements.with-engine #engine-selection {
             flex-shrink: 0;
             flex-grow: 0;
@@ -226,14 +224,7 @@ import SearchHistory from "../components/SearchHistory.astro";
         <div id="top-elements" class="flex flex-col gap-4 items-start w-full">
 
 
-            <div id="time-info" class="time-info flex items-center gap-2 text-[rgb(var(--color-text-secondary))] text-sm font-medium whitespace-nowrap
-                                dark:text-[rgb(var(--color-text-secondary))]">
-                <!-- Phosphor Icon element -->
-                <i id="time-icon" class="ph w-6 h-6 flex items-center justify-center rounded-full bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))]
-                                   dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))]"></i>
-                <span id="current-time" class="current-time text-xs font-semibold text-[rgb(var(--color-text-primary))]
-                                       dark:text-[rgb(var(--color-text-primary))]"></span>
-            </div>
+            <TimeInfo />
 
 
 
@@ -250,7 +241,7 @@ import SearchHistory from "../components/SearchHistory.astro";
                         name="query"
                         class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-[rgb(var(--color-text-primary))] text-base md:text-lg leading-relaxed placeholder:text-[rgb(var(--color-text-placeholder))] focus:outline-none
                                 dark:text-[rgb(var(--color-text-primary))] dark:placeholder:text-[rgb(var(--color-text-placeholder))]"
-                        placeholder="Search the web..."
+                        placeholder="Search Google..."
                         autocomplete="off"
                     />
                     <button type="submit" class="search-button absolute right-0 mr-2 text-[rgb(var(--color-text-secondary))] cursor-pointer bg-none border-none p-0 flex items-center justify-center hover:text-[rgb(var(--color-text-primary))]
@@ -265,7 +256,7 @@ import SearchHistory from "../components/SearchHistory.astro";
 
         <!-- Main content bottom: Engine Selection (if goals hidden), Goals, Daily Progress -->
         <div id="main-content-bottom" class="flex flex-col sm:flex-row gap-4 w-full justify-between items-center">
-            <div id="engine-selection" class="engine-selection flex flex-row flex-wrap items-start gap-2 sm:gap-3 pl-1 relative">
+            <div id="engine-selection" class="engine-selection flex flex-row  items-start gap-2 sm:gap-3 pl-1 relative">
                 <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to Google search (G)">
                     <input type="radio" name="engine" value="google" class="custom-radio" checked>
                     <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
@@ -297,15 +288,8 @@ import SearchHistory from "../components/SearchHistory.astro";
             <div class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start" id="goals-container">
                 <!-- Goals or "Click here to set up" message will be rendered here -->
             </div>
-            <div class="daily-progress-container flex flex-col gap-2 w-full pl-1 sm:w-auto sm:pl-0">
-                <div class="progress-label text-xs font-medium text-[rgb(var(--color-text-secondary))] uppercase whitespace-nowrap
-                            dark:text-[rgb(var(--color-text-secondary))]">DAY REMAINing: <span id="day-remaining-percent"></span>%</div>
-                <div class="progress-bar-wrapper bg-[rgb(var(--color-border-color))] rounded-sm h-2 w-full overflow-hidden
-                            dark:bg-[rgb(var(--color-border-color))]">
-                    <div id="day-progress-bar" class="progress-bar bg-[rgb(var(--color-accent))] h-full w-0 rounded-sm
-                                dark:bg-[rgb(var(--color-accent))]"></div>
-                </div>
-            </div>
+            <DailyProgressBar />
+            
         </div>
 
         <SearchHistory />
@@ -316,14 +300,6 @@ import SearchHistory from "../components/SearchHistory.astro";
     <script>
         // --- Function Definitions (All moved to top for scope) ---
 
-        // CDN-hosted Phosphor Icons (filled variant) - Defined early as it's a constant
-        const timeOfDayIconClasses = {
-            morning: 'ph-fill ph-sunrise',
-            m_day: 'ph-fill ph-sun',
-            evening: 'ph-fill ph-sunset',
-            night: 'ph-fill ph-moon',
-        };
-
         const searchEnginePlaceholders = {
             google: "Search Google...",
             perplexity: "Search Perplexity...",
@@ -332,95 +308,7 @@ import SearchHistory from "../components/SearchHistory.astro";
             history: "View search history or search Google..." // Special case for history
         };
 
-        function updateTimeOfDayInfo() {
-            const now = new Date();
-            const hour = now.getHours();
-            let iconClass;
-            let timeOfDayText;
-
-            if (hour >= 5 && hour < 12) {
-                iconClass = timeOfDayIconClasses.morning;
-                timeOfDayText = 'Morning';
-            } else if (hour >= 12 && hour < 18) {
-                iconClass = timeOfDayIconClasses.m_day;
-                timeOfDayText = 'Day';
-            } else if (hour >= 18 && hour < 21) {
-                iconClass = timeOfDayIconClasses.evening;
-                timeOfDayText = 'Evening';
-            } else {
-                iconClass = timeOfDayIconClasses.night;
-                timeOfDayText = 'Night';
-            }
-
-            // Options for date and time formatting
-            const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-            const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-
-            const formattedDate = now.toLocaleDateString('en-US', dateOptions);
-            const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
-
-            if (timeIconElement && currentTimeSpan) {
-                timeIconElement.className = 'ph ' + iconClass;
-                // Combine date, time, and time of day text
-                currentTimeSpan.textContent = `${formattedDate}, ${formattedTime} (${timeOfDayText})`;
-            }
-        }
-
-        function updateProgressBar(type, percent) {
-            let progressBar;
-            let percentText;
-
-            if (type === 'day') {
-                progressBar = document.getElementById('day-progress-bar');
-                percentText = document.getElementById('day-remaining-percent');
-            }
-
-            if (progressBar && percentText) {
-                const clampedPercent = Math.max(0, Math.min(100, percent));
-                progressBar.style.width = `${clampedPercent}%`;
-                percentText.textContent = clampedPercent.toFixed(1); // Display with one decimal place
-            }
-        }
-
-        function updateDayProgress() {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const currentDay = now.getDate();
-
-            // Use stored wake/sleep times or fall back to defaults
-            const wakeTime = localStorage.getItem('wakeTime') || '06:00';
-            const sleepTime = localStorage.getItem('sleepTime') || '22:00';
-
-            const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
-            const [sleepHour, sleepMinute] = sleepTime.split(':').map(Number);
-
-            const startOfActiveDay = new Date(currentYear, currentMonth, currentDay, wakeHour, wakeMinute, 0);
-            const endOfActiveDay = new Date(currentYear, currentMonth, currentDay, sleepHour, sleepMinute, 0);
-
-            // Handle cases where sleep time might be on the next day (e.g., wake 6 AM, sleep 2 AM next day)
-            if (sleepHour < wakeHour) {
-                endOfActiveDay.setDate(endOfActiveDay.getDate() + 1);
-            }
-
-            if (now < startOfActiveDay) {
-                updateProgressBar('day', 100); // Before active day, show 100% remaining
-                return;
-            }
-
-            if (now > endOfActiveDay) {
-                updateProgressBar('day', 0); // After active day, show 0% remaining
-                return;
-            }
-
-            const totalMillisecondsInActiveDay = endOfActiveDay.getTime() - startOfActiveDay.getTime();
-            const elapsedMillisecondsInActiveDay = now.getTime() - startOfActiveDay.getTime();
-
-            const elapsedPercent = (elapsedMillisecondsInActiveDay / totalMillisecondsInActiveDay) * 100;
-            const remainingPercent = 100 - elapsedPercent;
-
-            updateProgressBar('day', remainingPercent);
-        }
+        
 
     
 
@@ -686,8 +574,7 @@ import SearchHistory from "../components/SearchHistory.astro";
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const radioButtons = document.querySelectorAll('input[name="engine"]');
-        const timeIconElement = document.getElementById('time-icon');
-        const currentTimeSpan = document.getElementById('current-time');
+        
         const blankScreenOverlay = document.getElementById('blank-screen-overlay');
         const engineSelection = document.getElementById('engine-selection'); // Reference to the engine selection container
         const searchHistorySection = document.getElementById('search-history-section');
@@ -1229,25 +1116,29 @@ import SearchHistory from "../components/SearchHistory.astro";
             // Also update active line on window resize to handle responsive changes
             window.addEventListener('resize', updateActiveLinePosition);
 
-            setInterval(updateDayProgress, 60 * 1000);
+            
             setInterval(updateGoalTimeSince, 60 * 1000); // This will now conditionally render goals
-            setInterval(updateTimeOfDayInfo, 60 * 1000);
 
             // Apply saved preferences directly
             // This ensures theme-dependent elements like active-line color and theme-toggle text are set.
 
             goalsEnabled = localStorage.getItem('goalsEnabled') === 'true'; // Default to false if not set
             updateLayout();
-            updateDayProgress();
-            updateTimeOfDayInfo();
+            
+            
             updateActiveLineAndSections(); // Initial setup for engine selector
             
             // Ensure loading overlay is off
             blankScreenOverlay.style.opacity = '0'; 
             blankScreenOverlay.style.pointerEvents = 'none';
 
-            // Focus on the search input when the app initializes
+
+
+            setTimeout(() => {
             searchInput.focus();
+                
+            }, 1000);
+            // Focus on the search input when the app initializes
 
             // Initial call to set up the inactivity timer
             resetInactivityTimer();

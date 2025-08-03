@@ -4,6 +4,7 @@ import Menu from "../components/Menu.astro";
 import SearchHistory from "../components/SearchHistory.astro";
 import DailyProgressBar from "../components/DailyProgressBar.astro";
 import TimeInfo from "../components/TimeInfo.astro";
+import DynamicGreeting from "../components/DynamicGreeting.astro";
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -175,11 +176,6 @@ import TimeInfo from "../components/TimeInfo.astro";
             flex-shrink: 0;
             flex-grow: 0;
         }
-
-        /* Custom font for image text */
-        .font-casual-style {
-            font-family: 'Schoolbell', cursive;
-        }
     </style>
     <!-- Inline script to prevent theme flicker -->
    
@@ -221,7 +217,7 @@ import TimeInfo from "../components/TimeInfo.astro";
         </div>
 
         <!-- Top elements: Time Info and dynamically moved Engine Selection -->
-        <div id="top-elements" class="flex flex-col gap-4 items-start w-full">
+        <div id="top-elements" class="flex   justify-between gap-4 items-start w-full">
 
 
             <TimeInfo />
@@ -296,6 +292,8 @@ import TimeInfo from "../components/TimeInfo.astro";
     </div>
 
         <Menu />
+
+    <DynamicGreeting />
 
     <script>
         // --- Function Definitions (All moved to top for scope) ---
@@ -594,56 +592,8 @@ import TimeInfo from "../components/TimeInfo.astro";
         const topElementsContainer = document.getElementById('top-elements');
         const mainContentBottomContainer = document.getElementById('main-content-bottom');
 
-        // Global flag to track if Ctrl/Cmd is pressed
         let isCtrlPressed = false;
         let goalsEnabled = false; // State variable for goals visibility
-
-        // Image related elements and variables
-        let inactivityTimer; // Timer for inactivity detection
-        const INACTIVITY_THRESHOLD = 20000; // 20 seconds in milliseconds
-        let currentImageElement = null; // To keep track of the currently displayed image container
-
-        // Array of images with their positions, sizes, and associated text (for inactivity)
-        const inactivityImages = [
-            { src: 'https://i.pinimg.com/736x/20/6c/1d/206c1d2674e08f28e84cf781290ccf8c.jpg', position: 'bottom-left', size: 'medium', text: 'You sure are More Lazy Then i am' },
-            { src: 'https://i.pinimg.com/736x/1f/50/27/1f50270d8661c9ca8d714ef9a10ccb97.jpg', position: 'top-left', size: 'small', text: 'Bro are Sure You are Awake Now!' },
-            { src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'bottom-right', size: 'large', text: 'Oh My God , what should i do now ' },
-        ];
-
-        // New JSON variable for daily greetings (time-based, day-of-week)
-        const dailyGreetingImagesJson = [
-            { id: 'morning_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Good Morning! Make it a productive day.' },
-            { id: 'afternoon_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Good Afternoon! Keep up the great work.' },
-            { id: 'evening_greeting', src: 'https://i.pinimg.com/originals/a2/51/f1/a251f1e49fd85745edccac5b18887269.jpg', position: 'bottom-right', size: 'large', text: 'Good Evening! Time to wind down.' },
-            { id: 'night_greeting', src: 'https://pm1.aminoapps.com/7208/7d3d3fe9806fb2cc89bf764cb8c31236c74c831cr1-604-568v2_hq.jpg', position: 'bottom-left', size: 'medium', text: 'Good Night! Sweet dreams.' },
-            { id: 'sunday_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Happy Sunday! Enjoy your day off.' },
-        ];
-
-        // New JSON variable for holiday greetings (date-based)
-        const holidayGreetingImagesJson = [
-            { id: 'christmas_greeting', src: 'https://placehold.co/300x200/e83e8c/FFFFFF?text=Christmas', position: 'center', size: 'large', text: 'Merry Christmas! Hope you have a wonderful holiday!' },
-            { id: 'newyear_greeting', src: 'https://placehold.co/300x200/6f42c1/FFFFFF?text=NewYear', position: 'center', size: 'large', text: 'Happy New Year! Wishing you a fantastic year ahead!' },
-            { id: 'halloween_greeting', src: 'https://placehold.co/300x200/fd7e14/FFFFFF?text=Halloween', position: 'center', size: 'large', text: 'Happy Halloween! Have a spooky fun time!' },
-            { id: 'independence_day_greeting', src: 'https://placehold.co/300x200/20c997/FFFFFF?text=Independence', position: 'center', size: 'large', text: 'Happy Independence Day! Celebrate freedom!' },
-        ];
-
-
-        // Mapping for size to Tailwind max-height classes
-        const imageSizeClasses = {
-            'small': 'max-h-[20vh]',
-            'medium': 'max-h-[25vh]',
-            'large': 'max-h-[40vh]'
-        };
-
-        // Debounce function for scroll events (kept for general utility if needed later, but not used by scrollImagesJson anymore)
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                const context = this;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), delay);
-            };
-        }
 
         
 
@@ -894,204 +844,6 @@ import TimeInfo from "../components/TimeInfo.astro";
             }
         });
 
-        // Inactivity detection for image display
-        function showRandomImage(imagesArray) { // Modified to accept imagesArray
-            // Ensure imagesArray is not empty
-            if (!imagesArray || imagesArray.length === 0) {
-                console.warn("showRandomImage called with an empty or invalid imagesArray.");
-                return; // Exit if no images to display
-            }
-
-            // Synchronously remove any existing image before displaying a new one
-            if (currentImageElement && currentImageElement.parentNode) {
-                currentImageElement.remove();
-                currentImageElement = null;
-            }
-
-            // Select a random image from the provided imagesArray
-            const randomIndex = Math.floor(Math.random() * imagesArray.length);
-            const selectedImage = imagesArray[randomIndex];
-
-            // Crucial check: Ensure selectedImage is actually an object before proceeding
-            if (!selectedImage || typeof selectedImage !== 'object') {
-                console.error("Error: Selected image is undefined or not an object.", selectedImage);
-                return; // Exit if the selected image is not valid
-            }
-
-            // Create the image container div (outer wrapper for positioning)
-            const imageContainer = document.createElement('div');
-            // Base classes for fixed positioning, transition. Added p-4 for padding from screen edges.
-            imageContainer.className = 'fixed overflow-visible opacity-0 pointer-events-none z-20 transition-opacity duration-50 flex items-center '; // Removed transform classes
-            imageContainer.dataset.position = selectedImage.position;
-
-            // Add click listener to hide the image
-            imageContainer.addEventListener('click', hideImage);
-
-            // If this is a greeting image, store its ID for dismissal tracking
-            if (selectedImage.id) { 
-                imageContainer.dataset.greetingId = selectedImage.id;
-            }
-
-            // Apply position-specific classes to the outer container
-            if (selectedImage.position.includes('bottom')) {
-                imageContainer.classList.add('bottom-0');
-            } else { // top
-                imageContainer.classList.add('top-0');
-            }
-
-            if (selectedImage.position.includes('left')) {
-                imageContainer.classList.add('left-0');
-            } else { // right
-                imageContainer.classList.add('right-0');
-            }
-
-            // Create an inner wrapper for the image and text to control their internal layout
-            const contentWrapper = document.createElement('div');
-            // This wrapper will use flex to arrange image and text horizontally.
-            // items-end/items-start will align them vertically within this flex container.
-            contentWrapper.className = 'flex items-center  flex-row gap-2'; // Added gap for spacing
-
-            // Adjust vertical alignment within the contentWrapper based on image position (top/bottom)
-            if (selectedImage.position.includes('bottom')) {
-                contentWrapper.classList.add('items-center'); // Align items to the bottom of the flex container
-            } else {
-                contentWrapper.classList.add('items-center'); // Align items to the top of the flex container
-            }
-
-
-            // Create the img element
-            const imgElement = document.createElement('img');
-            imgElement.id = 'random-image';
-            imgElement.src = selectedImage.src;
-            imgElement.alt = 'Random Inactivity Image';
-            // Apply common image styles and the specific size class, removed shadow-lg
-            imgElement.className = `w-auto object-contain rounded-md ${imageSizeClasses[selectedImage.size] || 'max-h-[30vh]'}`; // Default to max-h-[30vh] if size is not recognized
-
-            // Create the text element
-            const textElement = document.createElement('div');
-            // Reverted to original styling for dark mode
-            textElement.className = 'text-base font-bold font-casual-style p-2 rounded-md max-w-[200px] text-[rgb(var(--color-text-primary))] bg-[rgb(var(--color-secondary-bg))] ';
-            textElement.textContent = selectedImage.text;
-
-            // Determine order based on horizontal position
-            if (selectedImage.position.includes('left')) {
-                // Image on left, text on right
-                contentWrapper.appendChild(imgElement);
-                contentWrapper.appendChild(textElement);
-            } else {
-                // Image on right, text on left
-                contentWrapper.appendChild(textElement);
-                contentWrapper.appendChild(imgElement);
-            }
-
-            imageContainer.appendChild(contentWrapper);
-            document.body.appendChild(imageContainer);
-
-            // Fade in the image
-            setTimeout(() => {
-                imageContainer.style.opacity = '1';
-                imageContainer.style.pointerEvents = 'auto';
-            }, 10); // Small delay to ensure DOM attachment before transition
-
-            currentImageElement = imageContainer; // Store reference to the current image container
-        }
-
-        function hideImage() {
-            if (currentImageElement && currentImageElement.parentNode) { // Add null check for parentNode
-                const greetingId = currentImageElement.dataset.greetingId;
-                if (greetingId) {
-                    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-                    const sessionStorageKey = `dismissedGreetings_${today}`; // Changed to sessionStorage
-                    let dismissedGreetings = JSON.parse(sessionStorage.getItem(sessionStorageKey) || '[]'); // Changed to sessionStorage
-                    if (!dismissedGreetings.includes(greetingId)) {
-                        dismissedGreetings.push(greetingId);
-                        sessionStorage.setItem(sessionStorageKey, JSON.stringify(dismissedGreetings)); // Changed to sessionStorage
-                    }
-                }
-                currentImageElement.style.opacity = '0';
-                currentImageElement.style.pointerEvents = 'none';
-                // Remove after transition
-                setTimeout(() => {
-                    if (currentImageElement && currentImageElement.parentNode) { // Check again before removing
-                        currentImageElement.remove();
-                        currentImageElement = null;
-                    }
-                }, 50); // Match transition duration
-            }
-        }
-
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                showRandomImage(inactivityImages); // Pass the inactivityImages array
-            }, INACTIVITY_THRESHOLD);
-        }
-
-        // --- Greeting Function ---
-        function displayGreeting() {
-            const now = new Date();
-            const month = now.getMonth() + 1; // getMonth() is 0-indexed
-            const day = now.getDate();
-            const hour = now.getHours();
-            const dayOfWeek = now.getDay(); // Sunday - 0, Monday - 1, etc.
-
-            const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
-            let dismissedGreetingsForToday = JSON.parse(sessionStorage.getItem(`dismissedGreetings_${today}`) || '[]'); // Changed to sessionStorage
-
-            let availableHolidayGreetings = holidayGreetingImagesJson.filter(g => !dismissedGreetingsForToday.includes(g.id));
-            let availableDailyGreetings = dailyGreetingImagesJson.filter(g => !dismissedGreetingsForToday.includes(g.id));
-
-            let greetingToShow = null;
-
-            // 1. Determine the most relevant greeting for the current moment
-            // Check for date-based greetings (holidays) first
-            if (month === 12 && day === 25) { // December 25th
-                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'christmas_greeting');
-            } else if (month === 1 && day === 1) { // January 1st
-                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'newyear_greeting');
-            } else if (month === 10 && day === 31) { // October 31st
-                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'halloween_greeting');
-            } else if (month === 7 && day === 4) { // July 4th (US Independence Day)
-                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'independence_day_greeting');
-            }
-
-            // If no holiday, check for day of week specific greetings
-            if (!greetingToShow) {
-                if (dayOfWeek === 0) { // Sunday
-                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'sunday_greeting');
-                }
-            }
-
-            // If no holiday or special day, check for time-based greetings
-            if (!greetingToShow) {
-                if (hour >= 5 && hour < 12) {
-                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'morning_greeting');
-                } else if (hour >= 12 && hour < 18) {
-                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'afternoon_greeting');
-                } else if (hour >= 18 && hour < 21) {
-                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'evening_greeting');
-                } else {
-                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'night_greeting');
-                }
-            }
-
-            // Now, check if the determined greeting (if any) has been dismissed
-            const isGreetingDismissed = greetingToShow && dismissedGreetingsForToday.includes(greetingToShow.id);
-
-            if (greetingToShow && !isGreetingDismissed) {
-                // If a relevant, non-dismissed greeting is found, show it directly.
-                showRandomImage([greetingToShow]);
-            } else {
-                // If no relevant greeting is found, OR if the relevant one was dismissed,
-                // then consider showing a random inactivity image with a specific probability.
-                const fallbackProbability = 0.20; // Reverted to default 20% probability
-
-                if (Math.random() < fallbackProbability) {
-                    showRandomImage(inactivityImages); // Show a random inactivity image
-                }
-            }
-        }
-
 
         // Function to initialize the app
         function initializeApp() {
@@ -1137,16 +889,9 @@ import TimeInfo from "../components/TimeInfo.astro";
             setTimeout(() => {
             searchInput.focus();
                 
-            }, 1000);
+            }, 400);
             // Focus on the search input when the app initializes
 
-            // Initial call to set up the inactivity timer
-            resetInactivityTimer();
-               // hideImage(); // Hide image immediately on any activity
-
-            // Listen for any user activity (mouse movement, key presses) to reset the timer
-            document.addEventListener('mousemove', resetInactivityTimer);
-            document.addEventListener('keydown', resetInactivityTimer);
 
             
         }
@@ -1173,9 +918,6 @@ import TimeInfo from "../components/TimeInfo.astro";
             }
 
             initializeApp(); // Call directly without delay
-
-            // Call displayGreeting directly on load; it handles its own logic and probability for fallbacks
-            displayGreeting();
         });
 
         // Fix for blank screen on browser back button

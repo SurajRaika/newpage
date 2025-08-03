@@ -55,7 +55,7 @@
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.4s ease-out forwards;
+  animation: fadeInUp 0.1s ease-out forwards;
 }
 </style>
 
@@ -71,7 +71,6 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
   const currentTimeSpan = document.getElementById('current-time');
   const loadingAnimationElement = document.getElementById('loading-animation');
 
@@ -98,5 +97,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update every minute
   setInterval(updateTime, 60 * 1000);
-});
 </script>

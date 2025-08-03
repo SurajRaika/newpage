@@ -1,0 +1,734 @@
+---
+// Astro Component - Interactive Event System
+---
+
+<style>
+    .font-casual-style {
+        font-family: 'Schoolbell', cursive;
+    }
+</style>
+
+<script>
+    // ====== CORE MODELS ======
+    class EventImage {
+        constructor(id, src, position, size, text, weight = 1) {
+            this.id = id;
+            this.src = src;
+            this.position = position; // 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'
+            this.size = size; // 'small', 'medium', 'large'
+            this.text = text;
+            this.weight = weight; // For weighted random selection
+        }
+    }
+
+    class EventCondition {
+        constructor(type, config) {
+            this.type = type;
+            this.config = config;
+        }
+
+        evaluate(context) {
+            switch (this.type) {
+                case 'time':
+                    return this.evaluateTime(context.dateTime);
+                case 'date':
+                    return this.evaluateDate(context.dateTime);
+                case 'dayOfWeek':
+                    return this.evaluateDayOfWeek(context.dateTime);
+                case 'inactivity':
+                    return this.evaluateInactivity(context.userActivity);
+                case 'custom':
+                    return this.config.evaluate(context);
+                default:
+                    return false;
+            }
+        }
+
+        evaluateTime(dateTime) {
+            const { startHour, endHour } = this.config;
+            if (endHour <= startHour) {
+                // Crosses midnight (e.g., 22:00 to 06:00)
+                return dateTime.hour >= startHour || dateTime.hour < endHour;
+            }
+            return dateTime.hour >= startHour && dateTime.hour < endHour;
+        }
+
+        evaluateDate(dateTime) {
+            const { month, day, dateRange } = this.config;
+            
+            if (month && day) {
+                return dateTime.month === month && dateTime.day === day;
+            }
+            
+            if (dateRange) {
+                const currentDate = new Date(dateTime.year, dateTime.month - 1, dateTime.day);
+                const startDate = new Date(dateRange.startYear, dateRange.startMonth - 1, dateRange.startDay);
+                const endDate = new Date(dateRange.endYear, dateRange.endMonth - 1, dateRange.endDay);
+                return currentDate >= startDate && currentDate <= endDate;
+            }
+            
+            return false;
+        }
+
+        evaluateDayOfWeek(dateTime) {
+            const { days } = this.config;
+            return days.includes(dateTime.dayOfWeek);
+        }
+
+        evaluateInactivity(userActivity) {
+            const { minInactiveTime } = this.config;
+            return userActivity.inactiveTime >= minInactiveTime;
+        }
+    }
+
+    class Event {
+        constructor(id, name, conditions, images, priority = 50, cooldown = 0, maxShowsPerDay = null) {
+            this.id = id;
+            this.name = name;
+            this.conditions = conditions; // Array of EventCondition
+            this.images = images; // Array of EventImage
+            this.priority = priority;
+            this.cooldown = cooldown; // Minutes before can show again
+            this.maxShowsPerDay = maxShowsPerDay;
+            this.lastShown = null;
+            this.showCount = 0;
+        }
+
+        canTrigger(context) {
+            // Check cooldown
+            if (this.lastShown) {
+                const timeSinceShown = Date.now() - this.lastShown;
+                if (timeSinceShown < this.cooldown * 60 * 1000) {
+                    return false;
+                }
+            }
+
+            // Check daily limit
+            if (this.maxShowsPerDay && this.showCount >= this.maxShowsPerDay) {
+                return false;
+            }
+
+            // Check if dismissed today
+            if (StorageManager.isEventDismissedToday(this.id)) {
+                return false;
+            }
+
+            // Check conditions (all must pass)
+            return this.conditions.every(condition => condition.evaluate(context));
+        }
+
+        getRandomImage() {
+            if (this.images.length === 0) return null;
+            
+            // Weighted random selection
+            const totalWeight = this.images.reduce((sum, img) => sum + img.weight, 0);
+            let random = Math.random() * totalWeight;
+            
+            for (const image of this.images) {
+                random -= image.weight;
+                if (random <= 0) {
+                    return image;
+                }
+            }
+            
+            return this.images[0]; // Fallback
+        }
+
+        markAsShown() {
+            this.lastShown = Date.now();
+            this.showCount++;
+        }
+
+        resetDailyCount() {
+            this.showCount = 0;
+        }
+    }
+
+    // ====== EVENT BUILDER ======
+    class EventBuilder {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            this._id = '';
+            this._name = '';
+            this._conditions = [];
+            this._images = [];
+            this._priority = 50;
+            this._cooldown = 0;
+            this._maxShowsPerDay = null;
+            return this;
+        }
+
+        id(id) {
+            this._id = id;
+            return this;
+        }
+
+        name(name) {
+            this._name = name;
+            return this;
+        }
+
+        priority(priority) {
+            this._priority = priority;
+            return this;
+        }
+
+        cooldown(minutes) {
+            this._cooldown = minutes;
+            return this;
+        }
+
+        maxShowsPerDay(count) {
+            this._maxShowsPerDay = count;
+            return this;
+        }
+
+        // Condition builders
+        onTime(startHour, endHour) {
+            this._conditions.push(new EventCondition('time', { startHour, endHour }));
+            return this;
+        }
+
+        onDate(month, day) {
+            this._conditions.push(new EventCondition('date', { month, day }));
+            return this;
+        }
+
+        onDateRange(startMonth, startDay, endMonth, endDay, year = new Date().getFullYear()) {
+            this._conditions.push(new EventCondition('date', {
+                dateRange: {
+                    startYear: year,
+                    startMonth,
+                    startDay,
+                    endYear: year,
+                    endMonth,
+                    endDay
+                }
+            }));
+            return this;
+        }
+
+        onDaysOfWeek(...days) {
+            this._conditions.push(new EventCondition('dayOfWeek', { days }));
+            return this;
+        }
+
+        onInactivity(minMinutes) {
+            this._conditions.push(new EventCondition('inactivity', { minInactiveTime: minMinutes * 60 * 1000 }));
+            return this;
+        }
+
+        onCustom(evaluateFunction) {
+            this._conditions.push(new EventCondition('custom', { evaluate: evaluateFunction }));
+            return this;
+        }
+
+        // Image builders
+        addImage(id, src, text, options = {}) {
+            const {
+                position = 'center',
+                size = 'medium',
+                weight = 1
+            } = options;
+            
+            this._images.push(new EventImage(id, src, position, size, text, weight));
+            return this;
+        }
+
+        addImages(imagesConfig) {
+            imagesConfig.forEach(config => {
+                this.addImage(config.id, config.src, config.text, config.options || {});
+            });
+            return this;
+        }
+
+        build() {
+            const event = new Event(
+                this._id,
+                this._name,
+                this._conditions,
+                this._images,
+                this._priority,
+                this._cooldown,
+                this._maxShowsPerDay
+            );
+            this.reset();
+            return event;
+        }
+    }
+
+    // ====== CONFIGURATION ======
+    const CONFIG = {
+        INACTIVITY_THRESHOLD: 20000,
+        TRANSITION_DURATION: 50,
+        FALLBACK_PROBABILITY: 0.80,
+        IMAGE_SIZES: {
+            'small': 'max-h-[20vh]',
+            'medium': 'max-h-[25vh]',
+            'large': 'max-h-[40vh]'
+        }
+    };
+
+    // ====== STORAGE MANAGER ======
+    class StorageManager {
+        static getTodayKey() {
+            return `eventData_${new Date().toISOString().slice(0, 10)}`;
+        }
+
+        static getTodayData() {
+            return JSON.parse(sessionStorage.getItem(this.getTodayKey()) || '{}');
+        }
+
+        static saveTodayData(data) {
+            sessionStorage.setItem(this.getTodayKey(), JSON.stringify(data));
+        }
+
+        static isEventDismissedToday(eventId) {
+            const data = this.getTodayData();
+            return data.dismissed && data.dismissed.includes(eventId);
+        }
+
+        static dismissEvent(eventId) {
+            const data = this.getTodayData();
+            if (!data.dismissed) data.dismissed = [];
+            if (!data.dismissed.includes(eventId)) {
+                data.dismissed.push(eventId);
+                this.saveTodayData(data);
+            }
+        }
+
+        static getEventShowCount(eventId) {
+            const data = this.getTodayData();
+            return data.showCounts?.[eventId] || 0;
+        }
+
+        static incrementEventShowCount(eventId) {
+            const data = this.getTodayData();
+            if (!data.showCounts) data.showCounts = {};
+            data.showCounts[eventId] = (data.showCounts[eventId] || 0) + 1;
+            this.saveTodayData(data);
+        }
+    }
+
+    // ====== IMAGE DISPLAY MANAGER ======
+    class ImageDisplayManager {
+        constructor() {
+            this.currentImageElement = null;
+        }
+
+        show(eventImage, eventId) {
+            this.hide();
+
+            const imageContainer = this.createImageContainer(eventImage, eventId);
+            const contentWrapper = this.createContentWrapper(eventImage);
+            const imgElement = this.createImageElement(eventImage);
+            const textElement = this.createTextElement(eventImage);
+
+            this.arrangeElements(contentWrapper, imgElement, textElement, eventImage.position);
+            imageContainer.appendChild(contentWrapper);
+            document.body.appendChild(imageContainer);
+
+            this.fadeIn(imageContainer);
+            this.currentImageElement = imageContainer;
+        }
+
+        createImageContainer(eventImage, eventId) {
+            const container = document.createElement('div');
+            container.className = 'fixed overflow-visible opacity-0 pointer-events-none z-20 transition-opacity duration-50 flex items-center';
+            container.dataset.position = eventImage.position;
+            container.dataset.eventId = eventId;
+            container.dataset.imageId = eventImage.id;
+
+            container.addEventListener('click', () => this.hide());
+            this.applyPositionClasses(container, eventImage.position);
+            
+            return container;
+        }
+
+        createContentWrapper(eventImage) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex items-center flex-row gap-2';
+            return wrapper;
+        }
+
+        createImageElement(eventImage) {
+            const img = document.createElement('img');
+            img.src = eventImage.src;
+            img.alt = 'Event Image';
+            
+            const sizeClass = CONFIG.IMAGE_SIZES[eventImage.size] || CONFIG.IMAGE_SIZES.medium;
+            img.className = `w-auto object-contain rounded-md ${sizeClass}`;
+            
+            return img;
+        }
+
+        createTextElement(eventImage) {
+            const text = document.createElement('div');
+            text.className = 'text-base font-bold font-casual-style p-2 rounded-md max-w-[200px] text-[rgb(var(--color-text-primary))] bg-[rgb(var(--color-secondary-bg))]';
+            text.textContent = eventImage.text;
+            return text;
+        }
+
+        arrangeElements(wrapper, img, text, position) {
+            if (position.includes('left')) {
+                wrapper.appendChild(img);
+                wrapper.appendChild(text);
+            } else {
+                wrapper.appendChild(text);
+                wrapper.appendChild(img);
+            }
+        }
+
+        applyPositionClasses(container, position) {
+            const positionMap = {
+                'top-left': ['top-0', 'left-0'],
+                'top-right': ['top-0', 'right-0'],
+                'bottom-left': ['bottom-0', 'left-0'],
+                'bottom-right': ['bottom-0', 'right-0'],
+                'center': ['top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2']
+            };
+
+            const classes = positionMap[position] || positionMap['center'];
+            container.classList.add(...classes);
+        }
+
+        fadeIn(container) {
+            setTimeout(() => {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            }, 10);
+        }
+
+        hide() {
+            if (this.currentImageElement?.parentNode) {
+                const eventId = this.currentImageElement.dataset.eventId;
+                
+                if (eventId) {
+                    StorageManager.dismissEvent(eventId);
+                }
+
+                this.currentImageElement.style.opacity = '0';
+                this.currentImageElement.style.pointerEvents = 'none';
+
+                setTimeout(() => {
+                    if (this.currentImageElement?.parentNode) {
+                        this.currentImageElement.remove();
+                        this.currentImageElement = null;
+                    }
+                }, CONFIG.TRANSITION_DURATION);
+            }
+        }
+    }
+
+    // ====== EVENT SYSTEM ======
+    class EventSystem {
+        constructor() {
+            this.events = new Map();
+            this.displayManager = new ImageDisplayManager();
+            this.userActivity = {
+                lastActivity: Date.now(),
+                inactiveTime: 0
+            };
+            this.contextCache = null;
+            this.contextCacheTime = 0;
+        }
+
+        registerEvent(event) {
+            this.events.set(event.id, event);
+            console.log(`📅 Registered event: ${event.name}`);
+        }
+
+        registerEvents(events) {
+            events.forEach(event => this.registerEvent(event));
+        }
+
+        getContext() {
+            const now = Date.now();
+            
+            // Cache context for 1 second to avoid recalculating
+            if (this.contextCache && (now - this.contextCacheTime) < 1000) {
+                return this.contextCache;
+            }
+
+            const dateTime = new Date();
+            this.contextCache = {
+                dateTime: {
+                    year: dateTime.getFullYear(),
+                    month: dateTime.getMonth() + 1,
+                    day: dateTime.getDate(),
+                    hour: dateTime.getHours(),
+                    minute: dateTime.getMinutes(),
+                    dayOfWeek: dateTime.getDay(),
+                    timestamp: now
+                },
+                userActivity: {
+                    ...this.userActivity,
+                    inactiveTime: now - this.userActivity.lastActivity
+                }
+            };
+            this.contextCacheTime = now;
+            
+            return this.contextCache;
+        }
+
+        findTriggeredEvents() {
+            const context = this.getContext();
+            const triggeredEvents = [];
+
+            for (const event of this.events.values()) {
+                if (event.canTrigger(context)) {
+                    triggeredEvents.push(event);
+                }
+            }
+
+            // Sort by priority (highest first)
+            return triggeredEvents.sort((a, b) => b.priority - a.priority);
+        }
+
+        triggerEvent() {
+            const triggeredEvents = this.findTriggeredEvents();
+            
+            if (triggeredEvents.length > 0) {
+                const selectedEvent = triggeredEvents[0]; // Highest priority
+                const randomImage = selectedEvent.getRandomImage();
+                
+                if (randomImage) {
+                    selectedEvent.markAsShown();
+                    StorageManager.incrementEventShowCount(selectedEvent.id);
+                    this.displayManager.show(randomImage, selectedEvent.id);
+                    console.log(`🎉 Triggered event: ${selectedEvent.name}`);
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        updateUserActivity() {
+            this.userActivity.lastActivity = Date.now();
+            this.contextCache = null; // Invalidate cache
+        }
+
+        // Public API for external use
+        createEvent() {
+            return new EventBuilder();
+        }
+    }
+
+    // ====== PREDEFINED EVENTS ======
+    function createPredefinedEvents(eventSystem) {
+        const builder = eventSystem.createEvent();
+
+        // Morning Greetings
+        const morningEvent = builder
+            .id('morning_greetings')
+            .name('Morning Greetings')
+            .priority(80)
+            .onTime(5, 12)
+            .maxShowsPerDay(1)
+            .cooldown(60)
+            .addImage('morning1', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Good Morning! ☀️ Ready to conquer the day?', {
+                position: 'top-right',
+                size: 'medium',
+                weight: 2
+            })
+            .addImage('morning2', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Rise and Shine! 🌅 Time to make magic happen!', {
+                position: 'center',
+                size: 'large',
+                weight: 1
+            })
+            .addImage('morning3', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Morning vibes! ✨ Let\'s make today amazing!', {
+                position: 'bottom-left',
+                size: 'small',
+                weight: 1
+            })
+            .build();
+
+        // Holiday Events
+        const christmasEvent = builder
+            .id('christmas_celebration')
+            .name('Christmas Celebration')
+            .priority(100)
+            .onDate(12, 25)
+            .maxShowsPerDay(3)
+            .addImage('christmas1', 'https://placehold.co/300x200/e83e8c/FFFFFF?text=Christmas', 'Merry Christmas! 🎄 Ho ho ho!', {
+                position: 'center',
+                size: 'large'
+            })
+            .addImage('christmas2', 'https://placehold.co/300x200/dc3545/FFFFFF?text=Santa', '🎅 Santa is coming to town!', {
+                position: 'top-left',
+                size: 'medium'
+            })
+            .build();
+
+        // Weekend Relaxation
+        const weekendEvent = builder
+            .id('weekend_vibes')
+            .name('Weekend Vibes')
+            .priority(70)
+            .onDaysOfWeek(0, 6) // Sunday, Saturday
+            .onTime(9, 18)
+            .maxShowsPerDay(2)
+            .addImage('weekend1', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Weekend vibes! 🎉 Time to relax and recharge!', {
+                position: 'bottom-right',
+                size: 'medium'
+            })
+            .addImage('weekend2', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Chill mode activated! 😎 Enjoy your weekend!', {
+                position: 'center',
+                size: 'large'
+            })
+            .build();
+
+        // Late Night Owl
+        const lateNightEvent = builder
+            .id('night_owl')
+            .name('Night Owl')
+            .priority(60)
+            .onTime(23, 5) // 11 PM to 5 AM
+            .maxShowsPerDay(2)
+            .addImage('night1', 'https://pm1.aminoapps.com/7208/7d3d3fe9806fb2cc89bf764cb8c31236c74c831cr1-604-568v2_hq.jpg', 'Still up? You night owl! 🦉', {
+                position: 'top-left',
+                size: 'small'
+            })
+            .addImage('night2', 'https://pm1.aminoapps.com/7208/7d3d3fe9806fb2cc89bf764cb8c31236c74c831cr1-604-568v2_hq.jpg', 'Burning the midnight oil? ⭐ Take care!', {
+                position: 'bottom-right',
+                size: 'medium'
+            })
+            .build();
+
+        // Inactivity Events
+        const inactivityEvent = builder
+            .id('inactivity_nudge')
+            .name('Inactivity Nudge')
+            .priority(30)
+            .onInactivity(0.3) // 20 seconds in minutes
+            .cooldown(5)
+            .addImage('lazy1', 'https://i.pinimg.com/736x/20/6c/1d/206c1d2674e08f28e84cf781290ccf8c.jpg', 'You sure are more lazy than I am! 😴', {
+                position: 'bottom-left',
+                size: 'medium',
+                weight: 2
+            })
+            .addImage('lazy2', 'https://i.pinimg.com/736x/1f/50/27/1f50270d8661c9ca8d714ef9a10ccb97.jpg', 'Bro, are you sure you\'re awake now? 👀', {
+                position: 'top-left',
+                size: 'small'
+            })
+            .addImage('lazy3', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Oh my god, what should I do now? 🤔', {
+                position: 'bottom-right',
+                size: 'large'
+            })
+            .build();
+
+        // Custom Event Example - Work Hours Motivation
+        const workHoursEvent = builder
+            .id('work_motivation')
+            .name('Work Hours Motivation')
+            .priority(50)
+            .onDaysOfWeek(1, 2, 3, 4, 5) // Monday to Friday
+            .onTime(9, 17)
+            .onCustom((context) => {
+                // Only trigger on odd hours during work time
+                return context.dateTime.hour % 2 === 1;
+            })
+            .maxShowsPerDay(3)
+            .cooldown(120) // 2 hours
+            .addImage('work1', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'You\'re doing great! 💪 Keep pushing!', {
+                position: 'center',
+                size: 'medium'
+            })
+            .addImage('work2', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Productivity mode ON! 🚀', {
+                position: 'top-right',
+                size: 'small'
+            })
+            .build();
+
+        const randomFunEvent = builder
+            .id('random_fun_stuff')
+            .name('Random Fun Stuff')
+            .priority(10) // Low priority
+            .onCustom((context) => {
+                // Triggers if the page has been open for 4 seconds
+                return Date.now() - context.dateTime.timestamp > 4000;
+            })
+            .addImage('joke1', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Why don\'t scientists trust atoms? Because they make up everything!', { position: 'center', size: 'medium', weight: 10 })
+            .addImage('fact1', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'A single cloud can weigh more than 1 million pounds.', { position: 'center', size: 'medium', weight: 5 })
+            .addImage('tip1', 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', 'Drink water! Staying hydrated is good for you.', { position: 'center', size: 'medium', weight: 2 })
+            .build();
+
+        return [morningEvent, christmasEvent, weekendEvent, lateNightEvent, inactivityEvent, workHoursEvent, randomFunEvent];
+    }
+
+    // ====== MAIN APPLICATION ======
+    class GreetingApp {
+        constructor() {
+            this.eventSystem = new EventSystem();
+            this.inactivityTimer = null;
+        }
+
+        init() {
+            // Register predefined events
+            const predefinedEvents = createPredefinedEvents(this.eventSystem);
+            this.eventSystem.registerEvents(predefinedEvents);
+
+            // Initial trigger
+            this.triggerEvents();
+
+            // Set up inactivity tracking
+            this.startInactivityTracking();
+
+            console.log('🎯 Greeting App initialized with', this.eventSystem.events.size, 'events');
+        }
+
+        triggerEvents() {
+            const triggered = this.eventSystem.triggerEvent();
+            
+            // If no high-priority event triggered, maybe show a fallback
+            if (!triggered && Math.random() < CONFIG.FALLBACK_PROBABILITY) {
+                this.eventSystem.triggerEvent(); // Try again for lower priority events
+            }
+        }
+
+        startInactivityTracking() {
+            const resetTimer = () => {
+                this.eventSystem.updateUserActivity();
+                clearTimeout(this.inactivityTimer);
+                this.inactivityTimer = setTimeout(() => {
+                    this.triggerEvents();
+                }, CONFIG.INACTIVITY_THRESHOLD);
+            };
+
+            resetTimer();
+            document.addEventListener('mousemove', resetTimer);
+            document.addEventListener('keydown', resetTimer);
+            document.addEventListener('click', resetTimer);
+            document.addEventListener('scroll', resetTimer);
+        }
+
+        // Public API
+        createEvent() {
+            return this.eventSystem.createEvent();
+        }
+
+        registerEvent(event) {
+            this.eventSystem.registerEvent(event);
+        }
+
+        getEventSystem() {
+            return this.eventSystem;
+        }
+    }
+
+    // ====== INITIALIZATION ======
+    let greetingApp;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        greetingApp = new GreetingApp();
+        greetingApp.init();
+    });
+
+    // Global access for debugging and external event registration
+    window.greetingApp = greetingApp;
+    window.EventBuilder = EventBuilder;
+</script>

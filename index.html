@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minimal Search</title>   
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Casual Font CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+    <!-- Schoolbell Font CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons CDN for filled icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
+    <!-- Tailwind CSS CDN with custom config to match existing colors -->
+      <link href="/src/global.css" rel="stylesheet">
+
+  
+    <style type="text/css">
+        /* CSS Variables for theming */
+        :root {
+            --color-primary-bg: 240 240 240;
+            --color-secondary-bg: 224 224 224;
+            --color-border-color: 187 187 187;
+            --color-text-primary: 26 26 26;
+            --color-text-secondary: 68 68 68;
+            --color-text-placeholder: 119 119 119;
+            --color-accent: 136 136 136;
+            --color-radio-selected-bg: 221 221 221;
+            --color-radio-selected-dot: 26 26 26;
+        }
+
+        html.dark {
+            --color-primary-bg: 26 26 26;
+            --color-secondary-bg: 42 42 42;
+            --color-border-color: 68 68 68;
+            --color-text-primary: 240 240 240;
+            --color-text-secondary: 204 204 204;
+            --color-text-placeholder: 136 136 136;
+            --color-accent: 255 255 255;
+            --color-radio-selected-bg: 85 85 85;
+            --color-radio-selected-dot: 255 255 255;
+        }
+
+        /* Global transition for all elements for smoother UI */
+        * {
+            transition-property: all;
+            transition-timing-function: ease-out;
+            transition-duration: 0.2s;
+        }
+
+        /* Body font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Specific styles not easily replaced by Tailwind without breaking design */
+        /* Active line indicator - now a single element */
+        #active-line {
+            position: absolute;
+            bottom: 0;
+            height: 2px;
+            border-radius: 1px;
+            transition: left 0.3s ease-out, width 0.3s ease-out; /* Sliding animation */
+            z-index: 10; /* Ensure it's on top */
+        }
+
+        /* Loading indicator animation */
+        #loading-indicator {
+            animation: slide-fade 1s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+        }
+
+        /* Keyframes for slide-fade animation */
+        @keyframes slide-fade {
+            0% { opacity: 0; transform: translateX(-50px); }
+            25% { opacity: 1; transform: translateX(0); }
+            75% { opacity: 1; transform: translateX(50px); }
+            100% { opacity: 0; transform: translateX(100px); }
+        }
+
+        /* Hide the actual radio button visually */
+        .custom-radio {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        /* Webkit browsers (Chrome, Safari) scrollbar styles */
+        .history-list::-webkit-scrollbar {
+            width: 6px; /* width of the scrollbar */
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: transparent; /* color of the tracking area */
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background-color: rgb(var(--color-border-color)); /* Light mode thumb color */
+            border-radius: 10px; /* roundness of the scroll thumb */
+            border: 1px solid rgb(var(--color-secondary-bg)); /* Light mode border color */
+        }
+
+        /* Dark mode scrollbar thumb */
+        html.dark .history-list::-webkit-scrollbar-thumb {
+            background-color: rgb(var(--color-border-color)); /* Dark mode thumb color */
+            border: 1px solid rgb(var(--color-secondary-bg)); /* Dark mode border color */
+        }
+
+        /* Firefox scrollbar styles */
+        .history-list {
+            scrollbar-width: thin;
+            scrollbar-color: rgb(var(--color-border-color)) transparent; /* Light mode thumb and track color */
+        }
+
+        /* Dark mode Firefox scrollbar */
+        html.dark .history-list {
+            scrollbar-color: rgb(var(--color-border-color)) transparent; /* Dark mode thumb and track color */
+        }
+
+        /* More Menu specific styles for visibility transition */
+        #more-menu {
+            display: flex; /* Keep flex display always */
+            visibility: hidden; /* Start hidden for transitions */
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none; /* Prevent clicks when hidden */
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out, visibility 0.2s ease-out;
+        }
+
+        #more-menu.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto; /* Allow clicks when shown */
+        }
+
+        /* Goal Context Menu specific styles for visibility transition */
+        #goal-context-menu {
+            display: flex; /* Keep flex display always */
+            visibility: hidden; /* Start hidden for transitions */
+            opacity: 0;
+            pointer-events: none; /* Prevent clicks when hidden */
+            transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+        }
+
+        #goal-context-menu.show {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Edit Goal Section (Modal Overlay) specific styles for visibility transition */
+        #edit-goal-section {
+            transition: opacity 0.15s ease-out; /* Fast fade for overlay */
+        }
+        #edit-goal-section.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        /* Modal inside edit goal section for slide effect */
+        #edit-goal-section .edit-goal-modal {
+            transform: translateY(-100%); /* Start completely off-screen top */
+            transition: transform 0.15s ease-out; /* Fast slide */
+        }
+        #edit-goal-section.show .edit-goal-modal {
+            transform: translateY(0); /* Slide into view */
+        }
+
+
+        /* Search History Section visibility and transition */
+        #search-history-section {
+            transition: max-height 0.15s ease-out, opacity 0.15s ease-out; /* Fast expand/collapse and fade */
+        }
+        #search-history-section.show {
+            max-height: 500px; /* Sufficient height to show content */
+            opacity: 1;
+        }
+
+        /* When engine-selection is at the top, ensure flex-item behavior */
+        #top-elements.with-engine #time-info {
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+        #top-elements.with-engine #engine-selection {
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+
+        /* Custom font for image text */
+        .font-casual-style {
+            font-family: 'Schoolbell', cursive;
+        }
+    </style>
+    <!-- Inline script to prevent theme flicker -->
+    <script>
+        (function() {
+            const html = document.documentElement;
+            const themePreference = localStorage.getItem('themePreference');
+            if (themePreference === 'dark') {
+                html.classList.add('dark');
+            } else {
+                // Default to light mode if no preference or preference is 'light'
+                html.classList.remove('dark');
+            }
+
+            // Handle initial goalsEnabled state and engine-selection placement
+            const goalsEnabledInitial = localStorage.getItem('goalsEnabled') === 'true';
+            // These elements might not be fully parsed yet, so we need to wait for them.
+            // This part will be handled in DOMContentLoaded to ensure elements exist.
+            // The flicker fix for theme is handled above.
+        })();
+    </script>
+</head>
+<body class="bg-[rgb(var(--color-primary-bg))] text-[rgb(var(--color-text-primary))] flex items-center justify-center min-h-screen p-4 antialiased
+             dark:bg-[rgb(var(--color-primary-bg))] dark:text-[rgb(var(--color-text-primary))]">
+    <!-- Blank screen overlay for transition -->
+    <div id="blank-screen-overlay" class="fixed inset-0 opacity-0 pointer-events-none z-[9999] transition-opacity duration-50 flex items-center justify-center
+             bg-[rgb(var(--color-primary-bg))] dark:bg-[rgb(var(--color-primary-bg))]">
+        <div id="loading-indicator" class="w-[50px] h-1 bg-[rgb(var(--color-accent))] rounded-sm opacity-0 dark:bg-[rgb(var(--color-accent))]"></div>
+    </div>
+
+    <!-- Goal Context Menu (Right-click) -->
+    <div id="goal-context-menu" class="context-menu absolute bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
+             dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
+        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="completed">Completed</div>
+        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="delete">Delete</div>
+    </div>
+
+    <div class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative">
+        <!-- New Edit Goal Section - For single goal edit, appears from top -->
+        <div id="edit-goal-section" class="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none">
+            <div class="edit-goal-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-[rgb(var(--color-accent))] focus-within:shadow-md
+                        dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
+                <label for="edit-goal-input" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
+                                            dark:text-[rgb(var(--color-text-secondary))]">
+                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5 text-[rgb(var(--color-text-primary))] text-base w-full box-border focus:outline-none focus:border-[rgb(var(--color-accent))]
+                                            dark:bg-[rgb(var(--color-primary-bg))] dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))] dark:focus:border-[rgb(var(--color-accent))]">
+                </label>
+                <div class="button-group flex flex-row gap-1 items-center ml-auto">
+                    <button id="edit-goal-action-button" class="bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-[rgb(var(--color-text-secondary))]
+                                            dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))] dark:hover:bg-[rgb(var(--color-text-secondary))]"></button> <!-- This will be Save or Completed -->
+                    <button id="edit-goal-delete-button" class="delete-button bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
+                                            dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top elements: Time Info and dynamically moved Engine Selection -->
+        <div id="top-elements" class="flex flex-col gap-4 items-start w-full">
+
+
+            <div id="time-info" class="time-info flex items-center gap-2 text-[rgb(var(--color-text-secondary))] text-sm font-medium whitespace-nowrap
+                                dark:text-[rgb(var(--color-text-secondary))]">
+                <!-- Phosphor Icon element -->
+                <i id="time-icon" class="ph w-6 h-6 flex items-center justify-center rounded-full bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))]
+                                   dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))]"></i>
+                <span id="current-time" class="current-time text-xs font-semibold text-[rgb(var(--color-text-primary))]
+                                       dark:text-[rgb(var(--color-text-primary))]"></span>
+            </div>
+
+
+
+            <!-- The engine-selection element will be dynamically moved here or in main-content-bottom -->
+        </div>
+
+        <div class="search-area-wrapper flex flex-col bg-[rgb(var(--color-secondary-bg))] border-2 border-[rgb(var(--color-border-color))] rounded-sm p-1 relative focus-within:border-[rgb(var(--color-accent))]
+                    dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
+            <form id="search-form" class="search-form w-full flex-grow mt-0">
+                <div class="input-wrapper relative flex items-center w-full">
+                    <input
+                        type="text"
+                        id="search-input"
+                        name="query"
+                        class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-[rgb(var(--color-text-primary))] text-base md:text-lg leading-relaxed placeholder:text-[rgb(var(--color-text-placeholder))] focus:outline-none
+                                dark:text-[rgb(var(--color-text-primary))] dark:placeholder:text-[rgb(var(--color-text-placeholder))]"
+                        placeholder="Search the web..."
+                        autocomplete="off"
+                    />
+                    <button type="submit" class="search-button absolute right-0 mr-2 text-[rgb(var(--color-text-secondary))] cursor-pointer bg-none border-none p-0 flex items-center justify-center hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]" aria-label="Search">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon w-5 h-5">
+                            <path d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.5 6.5a7.5 7.5 0 0 0 10.2 10.2Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Main content bottom: Engine Selection (if goals hidden), Goals, Daily Progress -->
+        <div id="main-content-bottom" class="flex flex-col sm:flex-row gap-4 w-full justify-between items-center">
+            <div id="engine-selection" class="engine-selection flex flex-row flex-wrap items-start gap-2 sm:gap-3 pl-1 relative">
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to Google search (G)">
+                    <input type="radio" name="engine" value="google" class="custom-radio" checked>
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">Google</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to Perplexity search (P)">
+                    <input type="radio" name="engine" value="perplexity" class="custom-radio">
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">Perplexity</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to YouTube search (Y)">
+                    <input type="radio" name="engine" value="youtube" class="custom-radio">
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">YouTube</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="Switch to ChatGPT search (C)">
+                    <input type="radio" name="engine" value="chatgpt" class="custom-radio">
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">ChatGPT</span>
+                </label>
+                <label class="engine-label flex flex-col items-center gap-1 cursor-pointer relative py-0.5 min-w-[3rem] sm:min-w-[4rem]" title="View search history (H)">
+                    <input type="radio" name="engine" value="history" class="custom-radio">
+                    <span class="radio-text font-medium text-[rgb(var(--color-text-secondary))] whitespace-nowrap uppercase text-xs px-0.5 hover:text-[rgb(var(--color-text-primary))]
+                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]">History</span>
+                </label>
+                <div id="active-line"></div> <!-- Single active line for sliding effect -->
+            </div>
+
+            <div class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start" id="goals-container">
+                <!-- Goals or "Click here to set up" message will be rendered here -->
+            </div>
+            <div class="daily-progress-container flex flex-col gap-2 w-full pl-1 sm:w-auto sm:pl-0">
+                <div class="progress-label text-xs font-medium text-[rgb(var(--color-text-secondary))] uppercase whitespace-nowrap
+                            dark:text-[rgb(var(--color-text-secondary))]">DAY REMAINing: <span id="day-remaining-percent"></span>%</div>
+                <div class="progress-bar-wrapper bg-[rgb(var(--color-border-color))] rounded-sm h-2 w-full overflow-hidden
+                            dark:bg-[rgb(var(--color-border-color))]">
+                    <div id="day-progress-bar" class="progress-bar bg-[rgb(var(--color-accent))] h-full w-0 rounded-sm
+                                dark:bg-[rgb(var(--color-accent))]"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Search History Section -->
+        <div id="search-history-section" class="history-section flex flex-col gap-3 bg-transparent border-t-2 border-[rgb(var(--color-accent))] rounded-none pt-4 pl-1 pr-1 pb-2 overflow-hidden max-h-0 opacity-0 transition-all duration-300 box-border mt-4
+                    dark:border-[rgb(var(--color-accent))]">
+            <div class="history-header flex justify-between items-center pb-2 border-b border-[rgb(var(--color-border-color))] mb-2
+                        dark:border-[rgb(var(--color-border-color))]">
+                <span class="history-title text-sm font-semibold text-[rgb(var(--color-text-primary))] uppercase
+                            dark:text-[rgb(var(--color-text-primary))]">Search History</span>
+                <button id="clear-history-button" class="clear-history-button bg-none border border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] px-3 py-1 rounded-sm cursor-pointer text-xs transition-all duration-200 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-text-primary))]
+                            dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-secondary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-text-primary))]">Clear All</button>
+            </div>
+            <ul id="history-list" class="history-list list-none p-0 m-0 max-h-[calc(20rem-3rem)] overflow-y-auto">
+                <!-- History items will be dynamically added here by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- More Button and Menu -->
+    <button id="more-button" class="fixed bottom-4 right-4 bg-[rgb(var(--color-secondary-bg))] text-[rgb(var(--color-text-primary))] border border-[rgb(var(--color-border-color))] px-4 py-2 rounded-md cursor-pointer text-sm font-medium z-[10001] transition-all duration-200 whitespace-nowrap hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
+                dark:bg-[rgb(var(--color-secondary-bg))] dark:text-[rgb(var(--color-text-primary))] dark:border-[rgb(var(--color-border-color))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]">More</button>
+    <div id="more-menu" class="fixed bottom-[calc(1rem+2.5rem+0.5rem)] right-4 bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-md invisible flex-col p-2 gap-2 z-[10000] shadow-lg opacity-0 translate-y-2 transition-all duration-200
+                dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
+        <button id="theme-toggle" class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"></button>
+        <button id="tasks-toggle" class="menu-item bg-transparent text-[rgb(var(--color-text-primary))] border border-transparent px-3 py-1.5 rounded-sm cursor-pointer text-sm font-medium text-left whitespace-nowrap transition-all duration-150 hover:bg-[rgb(var(--color-border-color))] hover:text-[rgb(var(--color-accent))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))] dark:hover:text-[rgb(var(--color-accent))]"></button>
+    </div>
+
+    <script>
+        // --- Function Definitions (All moved to top for scope) ---
+
+        // CDN-hosted Phosphor Icons (filled variant) - Defined early as it's a constant
+        const timeOfDayIconClasses = {
+            morning: 'ph-fill ph-sunrise',
+            m_day: 'ph-fill ph-sun',
+            evening: 'ph-fill ph-sunset',
+            night: 'ph-fill ph-moon',
+        };
+
+        const searchEnginePlaceholders = {
+            google: "Search Google...",
+            perplexity: "Search Perplexity...",
+            youtube: "Search YouTube...",
+            chatgpt: "Search ChatGPT...",
+            history: "View search history or search Google..." // Special case for history
+        };
+
+        function updateTimeOfDayInfo() {
+            const now = new Date();
+            const hour = now.getHours();
+            let iconClass;
+            let timeOfDayText;
+
+            if (hour >= 5 && hour < 12) {
+                iconClass = timeOfDayIconClasses.morning;
+                timeOfDayText = 'Morning';
+            } else if (hour >= 12 && hour < 18) {
+                iconClass = timeOfDayIconClasses.m_day;
+                timeOfDayText = 'Day';
+            } else if (hour >= 18 && hour < 21) {
+                iconClass = timeOfDayIconClasses.evening;
+                timeOfDayText = 'Evening';
+            } else {
+                iconClass = timeOfDayIconClasses.night;
+                timeOfDayText = 'Night';
+            }
+
+            // Options for date and time formatting
+            const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+            const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+
+            const formattedDate = now.toLocaleDateString('en-US', dateOptions);
+            const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
+
+            if (timeIconElement && currentTimeSpan) {
+                timeIconElement.className = 'ph ' + iconClass;
+                // Combine date, time, and time of day text
+                currentTimeSpan.textContent = `${formattedDate}, ${formattedTime} (${timeOfDayText})`;
+            }
+        }
+
+        function updateProgressBar(type, percent) {
+            let progressBar;
+            let percentText;
+
+            if (type === 'day') {
+                progressBar = document.getElementById('day-progress-bar');
+                percentText = document.getElementById('day-remaining-percent');
+            }
+
+            if (progressBar && percentText) {
+                const clampedPercent = Math.max(0, Math.min(100, percent));
+                progressBar.style.width = `${clampedPercent}%`;
+                percentText.textContent = clampedPercent.toFixed(1); // Display with one decimal place
+            }
+        }
+
+        function updateDayProgress() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const currentDay = now.getDate();
+
+            // Use stored wake/sleep times or fall back to defaults
+            const wakeTime = localStorage.getItem('wakeTime') || '06:00';
+            const sleepTime = localStorage.getItem('sleepTime') || '22:00';
+
+            const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
+            const [sleepHour, sleepMinute] = sleepTime.split(':').map(Number);
+
+            const startOfActiveDay = new Date(currentYear, currentMonth, currentDay, wakeHour, wakeMinute, 0);
+            const endOfActiveDay = new Date(currentYear, currentMonth, currentDay, sleepHour, sleepMinute, 0);
+
+            // Handle cases where sleep time might be on the next day (e.g., wake 6 AM, sleep 2 AM next day)
+            if (sleepHour < wakeHour) {
+                endOfActiveDay.setDate(endOfActiveDay.getDate() + 1);
+            }
+
+            if (now < startOfActiveDay) {
+                updateProgressBar('day', 100); // Before active day, show 100% remaining
+                return;
+            }
+
+            if (now > endOfActiveDay) {
+                updateProgressBar('day', 0); // After active day, show 0% remaining
+                return;
+            }
+
+            const totalMillisecondsInActiveDay = endOfActiveDay.getTime() - startOfActiveDay.getTime();
+            const elapsedMillisecondsInActiveDay = now.getTime() - startOfActiveDay.getTime();
+
+            const elapsedPercent = (elapsedMillisecondsInActiveDay / totalMillisecondsInActiveDay) * 100;
+            const remainingPercent = 100 - elapsedPercent;
+
+            updateProgressBar('day', remainingPercent);
+        }
+
+        function formatTimeAgo(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            if (days < 30) return `${days}d ago`;
+            const months = Math.floor(days / 30.44);
+            if (months < 12) return `${months}mo ago`;
+            const years = Math.floor(months / 12);
+            return `${years}y ago`;
+        }
+
+        function getGoals() {
+            try {
+                const goalsString = localStorage.getItem('userGoals');
+                return goalsString ? JSON.parse(goalsString) : [];
+            } catch (e) {
+                console.error("Error parsing goals from localStorage:", e);
+                return [];
+            }
+        }
+
+        function saveGoals(goalsArray) {
+            try {
+                localStorage.setItem('userGoals', JSON.stringify(goalsArray));
+            } catch (e) {
+                console.error("Error saving goals to localStorage:", e);
+            }
+        }
+
+        function renderGoals() {
+            const userGoals = getGoals(); // Get only user-defined goals
+
+            goalsContainer.innerHTML = ''; // Clear existing goals/button
+
+            const maxVisibleSlots = 2; // Always aim for 2 slots
+
+            for (let i = 0; i < maxVisibleSlots; i++) {
+                if (userGoals[i]) {
+                    // Render existing user goal
+                    const goalItem = document.createElement('div');
+                    goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] '; /* Apply unified styling */
+                    goalItem.dataset.index = i;
+                    goalItem.innerHTML = `
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'text-[rgb(var(--color-text-secondary))]"></i>
+                        <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow ' +
+                                        'text-[rgb(var(--color-text-primary))]">${userGoals[i].text}</span>
+                        <span class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 ' +
+                                        'text-[rgb(var(--color-text-secondary))]">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
+                    `;
+                    goalItem.addEventListener('click', (e) => {
+                        showEditGoalPopup(e, i, false);
+                    });
+                    goalItem.addEventListener('contextmenu', (e) => showGoalContextMenu(e, i, false));
+                    goalsContainer.appendChild(goalItem);
+                } else {
+                    // Render "Click here to add goal" card
+                    const setupPrompt = document.createElement('div');
+                    setupPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
+                                            'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] '; /* Apply unified styling */
+                    setupPrompt.innerHTML = `
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'text-[rgb(var(--color-text-secondary))]"></i>
+                        <span>Click here to add your next goal</span>
+                    `;
+                    setupPrompt.addEventListener('click', (e) => {
+                        showEditGoalPopup(e, -1, true); // isNewGoal true for new goal
+                    });
+                    goalsContainer.appendChild(setupPrompt);
+                }
+            }
+        }
+
+        let currentEditGoalIndex = -1;
+        let isEditingNewGoal = false; // Renamed from isEditingDefaultGoal for clarity
+        let originalGoalText = '';
+
+        function showEditGoalPopup(e, index, isNewGoal = false) { // Renamed isDefault to isNewGoal
+            e.stopPropagation();
+            currentEditGoalIndex = index;
+            isEditingNewGoal = isNewGoal;
+
+            let goalText = '';
+            if (!isNewGoal) { // If it's an existing goal
+                const currentGoals = getGoals();
+                const goalToEdit = currentGoals[index];
+                goalText = goalToEdit ? goalToEdit.text : '';
+            }
+            // If isNewGoal is true (clicked "add goal" prompt), goalText remains empty, which is correct for new goal.
+
+            originalGoalText = goalText;
+            editGoalInput.value = goalText;
+            editGoalSection.classList.add('show');
+            editGoalInput.focus();
+
+            updateActionButtonText();
+        }
+
+        function hideEditGoalPopup() {
+            editGoalSection.classList.remove('show');
+            currentEditGoalIndex = -1;
+            isEditingNewGoal = false;
+            originalGoalText = '';
+        }
+
+        function updateActionButtonText() {
+            if (editGoalInput.value.trim() !== originalGoalText.trim()) {
+                editGoalActionButton.textContent = "Save";
+            } else {
+                editGoalActionButton.textContent = "Completed";
+            }
+        }
+
+        function handleEditGoalAction() {
+            if (editGoalActionButton.textContent === "Save") {
+                handleSaveGoal();
+            } else if (editGoalActionButton.textContent === "Completed") {
+                handleCompleteGoal();
+            }
+        }
+
+        function handleSaveGoal() {
+            const newText = editGoalInput.value.trim();
+            if (!newText) {
+                console.warn("Goal title cannot be empty.");
+                return;
+            }
+
+            let userGoals = getGoals(); // Get all current goals
+
+            if (isEditingNewGoal) {
+                // If it was a new goal being added
+                userGoals.push({ text: newText, creationTime: new Date().toISOString() });
+            } else {
+                // If an existing user goal was edited, update it
+                if (currentEditGoalIndex !== -1 && currentEditGoalIndex < userGoals.length) {
+                    userGoals[currentEditGoalIndex].text = newText;
+                }
+            }
+            saveGoals(userGoals);
+            renderGoals();
+            hideEditGoalPopup();
+        }
+
+        function handleCompleteGoal() {
+            if (isEditingNewGoal) { // If it's the "add goal" prompt, just close
+                hideEditGoalPopup();
+                return;
+            }
+
+            let userGoals = getGoals();
+            if (currentEditGoalIndex !== -1 && currentEditGoalIndex < userGoals.length) {
+                userGoals.splice(currentEditGoalIndex, 1);
+                saveGoals(userGoals);
+                renderGoals();
+            }
+            hideEditGoalPopup();
+        }
+
+        function handleDeleteGoal() {
+            if (isEditingNewGoal) { // If it's the "add goal" prompt, just close
+                hideEditGoalPopup();
+                return;
+            }
+
+            let userGoals = getGoals();
+            if (currentEditGoalIndex !== -1 && currentEditGoalIndex < userGoals.length) {
+                userGoals.splice(currentEditGoalIndex, 1);
+                saveGoals(userGoals);
+                renderGoals();
+            }
+            hideGoalContextMenu(); // Ensure context menu is hidden
+            hideEditGoalPopup(); // Ensure edit popup is hidden
+        }
+
+
+        function showGoalContextMenu(e, index, isNewGoal = false) { // Renamed isDefault to isNewGoal
+            e.preventDefault();
+            if (isNewGoal) return; // Right-click does nothing on the "add goal" prompt
+
+            const currentGoals = getGoals();
+            if (index < 0 || index >= currentGoals.length) return;
+
+            goalContextMenu.classList.add('show');
+            goalContextMenu.style.left = `${e.clientX}px`;
+            goalContextMenu.style.top = `${e.clientY}px`;
+            goalContextMenu.dataset.goalIndex = index;
+            // Set visibility immediately for context menu
+            goalContextMenu.style.visibility = 'visible';
+            goalContextMenu.style.pointerEvents = 'auto';
+        }
+
+        function hideGoalContextMenu() {
+            goalContextMenu.classList.remove('show');
+            goalContextMenu.removeAttribute('data-goal-index');
+            // Use a timeout to hide visibility after transition completes
+            setTimeout(() => {
+                goalContextMenu.style.visibility = 'hidden';
+                goalContextMenu.style.pointerEvents = 'none';
+            }, 200); // Match transition-duration of opacity/transform
+        }
+
+        function handleContextMenuAction(action) {
+            const index = parseInt(goalContextMenu.dataset.goalIndex, 10);
+            if (isNaN(index)) return;
+
+            let userGoals = getGoals();
+            if (index >= 0 && index < userGoals.length) {
+                if (action === 'completed' || action === 'delete') {
+                    userGoals.splice(index, 1);
+                    saveGoals(userGoals);
+                    renderGoals();
+                }
+            }
+            hideGoalContextMenu();
+        }
+
+        function getSearchHistory() {
+            try {
+                const history = localStorage.getItem('searchHistory');
+                return history ? JSON.parse(history) : [];
+            }
+            catch (e) {
+                console.error("Error parsing search history from localStorage:", e);
+                return [];
+            }
+        }
+
+        function saveSearchHistory(history) {
+            try {
+                localStorage.setItem('searchHistory', JSON.stringify(history));
+            } catch (e) {
+                console.error("Error saving search history to localStorage:", e);
+            }
+        }
+
+        function addSearchToHistory(query, engine) {
+            const history = getSearchHistory();
+            const now = new Date();
+            const timestamp = now.toISOString();
+            history.unshift({ query, engine, timestamp });
+            if (history.length > 20) {
+                history.pop();
+            }
+            saveSearchHistory(history);
+            renderSearchHistory();
+        }
+
+        function renderSearchHistory() {
+            const history = getSearchHistory();
+            historyList.innerHTML = '';
+
+            if (history.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'No search history yet.';
+                li.classList.add('text-[rgb(var(--color-text-placeholder))]', 'text-center', 'p-4');
+                historyList.appendChild(li);
+                return;
+            }
+
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'history-item flex items-center py-1.5 border-b border-dashed cursor-pointer gap-2 hover:bg-[rgb(var(--color-primary-bg))] ' +
+                               'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] ';
+
+                const engineTag = document.createElement('span');
+                engineTag.className = 'history-engine-tag text-[0.65rem] px-1.5 py-0.5 rounded-sm uppercase flex-shrink-0 ' +
+                                      'bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] ';
+                engineTag.textContent = item.engine;
+
+                const querySpan = document.createElement('span');
+                querySpan.className = 'history-query flex-grow whitespace-nowrap overflow-hidden text-ellipsis text-sm sm:text-base';
+                querySpan.textContent = item.query;
+
+                const timestampSpan = document.createElement('span');
+                timestampSpan.className = 'history-timestamp text-[0.7rem] ml-auto flex-shrink-0 ' +
+                                          'text-[rgb(var(--color-text-secondary))]';
+                timestampSpan.textContent = formatTimeAgo(item.timestamp);
+
+                const openLinkButton = document.createElement('button');
+                openLinkButton.className = 'open-link-button bg-none border-none cursor-pointer p-0 flex items-center justify-center ml-2 flex-shrink-0 hover:text-[rgb(var(--color-text-primary))] ' +
+                                           'text-[rgb(var(--color-text-secondary))]';
+                openLinkButton.setAttribute('title', `Open in ${item.engine}`);
+                openLinkButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="open-link-icon">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/>
+                    </svg>
+                `;
+                openLinkButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    let url = '';
+                    switch (item.engine) {
+                        case 'google':
+                            url = `https://www.google.com/search?q=${encodeURIComponent(item.query)}`;
+                            break;
+                        case 'perplexity':
+                            url = `https://www.perplexity.ai/search?q=${encodeURIComponent(item.query)}`;
+                            break;
+                        case 'youtube':
+                            url = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`;
+                            break;
+                        case 'chatgpt':
+                            url = `https://chat.openai.com/chat?q=${encodeURIComponent(item.query)}`;
+                            break;
+                        default:
+                            url = `https://www.google.com/search?q=${encodeURIComponent(item.query)}`;
+                            break;
+                    }
+                    window.open(url, '_blank');
+                });
+
+                li.appendChild(engineTag);
+                li.appendChild(querySpan);
+                li.appendChild(timestampSpan);
+                li.appendChild(openLinkButton);
+
+                historyList.appendChild(li);
+            });
+        }
+
+        function updateGoalTimeSince() {
+            // Only render goals if they are enabled
+            if (goalsEnabled) {
+                renderGoals();
+            }
+        }
+
+        function updateActiveLinePosition() {
+            const currentRadio = document.querySelector('input[name="engine"]:checked');
+            const activeLineElement = document.getElementById('active-line');
+            if (currentRadio && activeLineElement) {
+                const parentLabel = currentRadio.closest('.engine-label');
+                if (parentLabel) {
+                    // Get the position and size relative to the parent .engine-selection
+                    const parentRect = engineSelection.getBoundingClientRect();
+                    const labelRect = parentLabel.getBoundingClientRect();
+
+                    const newLeft = `${labelRect.left - parentRect.left}px`;
+                    const newWidth = `${labelRect.width}px`;
+
+                    activeLineElement.style.left = newLeft;
+                    activeLineElement.style.width = newWidth;
+                }
+            }
+        }
+
+        function updateActiveLineAndSections() {
+            let historySelected = false;
+            radioButtons.forEach(radio => {
+                if (radio.checked) {
+                    // Update search input placeholder based on selected engine
+                    searchInput.placeholder = searchEnginePlaceholders[radio.value];
+                    if (radio.value === 'history') {
+                        historySelected = true;
+                    }
+                }
+            });
+
+            // Defer updateActiveLinePosition to ensure layout is stable
+            setTimeout(updateActiveLinePosition, 0); 
+
+            if (searchHistorySection) {
+                if (historySelected) {
+                    searchHistorySection.classList.add('show');
+                    renderSearchHistory();
+                } else {
+                    searchHistorySection.classList.remove('show');
+                }
+            }
+        }
+
+        // --- Element References ---
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+        const radioButtons = document.querySelectorAll('input[name="engine"]');
+        const timeIconElement = document.getElementById('time-icon');
+        const currentTimeSpan = document.getElementById('current-time');
+        const blankScreenOverlay = document.getElementById('blank-screen-overlay');
+        const engineSelection = document.getElementById('engine-selection'); // Reference to the engine selection container
+
+        const goalsContainer = document.getElementById('goals-container');
+        const goalContextMenu = document.getElementById('goal-context-menu');
+
+        const editGoalSection = document.getElementById('edit-goal-section');
+        const editGoalInput = document.getElementById('edit-goal-input');
+        const editGoalActionButton = document.getElementById('edit-goal-action-button');
+        const editGoalDeleteButton = document.getElementById('edit-goal-delete-button');
+
+        const searchHistorySection = document.getElementById('search-history-section');
+        const historyList = document.getElementById('history-list');
+        const clearHistoryButton = document.getElementById('clear-history-button');
+
+        // Elements for More menu and theme toggle
+        const moreButton = document.getElementById('more-button');
+        const moreMenu = document.getElementById('more-menu');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const tasksToggleButton = document.getElementById('tasks-toggle'); // New tasks toggle button
+
+        const topElementsContainer = document.getElementById('top-elements');
+        const mainContentBottomContainer = document.getElementById('main-content-bottom');
+
+        // Global flag to track if Ctrl/Cmd is pressed
+        let isCtrlPressed = false;
+        let goalsEnabled = false; // State variable for goals visibility
+
+        // Image related elements and variables
+        let inactivityTimer; // Timer for inactivity detection
+        const INACTIVITY_THRESHOLD = 20000; // 20 seconds in milliseconds
+        let currentImageElement = null; // To keep track of the currently displayed image container
+
+        // Array of images with their positions, sizes, and associated text (for inactivity)
+        const inactivityImages = [
+            { src: 'https://i.pinimg.com/736x/20/6c/1d/206c1d2674e08f28e84cf781290ccf8c.jpg', position: 'bottom-left', size: 'medium', text: 'You sure are More Lazy Then i am' },
+            { src: 'https://i.pinimg.com/736x/1f/50/27/1f50270d8661c9ca8d714ef9a10ccb97.jpg', position: 'top-left', size: 'small', text: 'Bro are Sure You are Awake Now!' },
+            { src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'bottom-right', size: 'large', text: 'Oh My God , what should i do now ' },
+        ];
+
+        // New JSON variable for daily greetings (time-based, day-of-week)
+        const dailyGreetingImagesJson = [
+            { id: 'morning_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Good Morning! Make it a productive day.' },
+            { id: 'afternoon_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Good Afternoon! Keep up the great work.' },
+            { id: 'evening_greeting', src: 'https://i.pinimg.com/originals/a2/51/f1/a251f1e49fd85745edccac5b18887269.jpg', position: 'bottom-right', size: 'large', text: 'Good Evening! Time to wind down.' },
+            { id: 'night_greeting', src: 'https://pm1.aminoapps.com/7208/7d3d3fe9806fb2cc89bf764cb8c31236c74c831cr1-604-568v2_hq.jpg', position: 'bottom-left', size: 'medium', text: 'Good Night! Sweet dreams.' },
+            { id: 'sunday_greeting', src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg', position: 'center', size: 'medium', text: 'Happy Sunday! Enjoy your day off.' },
+        ];
+
+        // New JSON variable for holiday greetings (date-based)
+        const holidayGreetingImagesJson = [
+            { id: 'christmas_greeting', src: 'https://placehold.co/300x200/e83e8c/FFFFFF?text=Christmas', position: 'center', size: 'large', text: 'Merry Christmas! Hope you have a wonderful holiday!' },
+            { id: 'newyear_greeting', src: 'https://placehold.co/300x200/6f42c1/FFFFFF?text=NewYear', position: 'center', size: 'large', text: 'Happy New Year! Wishing you a fantastic year ahead!' },
+            { id: 'halloween_greeting', src: 'https://placehold.co/300x200/fd7e14/FFFFFF?text=Halloween', position: 'center', size: 'large', text: 'Happy Halloween! Have a spooky fun time!' },
+            { id: 'independence_day_greeting', src: 'https://placehold.co/300x200/20c997/FFFFFF?text=Independence', position: 'center', size: 'large', text: 'Happy Independence Day! Celebrate freedom!' },
+        ];
+
+
+        // Mapping for size to Tailwind max-height classes
+        const imageSizeClasses = {
+            'small': 'max-h-[20vh]',
+            'medium': 'max-h-[25vh]',
+            'large': 'max-h-[40vh]'
+        };
+
+        // Debounce function for scroll events (kept for general utility if needed later, but not used by scrollImagesJson anymore)
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        // Function to apply theme
+        function applyTheme(theme) {
+            const html = document.documentElement; // Target the html element for dark mode class
+            const activeLine = document.getElementById('active-line'); // Get the active line element
+
+            if (theme === 'light') {
+                html.classList.remove('dark');
+                themeToggleButton.textContent = 'Dark Mode';
+                // Set active line color for light mode explicitly using CSS variable
+                if (activeLine) activeLine.style.backgroundColor = 'rgb(var(--color-text-primary))'; 
+            } else { // 'dark' theme
+                html.classList.add('dark');
+                themeToggleButton.textContent = 'Light Mode';
+                // Set active line color for dark mode explicitly using CSS variable
+                if (activeLine) activeLine.style.backgroundColor = 'rgb(var(--color-accent))'; 
+            }
+            localStorage.setItem('themePreference', theme);
+        }
+
+        // Function to toggle goals visibility and update layout
+        function toggleGoals() {
+            goalsEnabled = !goalsEnabled;
+            localStorage.setItem('goalsEnabled', goalsEnabled);
+            updateLayout(); // Call updateLayout to handle DOM changes and button text
+            moreMenu.classList.remove('show'); // Close menu after selection
+            setTimeout(() => {
+                moreMenu.style.visibility = 'hidden';
+                moreMenu.style.pointerEvents = 'none';
+            }, 200);
+        }
+
+        function updateLayout() {
+            if (goalsEnabled) {
+                goalsContainer.classList.remove('hidden');
+                tasksToggleButton.textContent = 'Disable Tasks';
+                // Move engine-selection to top-elements
+                topElementsContainer.appendChild(engineSelection);
+                topElementsContainer.classList.add('with-engine');
+            } else {
+                goalsContainer.classList.add('hidden');
+                tasksToggleButton.textContent = 'Enable Tasks';
+                // Move engine-selection to main-content-bottom
+                mainContentBottomContainer.prepend(engineSelection); // Add to the beginning of bottom section
+                topElementsContainer.classList.remove('with-engine');
+            }
+            renderGoals(); // Re-render goals based on new visibility state
+            // Ensure updateActiveLinePosition runs after DOM changes are processed
+            setTimeout(updateActiveLinePosition, 0); 
+        }
+
+
+        // Event listener for context menu items
+        goalContextMenu.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            if (action) {
+                handleContextMenuAction(action);
+            }
+        });
+
+        // Hide context menu, edit goal popup if clicked anywhere outside them
+        document.addEventListener('click', (e) => {
+            if (!goalContextMenu.contains(e.target) && goalContextMenu.classList.contains('show')) {
+                hideGoalContextMenu();
+            }
+            // Check if the click is outside the edit goal modal and it's currently shown
+            if (editGoalSection.classList.contains('show') && !editGoalModal.contains(e.target)) {
+                hideEditGoalPopup();
+            }
+            // Hide more menu if clicked outside
+            if (moreMenu.classList.contains('show') && !moreMenu.contains(e.target) && e.target !== moreButton) {
+                moreMenu.classList.remove('show');
+                // Use a timeout to hide visibility after transition completes
+                setTimeout(() => {
+                    moreMenu.style.visibility = 'hidden';
+                    moreMenu.style.pointerEvents = 'none';
+                }, 200); // Match transition-duration of opacity/transform
+            }
+        });
+
+        // Add escape key listener
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (editGoalSection.classList.contains('show')) {
+                    hideEditGoalPopup();
+                }
+                if (moreMenu.classList.contains('show')) {
+                    moreMenu.classList.remove('show');
+                    // Use a timeout to hide visibility after transition completes
+                    setTimeout(() => {
+                        moreMenu.style.visibility = 'hidden';
+                        moreMenu.style.pointerEvents = 'none';
+                    }, 200); // Match transition-duration of opacity/transform
+                }
+                // If escape is pressed and the search input is focused, blur it
+                if (document.activeElement === searchInput) {
+                    searchInput.blur();
+                }
+            }
+        });
+
+        // Add Enter key listener for the goal input
+        editGoalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent default form submission or new line
+                handleEditGoalAction();
+            }
+        });
+
+        // Listen for changes on radio buttons to update the active line and sections visibility
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', updateActiveLineAndSections);
+        });
+
+        // Clear history button listener
+        if (clearHistoryButton) {
+            clearHistoryButton.addEventListener('click', () => {
+                localStorage.removeItem('searchHistory');
+                renderSearchHistory();
+            });
+        }
+
+        // Track Ctrl/Cmd key state
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Control' || e.key === 'Meta') {
+                isCtrlPressed = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Control' || e.key === 'Meta') {
+                isCtrlPressed = false;
+            }
+        });
+
+        // --- Form Submission Logic ---
+        function performSearch(query, selectedEngine, openInNewTab = false) {
+            if (!query) return;
+
+            // If history is active, switch to Google before searching
+            if (selectedEngine === 'history') {
+                const googleRadio = document.querySelector('input[name="engine"][value="google"]');
+                if (googleRadio) {
+                    googleRadio.checked = true;
+                    googleRadio.dispatchEvent(new Event('change')); // Trigger change to update UI
+                    selectedEngine = 'google'; // Update selectedEngine for the URL construction
+                }
+            }
+
+            let url = '';
+            switch (selectedEngine) {
+                case 'google':
+                    url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                    break;
+                case 'perplexity':
+                    url = `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}`;
+                    break;
+                case 'youtube':
+                    url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                    break;
+                case 'chatgpt':
+                    url = `https://chat.openai.com/chat?q=${encodeURIComponent(query)}`;
+                    break;
+                // No default case needed as history is handled above and other cases are explicit
+            }
+
+            if (selectedEngine !== 'history') { // Only add to history if it's an actual search engine
+                addSearchToHistory(query, selectedEngine);
+            }
+
+            // Only show blank screen overlay if not opening in a new tab
+            if (!openInNewTab) {
+                blankScreenOverlay.style.opacity = '1';
+                blankScreenOverlay.style.pointerEvents = 'auto';
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 200);
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            let query = searchInput.value.trim();
+            let selectedEngine = document.querySelector('input[name="engine"]:checked').value;
+            performSearch(query, selectedEngine, isCtrlPressed); // Use isCtrlPressed for new tab behavior
+        });
+
+        // New helper function for engine switching logic
+        function handleEngineSwitch(key) {
+            let targetEngine = null;
+            if (key === 'p') {
+                targetEngine = 'perplexity';
+            } else if (key === 'g') {
+                targetEngine = 'google';
+            } else if (key === 'y') {
+                targetEngine = 'youtube';
+            } else if (key === 'c') {
+                targetEngine = 'chatgpt';
+            } else if (key === 'h') {
+                targetEngine = 'history';
+            } else if (key === 'arrowleft' || key === 'arrowright') {
+                const currentRadio = document.querySelector('input[name="engine"]:checked');
+                let currentIndex = -1;
+                const engineLabels = Array.from(document.querySelectorAll('.engine-label input[name="engine"]'));
+
+                for (let i = 0; i < engineLabels.length; i++) {
+                    if (engineLabels[i] === currentRadio) {
+                        currentIndex = i;
+                        break;
+                    }
+                }
+
+                let newIndex = currentIndex;
+                if (key === 'arrowright') {
+                    newIndex = (currentIndex + 1) % engineLabels.length;
+                } else if (key === 'arrowleft') {
+                    newIndex = (currentIndex - 1 + engineLabels.length) % engineLabels.length;
+                }
+
+                if (newIndex !== currentIndex) {
+                    engineLabels[newIndex].checked = true;
+                    engineLabels[newIndex].dispatchEvent(new Event('change'));
+                }
+                return; // Exit to prevent other keydown logic from interfering
+            }
+
+            if (targetEngine) {
+                const radioToSelect = document.querySelector(`input[name="engine"][value="${targetEngine}"]`);
+                if (radioToSelect) {
+                    radioToSelect.checked = true;
+                    radioToSelect.dispatchEvent(new Event('change'));
+                }
+            }
+        }
+
+        // --- Keyboard Shortcut Logic ---
+        document.addEventListener('keydown', function(e) {
+            const key = e.key.toLowerCase();
+            const isInputActive = document.activeElement.tagName === 'INPUT' ||
+                                  document.activeElement.tagName === 'TEXTAREA' ||
+                                  document.activeElement.tagName === 'SELECT';
+
+            // Define the keys that trigger engine switching
+            const engineSwitchKeys = ['p', 'g', 'y', 'c', 'h', 'arrowleft', 'arrowright'];
+
+            // Check if an engine switch key is pressed
+            if (engineSwitchKeys.includes(key)) {
+                // If search input is active, require Alt key for engine switching
+                if (isInputActive) {
+                    if (e.altKey) {
+                        e.preventDefault(); // Prevent default browser behavior
+                        handleEngineSwitch(key);
+                    }
+                } else { // If search input is NOT active, allow engine switching without Alt key
+                    e.preventDefault(); // Prevent default browser behavior (e.g., 'h' for help)
+                    handleEngineSwitch(key);
+                }
+            }
+
+            // Handle Ctrl/Cmd + Enter (always active, opens in new tab)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault(); // Prevent default browser behavior
+                let query = searchInput.value.trim();
+                if (query) {
+                    let selectedEngine = document.querySelector('input[name="engine"]:checked').value;
+                    performSearch(query, selectedEngine, true); // Force open in new tab
+                }
+                return; // Exit to prevent other Enter key logic from interfering
+            }
+
+            // Handle Enter key (when search input is not active, search if content exists)
+            if (e.key === 'Enter' && !isInputActive) {
+                e.preventDefault(); // Prevent default browser behavior
+                let query = searchInput.value.trim();
+                if (query) {
+                    let selectedEngine = document.querySelector('input[name="engine"]:checked').value;
+                    performSearch(query, selectedEngine, false); // Regular search in current tab
+                }
+                return; // Exit
+            }
+
+            // Handle '/' for focusing search input (when not active)
+            if (!isInputActive && key === '/') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+
+            // Handle Escape for blurring search input (when active)
+            if (e.key === 'Escape' && isInputActive) {
+                searchInput.blur();
+            }
+        });
+
+        // Inactivity detection for image display
+        function showRandomImage(imagesArray) { // Modified to accept imagesArray
+            // Ensure imagesArray is not empty
+            if (!imagesArray || imagesArray.length === 0) {
+                console.warn("showRandomImage called with an empty or invalid imagesArray.");
+                return; // Exit if no images to display
+            }
+
+            // Synchronously remove any existing image before displaying a new one
+            if (currentImageElement && currentImageElement.parentNode) {
+                currentImageElement.remove();
+                currentImageElement = null;
+            }
+
+            // Select a random image from the provided imagesArray
+            const randomIndex = Math.floor(Math.random() * imagesArray.length);
+            const selectedImage = imagesArray[randomIndex];
+
+            // Crucial check: Ensure selectedImage is actually an object before proceeding
+            if (!selectedImage || typeof selectedImage !== 'object') {
+                console.error("Error: Selected image is undefined or not an object.", selectedImage);
+                return; // Exit if the selected image is not valid
+            }
+
+            // Create the image container div (outer wrapper for positioning)
+            const imageContainer = document.createElement('div');
+            // Base classes for fixed positioning, transition. Added p-4 for padding from screen edges.
+            imageContainer.className = 'fixed overflow-visible opacity-0 pointer-events-none z-20 transition-opacity duration-50 flex items-center '; // Removed transform classes
+            imageContainer.dataset.position = selectedImage.position;
+
+            // Add click listener to hide the image
+            imageContainer.addEventListener('click', hideImage);
+
+            // If this is a greeting image, store its ID for dismissal tracking
+            if (selectedImage.id) { 
+                imageContainer.dataset.greetingId = selectedImage.id;
+            }
+
+            // Apply position-specific classes to the outer container
+            if (selectedImage.position.includes('bottom')) {
+                imageContainer.classList.add('bottom-0');
+            } else { // top
+                imageContainer.classList.add('top-0');
+            }
+
+            if (selectedImage.position.includes('left')) {
+                imageContainer.classList.add('left-0');
+            } else { // right
+                imageContainer.classList.add('right-0');
+            }
+
+            // Create an inner wrapper for the image and text to control their internal layout
+            const contentWrapper = document.createElement('div');
+            // This wrapper will use flex to arrange image and text horizontally.
+            // items-end/items-start will align them vertically within this flex container.
+            contentWrapper.className = 'flex items-center  flex-row gap-2'; // Added gap for spacing
+
+            // Adjust vertical alignment within the contentWrapper based on image position (top/bottom)
+            if (selectedImage.position.includes('bottom')) {
+                contentWrapper.classList.add('items-center'); // Align items to the bottom of the flex container
+            } else {
+                contentWrapper.classList.add('items-center'); // Align items to the top of the flex container
+            }
+
+
+            // Create the img element
+            const imgElement = document.createElement('img');
+            imgElement.id = 'random-image';
+            imgElement.src = selectedImage.src;
+            imgElement.alt = 'Random Inactivity Image';
+            // Apply common image styles and the specific size class, removed shadow-lg
+            imgElement.className = `w-auto object-contain rounded-md ${imageSizeClasses[selectedImage.size] || 'max-h-[30vh]'}`; // Default to max-h-[30vh] if size is not recognized
+
+            // Create the text element
+            const textElement = document.createElement('div');
+            // Reverted to original styling for dark mode
+            textElement.className = 'text-base font-bold font-casual-style p-2 rounded-md max-w-[200px] text-[rgb(var(--color-text-primary))] bg-[rgb(var(--color-secondary-bg))] ';
+            textElement.textContent = selectedImage.text;
+
+            // Determine order based on horizontal position
+            if (selectedImage.position.includes('left')) {
+                // Image on left, text on right
+                contentWrapper.appendChild(imgElement);
+                contentWrapper.appendChild(textElement);
+            } else {
+                // Image on right, text on left
+                contentWrapper.appendChild(textElement);
+                contentWrapper.appendChild(imgElement);
+            }
+
+            imageContainer.appendChild(contentWrapper);
+            document.body.appendChild(imageContainer);
+
+            // Fade in the image
+            setTimeout(() => {
+                imageContainer.style.opacity = '1';
+                imageContainer.style.pointerEvents = 'auto';
+            }, 10); // Small delay to ensure DOM attachment before transition
+
+            currentImageElement = imageContainer; // Store reference to the current image container
+        }
+
+        function hideImage() {
+            if (currentImageElement && currentImageElement.parentNode) { // Add null check for parentNode
+                const greetingId = currentImageElement.dataset.greetingId;
+                if (greetingId) {
+                    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                    const sessionStorageKey = `dismissedGreetings_${today}`; // Changed to sessionStorage
+                    let dismissedGreetings = JSON.parse(sessionStorage.getItem(sessionStorageKey) || '[]'); // Changed to sessionStorage
+                    if (!dismissedGreetings.includes(greetingId)) {
+                        dismissedGreetings.push(greetingId);
+                        sessionStorage.setItem(sessionStorageKey, JSON.stringify(dismissedGreetings)); // Changed to sessionStorage
+                    }
+                }
+                currentImageElement.style.opacity = '0';
+                currentImageElement.style.pointerEvents = 'none';
+                // Remove after transition
+                setTimeout(() => {
+                    if (currentImageElement && currentImageElement.parentNode) { // Check again before removing
+                        currentImageElement.remove();
+                        currentImageElement = null;
+                    }
+                }, 50); // Match transition duration
+            }
+        }
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                showRandomImage(inactivityImages); // Pass the inactivityImages array
+            }, INACTIVITY_THRESHOLD);
+        }
+
+        // --- Greeting Function ---
+        function displayGreeting() {
+            const now = new Date();
+            const month = now.getMonth() + 1; // getMonth() is 0-indexed
+            const day = now.getDate();
+            const hour = now.getHours();
+            const dayOfWeek = now.getDay(); // Sunday - 0, Monday - 1, etc.
+
+            const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
+            let dismissedGreetingsForToday = JSON.parse(sessionStorage.getItem(`dismissedGreetings_${today}`) || '[]'); // Changed to sessionStorage
+
+            let availableHolidayGreetings = holidayGreetingImagesJson.filter(g => !dismissedGreetingsForToday.includes(g.id));
+            let availableDailyGreetings = dailyGreetingImagesJson.filter(g => !dismissedGreetingsForToday.includes(g.id));
+
+            let greetingToShow = null;
+
+            // 1. Determine the most relevant greeting for the current moment
+            // Check for date-based greetings (holidays) first
+            if (month === 12 && day === 25) { // December 25th
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'christmas_greeting');
+            } else if (month === 1 && day === 1) { // January 1st
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'newyear_greeting');
+            } else if (month === 10 && day === 31) { // October 31st
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'halloween_greeting');
+            } else if (month === 7 && day === 4) { // July 4th (US Independence Day)
+                greetingToShow = holidayGreetingImagesJson.find(g => g.id === 'independence_day_greeting');
+            }
+
+            // If no holiday, check for day of week specific greetings
+            if (!greetingToShow) {
+                if (dayOfWeek === 0) { // Sunday
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'sunday_greeting');
+                }
+            }
+
+            // If no holiday or special day, check for time-based greetings
+            if (!greetingToShow) {
+                if (hour >= 5 && hour < 12) {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'morning_greeting');
+                } else if (hour >= 12 && hour < 18) {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'afternoon_greeting');
+                } else if (hour >= 18 && hour < 21) {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'evening_greeting');
+                } else {
+                    greetingToShow = dailyGreetingImagesJson.find(g => g.id === 'night_greeting');
+                }
+            }
+
+            // Now, check if the determined greeting (if any) has been dismissed
+            const isGreetingDismissed = greetingToShow && dismissedGreetingsForToday.includes(greetingToShow.id);
+
+            if (greetingToShow && !isGreetingDismissed) {
+                // If a relevant, non-dismissed greeting is found, show it directly.
+                showRandomImage([greetingToShow]);
+            } else {
+                // If no relevant greeting is found, OR if the relevant one was dismissed,
+                // then consider showing a random inactivity image with a specific probability.
+                const fallbackProbability = 0.20; // Reverted to default 20% probability
+
+                if (Math.random() < fallbackProbability) {
+                    showRandomImage(inactivityImages); // Show a random inactivity image
+                }
+            }
+        }
+
+
+        // Function to initialize the app
+        function initializeApp() {
+            // Element reference for editGoalModal
+            window.editGoalModal = document.querySelector('#edit-goal-section .edit-goal-modal');
+
+            // Event listener for the new combined action button
+            if (editGoalActionButton) {
+                editGoalActionButton.addEventListener('click', handleEditGoalAction);
+            }
+            // Event listener for the delete button
+            if (editGoalDeleteButton) {
+                editGoalDeleteButton.addEventListener('click', handleDeleteGoal);
+            }
+            // Event listener for input changes to update action button text
+            if (editGoalInput) {
+                editGoalInput.addEventListener('input', updateActionButtonText);
+            }
+
+            // Also update active line on window resize to handle responsive changes
+            window.addEventListener('resize', updateActiveLinePosition);
+
+            setInterval(updateDayProgress, 60 * 1000);
+            setInterval(updateGoalTimeSince, 60 * 1000); // This will now conditionally render goals
+            setInterval(updateTimeOfDayInfo, 60 * 1000);
+
+            // Apply saved preferences directly
+            // This ensures theme-dependent elements like active-line color and theme-toggle text are set.
+            applyTheme(localStorage.getItem('themePreference') || 'light'); // Default to light if not set
+
+            goalsEnabled = localStorage.getItem('goalsEnabled') === 'true'; // Default to false if not set
+            updateLayout();
+            updateDayProgress();
+            updateTimeOfDayInfo();
+            renderSearchHistory();
+            updateActiveLineAndSections(); // Initial setup for engine selector
+            
+            // Ensure loading overlay is off
+            blankScreenOverlay.style.opacity = '0'; 
+            blankScreenOverlay.style.pointerEvents = 'none';
+
+            // Focus on the search input when the app initializes
+            searchInput.focus();
+
+            // Initial call to set up the inactivity timer
+            resetInactivityTimer();
+               // hideImage(); // Hide image immediately on any activity
+
+            // Listen for any user activity (mouse movement, key presses) to reset the timer
+            document.addEventListener('mousemove', resetInactivityTimer);
+            document.addEventListener('keydown', resetInactivityTimer);
+
+            // Event listener for theme toggle button (now inside the more menu)
+            themeToggleButton.addEventListener('click', () => {
+                const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+                moreMenu.classList.remove('show'); // Close menu after selection
+                // Use a timeout to hide visibility after transition completes
+                setTimeout(() => {
+                    moreMenu.style.visibility = 'hidden';
+                    moreMenu.style.pointerEvents = 'none';
+                }, 200); // Match transition-duration of opacity/transform
+            });
+
+            // Event listener for Tasks toggle button
+            tasksToggleButton.addEventListener('click', toggleGoals);
+
+            // Event listener for More button
+            moreButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent document click from immediately closing it
+                moreMenu.classList.toggle('show');
+                // Toggle visibility to allow transitions
+                if (moreMenu.classList.contains('show')) {
+                    moreMenu.style.visibility = 'visible';
+                    moreMenu.style.pointerEvents = 'auto';
+                } else {
+                    // Use a timeout to hide visibility after transition completes
+                    setTimeout(() => {
+                        moreMenu.style.visibility = 'hidden';
+                        moreMenu.style.pointerEvents = 'none';
+                    }, 200); // Match transition-duration of opacity/transform
+                }
+            });
+        }
+
+
+        // Initial call when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // This part ensures engine-selection is moved early based on goalsEnabled
+            const goalsEnabledInitial = localStorage.getItem('goalsEnabled') === 'true';
+            const engineSelectionElement = document.getElementById('engine-selection');
+            const topElementsContainerElement = document.getElementById('top-elements');
+            const mainContentBottomContainerElement = document.getElementById('main-content-bottom');
+
+            if (goalsEnabledInitial) {
+                if (engineSelectionElement && topElementsContainerElement) {
+                    topElementsContainerElement.appendChild(engineSelectionElement);
+                    topElementsContainerElement.classList.add('with-engine');
+                }
+            } else {
+                if (engineSelectionElement && mainContentBottomContainerElement) {
+                    mainContentBottomContainerElement.prepend(engineSelectionElement);
+                    topElementsContainerElement.classList.remove('with-engine');
+                }
+            }
+
+            initializeApp(); // Call directly without delay
+
+            // Call displayGreeting directly on load; it handles its own logic and probability for fallbacks
+            displayGreeting();
+        });
+
+        // Fix for blank screen on browser back button
+        window.addEventListener('pageshow', (event) => {
+            // Check if the page is being shown from the bfcache (back-forward cache)
+            // This means the user navigated back to the page.
+            if (event.persisted) {
+                blankScreenOverlay.style.opacity = '0';
+                blankScreenOverlay.style.pointerEvents = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

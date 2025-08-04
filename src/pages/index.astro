@@ -4,7 +4,7 @@ import Menu from "../components/Menu.astro";
 import SearchHistory from "../components/SearchHistory.astro";
 import DailyProgressBar from "../components/DailyProgressBar.astro";
 import TimeInfo from "../components/TimeInfo.astro";
-import DynamicGreeting from "../components/DynamicGreeting.astro";
+import DynamicGreeting from "../components/DynamicGreeting/index.astro";
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -293,7 +293,8 @@ import DynamicGreeting from "../components/DynamicGreeting.astro";
 
         <Menu />
 
-    <DynamicGreeting />
+<DynamicGreeting />
+
 
     <script>
         // --- Function Definitions (All moved to top for scope) ---

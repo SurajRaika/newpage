@@ -20,6 +20,7 @@ export class InactivityEvent extends BaseEvent {
   ];
     constructor() {
         super();
+        this.initializeListener();
 
 
 
@@ -54,6 +55,7 @@ export class InactivityEvent extends BaseEvent {
   onEventResponse(response: EventResponse): void {
     //console.log(`[${this.eventId}] Received response from hub:`, response);
     if (response.action === 'clicked') {
+      console.log("sadfas")
       //console.log('User is back! Maybe show a welcome back message next time.');
     }
   }

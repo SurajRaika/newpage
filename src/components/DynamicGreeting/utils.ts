@@ -30,18 +30,23 @@ export class EventUtils {
 
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'flex items-center gap-3 relative'; // Relative for close button
+// Define font size classes for different image sizes
+const FONT_SIZE_CLASSES = {
+  small: 'text-base',
+  medium: 'text-lg',
+  large: 'text-xl'
+};
 
-    // Image element
-    const img = document.createElement('img');
-    img.src = imageData.src;
-    img.alt = 'Greeting Image';
-    img.className = `w-auto object-contain rounded-md ${this.IMAGE_SIZE_CLASSES[imageData.size]}`;
+// Image element
+const img = document.createElement('img');
+img.src = imageData.src;
+img.alt = 'Greeting Image';
+img.className = `w-auto object-contain rounded-md ${this.IMAGE_SIZE_CLASSES[imageData.size]}`;
 
-    // Text element
-    const text = document.createElement('div');
-    text.className = 'text-lg font-bold font-casual-style p-3 rounded-lg max-w-[220px] text-[rgb(var(--color-text-primary))] bg-[rgb(var(--color-secondary-bg))] shadow-lg';
-    text.textContent = imageData.text;
-
+// Text element
+const text = document.createElement('div');
+text.className = `font-schoolbell p-3 rounded-lg max-w-[220px] text-[rgb(var(--color-text-primary))] shadow-sm ${FONT_SIZE_CLASSES[imageData.size]}`;
+text.textContent = imageData.text;
     // Order image and text based on screen position for better layout
     if (imageData.position.includes('left')) {
       contentWrapper.append(img, text);

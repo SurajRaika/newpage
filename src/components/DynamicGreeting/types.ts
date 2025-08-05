@@ -61,52 +61,43 @@ export abstract class BaseEvent {
   abstract eventId: string;
 
   constructor() {
-    // Automatically listen for responses from the hub directed at this specific event.
+    // This is tricky. The eventId is not available in the base constructor.
+    // We need to initialize the listener after the subclass has set the eventId.
+  }
+
+  /**
+   * Initializes the event listener. This MUST be called in the subclass constructor.
+   */
+  protected initializeListener(): void {
+    if (!this.eventId) {
+      console.error("Event ID is not set. Cannot initialize listener.");
+      return;
+    }
+    console.log(`[${this.eventId}] Initializing listener.`);
     window.addEventListener(`greeting:response:${this.eventId}`, (e: CustomEvent<EventResponse>) => {
-      console.log("TEST Received response for event:", this.eventId, e.detail);
+      // console.log(`[${this.eventId}] Received response:`, e.detail);
       this.onEventResponse(e.detail);
     });
   }
 
-  // --- Abstract methods that MUST be implemented by each specific event ---
-
-  /** Determines if the event's conditions are met to be shown. */
+  // --- Abstract methods ---
   abstract canTrigger(): boolean;
-
-  /** Returns the event's priority level. */
   abstract getPriority(): EventPriority;
-
-  /** Returns the image and text data for the event. */
   abstract getImageData(): Omit<ImageData, 'id'>;
-
-  /** Handles user interaction feedback from the hub (e.g., click, dismiss). */
   abstract onEventResponse(response: EventResponse): void;
 
-
-  // --- Core communication logic ---
-
-  /**
-   * Sends a display request to the central hub.
-   * Any event can call this to ask for permission to be displayed.
-   */
+  // --- Core logic ---
   protected requestDisplay(): void {
-    if (!this.canTrigger()) {
-      //console.log(`[${this.eventId}] Request denied: canTrigger() returned false.`);
-      return;
-    }
+    if (!this.canTrigger()) return;
 
     const request: EventRequest = {
       eventId: this.eventId,
       priority: this.getPriority(),
       imageData: {
         ...this.getImageData(),
-        id: `${this.eventId}_${Date.now()}` // Ensure a unique ID for this instance
+        id: `${this.eventId}_${Date.now()}`
       }
     };
-
-    // Dispatch a custom event on the window for the hub to catch.
-    // This decouples the event from the hub.
-    //console.log(`[${this.eventId}] Dispatching display request with priority ${EventPriority[request.priority]}.`, request);
     window.dispatchEvent(new CustomEvent('greeting:requestDisplay', { detail: request }));
   }
 }

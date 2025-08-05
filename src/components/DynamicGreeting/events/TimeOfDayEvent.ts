@@ -79,9 +79,13 @@ export class TimeOfDayEvent extends BaseEvent {
 
   constructor() {
     super();
+            this.initializeListener();
+
     setTimeout(() => {
       this.requestDisplay();
     }, 2000);
+
+
   }
 
   private getTimeOfDay(): string {
@@ -126,10 +130,8 @@ export class TimeOfDayEvent extends BaseEvent {
 
   onEventResponse(response: EventResponse): void {
     if (response.action === 'clicked' || response.action === 'dismissed') {
-      if (typeof window !== 'undefined' && window.localStorage) {
         const expiryTime = new Date().getTime() + (60 * 60 * 1000); // 1 hour from now
         localStorage.setItem(this.localStorageKey, expiryTime.toString());
-      }
     }
   }
 }

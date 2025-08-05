@@ -8,6 +8,9 @@ module.exports = {
       colors: {
         custombg: '#1A2238', // change this hex code to your preferred color
       },
+      fontFamily: {
+        schoolbell: ['Schoolbell', 'cursive'],
+      },
     },
   },
   plugins: [],

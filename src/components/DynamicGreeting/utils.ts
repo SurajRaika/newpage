@@ -15,7 +15,7 @@ export class EventUtils {
    */
   static createImageElement(imageData: ImageData): HTMLElement {
     const container = document.createElement('div');
-    container.className = 'fixed overflow-visible opacity-0 pointer-events-none z-50 transition-opacity duration-300 flex items-center p-4';
+    container.className = 'fixed overflow-visible opacity-0 pointer-events-none z-50 transition-opacity duration-300 flex items-center p-0 px-0.5';
     container.dataset.eventId = imageData.id;
 
     // Positioning logic
@@ -40,8 +40,9 @@ const FONT_SIZE_CLASSES = {
 // Image element
 const img = document.createElement('img');
 img.src = imageData.src;
+img.id="greeting_image"
 img.alt = 'Greeting Image';
-img.className = `w-auto object-contain rounded-md ${this.IMAGE_SIZE_CLASSES[imageData.size]}`;
+img.className = `w-auto object-contain  drop-shadow-white rounded-md ${this.IMAGE_SIZE_CLASSES[imageData.size]}`;
 
 // Text element
 const text = document.createElement('div');

@@ -2,3 +2,14 @@
 @theme {
   --font-schoolbell: "Schoolbell", sans-serif;
 }
+
+
+
+
+#greeting_image{
+ filter:
+    drop-shadow(1px 0 white)
+    drop-shadow(-1px 0 white)
+    drop-shadow(0 1px white)
+    drop-shadow(0 -1px white); 
+}

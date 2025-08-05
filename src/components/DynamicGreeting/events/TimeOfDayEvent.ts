@@ -9,13 +9,13 @@ export class TimeOfDayEvent extends BaseEvent {
     morning: [
       {
         texts: ["Good Morning! Have a great day!", "Rise and shine!", "Morning, sunshine!"],
-        src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg',
+        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
         position: 'top-right',
         size: 'small'
       },
       {
         texts: ["A new day, a new beginning!", "Good morning! Let's make it a good one."],
-        src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg',
+        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
         position: 'top-left',
         size: 'medium'
       }
@@ -23,13 +23,13 @@ export class TimeOfDayEvent extends BaseEvent {
     afternoon: [
       {
         texts: ["Good Afternoon! Hope you're having a productive day!", "Midday greetings!", "Time for a quick break?"],
-        src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg',
+        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
         position: 'top-right',
         size: 'small'
       },
       {
         texts: ["Afternoon vibes!", "Keep up the great work this afternoon!"],
-        src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg',
+        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
         position: 'bottom-right',
         size: 'medium'
       }
@@ -51,7 +51,7 @@ export class TimeOfDayEvent extends BaseEvent {
       },
       {
         texts: ["Unwind and recharge.", "Hope you had a good day!"],
-        src: 'https://i.pinimg.com/564x/76/ee/49/76ee4939f5dcf57605ed76d9c6f475bf.jpg',
+        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
         position: 'bottom-left',
         size: 'medium'
       }

@@ -1,0 +1,285 @@
+// Morning
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'Ugh, another morning. Can I get five more minutes?'
+},
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'Just pretend I\'m still asleep.'
+},
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'Coffee... need coffee...'
+},
+
+// Night
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'Is it bedtime yet? I\'m already done with this day.'
+},
+{
+  src: 'httpsi.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'My bed is calling me.'
+},
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'All this late-night work is making me sleepy.'
+},
+
+// Inactive [or Lazy]
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'I\'m not lazy, I\'m just on energy-saving mode.'
+},
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'Don\'t ask me to do anything. The answer is no.'
+},
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'My only goal today is to remain completely still.'
+},
+
+// Random
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'Don\'t mind me, just thinking about naps.'
+},
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'This is my face when I\'m not doing anything.'
+},
+{
+  src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+  position: ['bottom-right'],
+  size: 'medium',
+  text: 'Can\'t decide if I want to sleep or eat. Or both.'
+}
+
+
+[
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Ugh, morning breath is the worst."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Just gotta get this over with."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Not a morning person, can you tell?"
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Evening routine starting... almost there."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Brushing away the day."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "One step closer to being done for the night."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Late night, but gotta keep the teeth clean."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Almost time for sleep... after this."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Just going through the motions at this point."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Just a quick brush."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Keeping things fresh."
+  },
+  {
+    "src": "https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png",
+    "position": ["bottom-right"],
+    "size": "medium",
+    "text": "Nothing much, just this."
+  }
+]
+Here is the information in a JSON-like format, with the messages grouped by the event they correspond to.
+
+```json
+{
+  "Morning": [
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "Good morning, nakama! Let's set sail for a new adventure!"
+    },
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "Wake up! The Grand Line isn't going to explore itself!"
+    },
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "Another day on the Thousand Sunny begins!"
+    }
+  ],
+  "Evening": [
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "The day is done, time to celebrate with a feast!"
+    },
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "Another adventure successfully completed!"
+    },
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "What a day with my amazing crew!"
+    }
+  ],
+  "Random": [
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "Ahoy there! The Straw Hat Pirates are here to say hi!"
+    },
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "Just checking in with my crew."
+    },
+    {
+      "src": "https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png",
+      "position": ["bottom-right"],
+      "size": "medium",
+      "text": "We're all here, ready for anything!"
+    }
+  ]
+}
+```
+
+
+{
+  "Morning": [
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "Ugh, a morning mood."
+    },
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "Don't talk to me. Not yet."
+    },
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "Too early for this."
+    }
+  ],
+  "Inactive [or Lazy]": [
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "I refuse to move."
+    },
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "My current mood is 'no'."
+    },
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "Don't you dare give me a task."
+    }
+  ],
+  "Random": [
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "Hmpf."
+    },
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "I am not amused."
+    },
+    {
+      "src": "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      "position": ["bottom-left"],
+      "size": "medium",
+      "text": "This is my resting annoyed face."
+    }
+  ]
+}

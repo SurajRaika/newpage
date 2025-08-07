@@ -1,137 +1,163 @@
+// /home/karma/Documents/astro_tailwind_config/src/components/DynamicGreeting/events/TimeOfDayEvent.ts
 
+// Import required types and base classes
 import { BaseEvent, EventPriority, type EventResponse, type ImageData } from '../types';
 
+/**
+ * TimeOfDayEvent:
+ * This event triggers based on the current time of day (morning, afternoon, evening, night).
+ * It displays a random image with a relevant message to the user.
+ */
 export class TimeOfDayEvent extends BaseEvent {
+  // A unique identifier for this event (used by the event hub)
   eventId = 'time_of_day_event';
+
+  // Local storage key to manage cooldown period
   private localStorageKey = 'time_of_day_event_expiry';
 
-  private greetings: { [key: string]: Array<{ texts: string[]; src: string; position: 'top-right' | 'bottom-left' | 'top-left' | 'bottom-right'; size: 'small' | 'medium' | 'large'; }> } = {
+  /**
+   * Greeting images grouped by time of day.
+   * Each key represents a time of day, containing an array of objects:
+   * - texts: List of possible messages for that time of day
+   * - src: Image URL
+   * - position: Screen position for the image
+   * - size: Image size
+   */
+  private greetings: Record<'morning' | 'afternoon' | 'evening' | 'night', {
+    texts: string[];
+    src: string;
+    position: 'top-right' | 'bottom-left' | 'top-left' | 'bottom-right';
+    size: 'small' | 'medium' | 'large';
+  }[]> = {
     morning: [
       {
-        texts: ["Good Morning! Have a great day!", "Rise and shine!", "Morning, sunshine!"],
-        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
-        position: 'top-right',
-        size: 'small'
-      },
-      {
-        texts: ["A new day, a new beginning!", "Good morning! Let's make it a good one."],
-        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
-        position: 'top-left',
+        texts: [
+          "Good morning! Let's make this day awesome!",
+          "Rise and shine! It's a brand new day.",
+          "Morning vibes are the best vibes."
+        ],
+        src: 'https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png',
+        position: 'bottom-right',
         size: 'medium'
       }
     ],
     afternoon: [
       {
-        texts: ["Good Afternoon! Hope you're having a productive day!", "Midday greetings!", "Time for a quick break?"],
-        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
-        position: 'top-right',
-        size: 'small'
-      },
-      {
-        texts: ["Afternoon vibes!", "Keep up the great work this afternoon!"],
-        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
-        position: 'bottom-right',
+        texts: [
+          "Good afternoon! Keep up the great work.",
+          "Don't let the post-lunch slump get you.",
+          "Halfway through the day—keep going!"
+        ],
+        src: 'https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png',
+        position: 'bottom-left',
         size: 'medium'
       }
     ],
     evening: [
       {
         texts: [
-  "Bhai, so ja na ab toh 😴",
-  "Tu abhi bhi kaam kar raha hai? 😳",
-  "Phir se all-nighter? Kya hi dedication hai 😂",
-  "Neend nahi aa rahi ya kaam khatam nahi ho raha? 😅",
-  "Chhod na ab, kal dekh lenge. Soya ja! 🌙",
-  "Bhai, raat ke is time pe bhi active? 😐",
-  "Work-life balance ka naam suna hai? 😜"
-],
-        src: 'https://i.pinimg.com/474x/04/be/c4/04bec46856edd7d9014fa4a81980c90e.jpg',
-        position: 'top-right',
-        size: 'small'
-      },
-      {
-        texts: ["Unwind and recharge.", "Hope you had a good day!"],
-        src: 'https://i.pinimg.com/originals/3b/af/c1/3bafc1f31c40c5f80803cfaa0e4c4f20.png',
-        position: 'bottom-left',
+          "Good evening! Time to wind down.",
+          "Evenings are for relaxation and reflection.",
+          "Hope you had a productive day!"
+        ],
+        src: 'https://i.pinimg.com/originals/19/ed/31/19ed3192c2ef2c4f4916722de08543fa.png',
+        position: 'bottom-right',
         size: 'medium'
       }
     ],
     night: [
-     {
+      {
         texts: [
-  "Bhai, so ja na ab toh 😴",
-  "Tu abhi bhi kaam kar raha hai? 😳",
-  "Phir se all-nighter? Kya hi dedication hai 😂",
-  "Neend nahi aa rahi ya kaam khatam nahi ho raha? 😅",
-  "Chhod na ab, kal dekh lenge. Soya ja! 🌙",
-  "Bhai, raat ke is time pe bhi active? 😐",
-  "Work-life balance ka naam suna hai? 😜"
-],
-        src: 'https://i.pinimg.com/474x/04/be/c4/04bec46856edd7d9014fa4a81980c90e.jpg',
-        position: 'top-right',
-        size: 'small'
-      },
-     
+          "Good night! Time to rest and recharge.",
+          "Late night? Don't forget to sleep soon!",
+          "Nighttime is for dreaming big."
+        ],
+        src: 'https://i.pinimg.com/originals/0a/a7/43/0aa74374c354c8a381bfb1ffb16c9dbf.png',
+        position: 'bottom-right',
+        size: 'medium'
+      }
     ]
   };
 
-  private currentGreetingKey: string = '';
+  // Stores the current greeting key (morning, afternoon, evening, night)
+  private currentGreetingKey: 'morning' | 'afternoon' | 'evening' | 'night' = 'morning';
 
+  /**
+   * Constructor:
+   * - Calls parent constructor (BaseEvent)
+   * - Determines the current time of day
+   * - Sets a timer to request the display after 2 seconds
+   */
   constructor() {
     super();
-            this.initializeListener();
 
+    this.currentGreetingKey = this.getTimeOfDay();
+
+    // Automatically request display after 2 seconds
     setTimeout(() => {
-      this.requestDisplay();
+      if (this.canTrigger()) {
+        this.requestDisplay(); // Requests the hub to display this event
+      }
     }, 2000);
-
-
   }
 
-  private getTimeOfDay(): string {
+  /**
+   * Determines the current time of day as one of four buckets.
+   */
+  private getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-      return 'morning';
-    } else if (hour >= 12 && hour < 17) {
-      return 'afternoon';
-    } else if (hour >= 17 && hour < 21) {
-      return 'evening';
-    } else {
-      return 'night';
-    }
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'night';
   }
 
+  /**
+   * Determines if the event can be triggered.
+   * Checks local storage for cooldown period (1 hour).
+   */
   canTrigger(): boolean {
     if (typeof window === 'undefined' || !window.localStorage) {
-      return true; // Cannot store in localStorage, so always allow triggering
+      return true; // No local storage, always allow
     }
 
     const expiryTime = localStorage.getItem(this.localStorageKey);
     if (expiryTime) {
-      const now = new Date().getTime();
+      const now = Date.now();
       if (now < parseInt(expiryTime, 10)) {
-        return false; // Still within the cool-down period
+        return false; // Still in cooldown
       }
     }
-    this.currentGreetingKey = this.getTimeOfDay();
     return true;
   }
 
+  /**
+   * Event priority:
+   * Used by the event hub to decide which event to show if multiple are eligible.
+   * Higher priority = shown first.
+   */
   getPriority(): EventPriority {
-    return EventPriority.HIGH;
+    return EventPriority.MEDIUM; // Medium priority for this event
   }
 
+  /**
+   * Returns a random image and text combination for the current time of day.
+   */
   getImageData(): Omit<ImageData, 'id'> {
-    const timeOfDayImages = this.greetings[this.currentGreetingKey];
-    const selectedImage = timeOfDayImages[Math.floor(Math.random() * timeOfDayImages.length)];
-    const selectedText = selectedImage.texts[Math.floor(Math.random() * selectedImage.texts.length)];
-    return { ...selectedImage, text: selectedText };
+    const options = this.greetings[this.currentGreetingKey];
+    const randomImage = options[Math.floor(Math.random() * options.length)];
+    const randomText = randomImage.texts[Math.floor(Math.random() * randomImage.texts.length)];
+    return { ...randomImage, text: randomText };
   }
 
+  /**
+   * Handles user interaction responses from the hub.
+   * Updates the cooldown period when dismissed or clicked.
+   */
   onEventResponse(response: EventResponse): void {
     if (response.action === 'clicked' || response.action === 'dismissed') {
-        const expiryTime = new Date().getTime() + (60 * 60 * 1000); // 1 hour from now
-        localStorage.setItem(this.localStorageKey, expiryTime.toString());
+      const expiryTime = Date.now() + 60 * 60 * 1000; // 1 hour cooldown
+      localStorage.setItem(this.localStorageKey, expiryTime.toString());
     }
   }
 }

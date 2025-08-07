@@ -1,43 +1,63 @@
 // /home/karma/Documents/astro_tailwind_config/src/components/DynamicGreeting/events/InactivityEvent.ts
+
 import { BaseEvent, EventPriority, type EventResponse, type ImageData } from '../types';
 
+/**
+ * InactivityEvent:
+ * Displays a random image and one of several funny texts when the user is inactive.
+ */
 export class InactivityEvent extends BaseEvent {
   eventId = 'inactivity_event';
 
-  private inactivityImages: Omit<ImageData, 'id'>[] = [
+  /**
+   * Array of inactivity image data.
+   * Each object includes:
+   *  - texts: multiple text options (we will choose one randomly)
+   *  - src: image URL
+   *  - position: where to display
+   *  - size: image size
+   */
+  private inactivityImages: {
+    texts: string[];
+    src: string;
+    position: string;
+    size: string;
+  }[] = [
     {
-      src: 'https://i.pinimg.com/736x/20/6c/1d/206c1d2674e08f28e84cf781290ccf8c.jpg',
-      position: 'bottom-left',
-      size: 'medium',
-      text: 'You sure are lazier than I am!'
+      texts: [
+        "I'm not lazy, I'm just on energy-saving mode.",
+        "Don't ask me to do anything. The answer is no.",
+        "My only goal today is to remain completely still."
+      ],
+      src: "https://i.pinimg.com/originals/0b/0a/8e/0b0a8e69f615d9cc4306228a77bde5f6.png",
+      position: "bottom-right",
+      size: "medium"
     },
     {
-      src: 'https://i.pinimg.com/736x/1f/50/27/1f50270d8661c9ca8d714ef9a10ccb97.jpg',
-      position: 'top-left',
-      size: 'small',
-      text: 'Bro, are you sure you are awake?'
+      texts: [
+        "I refuse to move.",
+        "My current mood is 'no'.",
+        "Don't you dare give me a task."
+      ],
+      src: "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
+      position: "bottom-right",
+      size: "large"
     }
   ];
-    constructor() {
-        super();
-        this.initializeListener();
 
+  constructor() {
+    super();
+    this.initializeListener();
 
+    // DEMO: Trigger the event after 2 seconds
+    setTimeout(() => {
+      this.requestDisplay();
+    }, 2000);
 
-        // Every 2 minutes, try to show a tip.
-        // setInterval(() => this.requestDisplay(), 1200); // 2 minut
+    // Example for continuous check (every 2 mins):
+    // setInterval(() => this.requestDisplay(), 120000);
+  }
 
-        setTimeout(() => {
-            this.requestDisplay()
-        }, 2000);
-
-
-        // 
-
-
-
-    }
-  /** This event is triggered by the hub, so canTrigger is always true when called. */
   canTrigger(): boolean {
     return true;
   }
@@ -46,17 +66,29 @@ export class InactivityEvent extends BaseEvent {
     return EventPriority.MEDIUM;
   }
 
+  /**
+   * Return a random image data with a randomly selected text.
+   * The hub expects { src, position, size, text } (based on ImageData type).
+   */
   getImageData(): Omit<ImageData, 'id'> {
-    return this.inactivityImages[Math.floor(Math.random() * this.inactivityImages.length)];
+    // Pick a random image object
+    const randomImage = this.inactivityImages[Math.floor(Math.random() * this.inactivityImages.length)];
+    
+    // Pick a random text from the selected image's texts array
+    const randomText = randomImage.texts[Math.floor(Math.random() * randomImage.texts.length)];
+
+    // Return in correct format
+    return {
+      src: randomImage.src,
+      position: randomImage.position,
+      size: randomImage.size,
+      text: randomText
+    };
   }
 
-
-
   onEventResponse(response: EventResponse): void {
-    //console.log(`[${this.eventId}] Received response from hub:`, response);
     if (response.action === 'clicked') {
-      console.log("sadfas")
-      //console.log('User is back! Maybe show a welcome back message next time.');
+      console.log("User interacted with inactivity event.");
     }
   }
 }

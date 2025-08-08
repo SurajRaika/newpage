@@ -1,0 +1,246 @@
+--- 
+---
+
+<!-- Goal Context Menu (Right-click) -->
+    <div id="goal-context-menu" class="context-menu absolute bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
+             dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
+        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="completed">Completed</div>
+        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="delete">Delete</div>
+    </div>
+
+    <div class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative">
+        <!-- New Edit Goal Section - For single goal edit, appears from top -->
+        <div id="edit-goal-section" class="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none">
+            <div class="edit-goal-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-[rgb(var(--color-accent))] focus-within:shadow-md
+                        dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
+                <label for="edit-goal-input" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
+                                            dark:text-[rgb(var(--color-text-secondary))]">
+                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5 text-[rgb(var(--color-text-primary))] text-base w-full box-border focus:outline-none focus:border-[rgb(var(--color-accent))]
+                                            dark:bg-[rgb(var(--color-primary-bg))] dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))] dark:focus:border-[rgb(var(--color-accent))]">
+                </label>
+                <div class="button-group flex flex-row gap-1 items-center ml-auto">
+                    <button id="edit-goal-action-button" class="bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-[rgb(var(--color-text-secondary))]
+                                            dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))] dark:hover:bg-[rgb(var(--color-text-secondary))]"></button> <!-- This will be Save or Completed -->
+                    <button id="edit-goal-delete-button" class="delete-button bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
+                                            dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]">Delete</button>
+                </div>
+            </div>
+        </div>
+
+<script>
+        function getGoals() {
+            try {
+                const goalsString = localStorage.getItem('userGoals');
+                return goalsString ? JSON.parse(goalsString) : [];
+            } catch (e) {
+                console.error("Error parsing goals from localStorage:", e);
+                return [];
+            }
+        }
+
+        function saveGoals(goalsArray) {
+            try {
+                localStorage.setItem('userGoals', JSON.stringify(goalsArray));
+            } catch (e) {
+                console.error("Error saving goals to localStorage:", e);
+            }
+        }
+
+        function renderGoals() {
+            const userGoals = getGoals(); // Get only user-defined goals
+
+            goalsContainer.innerHTML = ''; // Clear existing goals/button
+
+            const maxVisibleSlots = 2; // Always aim for 2 slots
+
+            for (let i = 0; i < maxVisibleSlots; i++) {
+                if (userGoals[i]) {
+                    // Render existing user goal
+                    const goalItem = document.createElement('div');
+                    goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] '; /* Apply unified styling */
+                    goalItem.dataset.index = i;
+                    goalItem.innerHTML = `
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'text-[rgb(var(--color-text-secondary))]"></i>
+                        <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow ' +
+                                        'text-[rgb(var(--color-text-primary))]">${userGoals[i].text}</span>
+                        <span class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 ' +
+                                        'text-[rgb(var(--color-text-secondary))]">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
+                    `;
+                    goalItem.addEventListener('click', (e) => {
+                        showEditGoalPopup(e, i, false);
+                    });
+                    goalItem.addEventListener('contextmenu', (e) => showGoalContextMenu(e, i, false));
+                    goalsContainer.appendChild(goalItem);
+                } else {
+                    // Render "Click here to add goal" card
+                    const setupPrompt = document.createElement('div');
+                    setupPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
+                                            'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] '; /* Apply unified styling */
+                    setupPrompt.innerHTML = `
+                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
+                                        'text-[rgb(var(--color-text-secondary))]"></i>
+                        <span>Click here to add your next goal</span>
+                    `;
+                    setupPrompt.addEventListener('click', (e) => {
+                        showEditGoalPopup(e, -1, true); // isNewGoal true for new goal
+                    });
+                    goalsContainer.appendChild(setupPrompt);
+                }
+            }
+        }
+
+        let currentEditGoalIndex = -1;
+        let isEditingNewGoal = false; // Renamed from isEditingDefaultGoal for clarity
+        let originalGoalText = '';
+
+        function showEditGoalPopup(e, index, isNewGoal = false) { // Renamed isDefault to isNewGoal
+            e.stopPropagation();
+            currentEditGoalIndex = index;
+            isEditingNewGoal = isNewGoal;
+
+            let goalText = '';
+            if (!isNewGoal) { // If it's an existing goal
+                const currentGoals = getGoals();
+                const goalToEdit = currentGoals[index];
+                goalText = goalToEdit ? goalToEdit.text : '';
+            }
+            // If isNewGoal is true (clicked "add goal" prompt), goalText remains empty, which is correct for new goal.
+
+            originalGoalText = goalText;
+            editGoalInput.value = goalText;
+            editGoalSection.classList.add('show');
+            editGoalInput.focus();
+
+            updateActionButtonText();
+        }
+
+        function hideEditGoalPopup() {
+            editGoalSection.classList.remove('show');
+            currentEditGoalIndex = -1;
+            isEditingNewGoal = false;
+            originalGoalText = '';
+        }
+
+        function updateActionButtonText() {
+            if (editGoalInput.value.trim() !== originalGoalText.trim()) {
+                editGoalActionButton.textContent = "Save";
+            } else {
+                editGoalActionButton.textContent = "Completed";
+            }
+        }
+
+        function handleEditGoalAction() {
+            if (editGoalActionButton.textContent === "Save") {
+                handleSaveGoal();
+            } else if (editGoalActionButton.textContent === "Completed") {
+                handleCompleteGoal();
+            }
+        }
+
+        function handleSaveGoal() {
+            const newText = editGoalInput.value.trim();
+            if (!newText) {
+                console.warn("Goal title cannot be empty.");
+                return;
+            }
+
+            let userGoals = getGoals(); // Get all current goals
+
+            if (isEditingNewGoal) {
+                // If it was a new goal being added
+                userGoals.push({ text: newText, creationTime: new Date().toISOString() });
+            } else {
+                // If an existing user goal was edited, update it
+                if (currentEditGoalIndex !== -1 && currentEditGoalIndex < userGoals.length) {
+                    userGoals[currentEditGoalIndex].text = newText;
+                }
+            }
+            saveGoals(userGoals);
+            renderGoals();
+            hideEditGoalPopup();
+        }
+
+        function handleCompleteGoal() {
+            if (isEditingNewGoal) { // If it's the "add goal" prompt, just close
+                hideEditGoalPopup();
+                return;
+            }
+
+            let userGoals = getGoals();
+            if (currentEditGoalIndex !== -1 && currentEditGoalIndex < userGoals.length) {
+                userGoals.splice(currentEditGoalIndex, 1);
+                saveGoals(userGoals);
+                renderGoals();
+            }
+            hideEditGoalPopup();
+        }
+
+        function handleDeleteGoal() {
+            if (isEditingNewGoal) { // If it's the "add goal" prompt, just close
+                hideEditGoalPopup();
+                return;
+            }
+
+            let userGoals = getGoals();
+            if (currentEditGoalIndex !== -1 && currentEditGoalIndex < userGoals.length) {
+                userGoals.splice(currentEditGoalIndex, 1);
+                saveGoals(userGoals);
+                renderGoals();
+            }
+            hideGoalContextMenu(); // Ensure context menu is hidden
+            hideEditGoalPopup(); // Ensure edit popup is hidden
+        }
+
+
+        function showGoalContextMenu(e, index, isNewGoal = false) { // Renamed isDefault to isNewGoal
+            e.preventDefault();
+            if (isNewGoal) return; // Right-click does nothing on the "add goal" prompt
+
+            const currentGoals = getGoals();
+            if (index < 0 || index >= currentGoals.length) return;
+
+            goalContextMenu.classList.add('show');
+            goalContextMenu.style.left = `${e.clientX}px`;
+            goalContextMenu.style.top = `${e.clientY}px`;
+            goalContextMenu.dataset.goalIndex = index;
+            // Set visibility immediately for context menu
+            goalContextMenu.style.visibility = 'visible';
+            goalContextMenu.style.pointerEvents = 'auto';
+        }
+
+        function hideGoalContextMenu() {
+            goalContextMenu.classList.remove('show');
+            goalContextMenu.removeAttribute('data-goal-index');
+            // Use a timeout to hide visibility after transition completes
+            setTimeout(() => {
+                goalContextMenu.style.visibility = 'hidden';
+                goalContextMenu.style.pointerEvents = 'none';
+            }, 200); // Match transition-duration of opacity/transform
+        }
+
+        function handleContextMenuAction(action) {
+            const index = parseInt(goalContextMenu.dataset.goalIndex, 10);
+            if (isNaN(index)) return;
+
+            let userGoals = getGoals();
+            if (index >= 0 && index < userGoals.length) {
+                if (action === 'completed' || action === 'delete') {
+                    userGoals.splice(index, 1);
+                    saveGoals(userGoals);
+                    renderGoals();
+                }
+            }
+            hideGoalContextMenu();
+        }
+
+        function updateGoalTimeSince() {
+            // Only render goals if they are enabled
+            if (goalsEnabled) {
+                renderGoals();
+            }
+        }
+</script>

@@ -187,13 +187,7 @@ import DynamicGreeting from "../components/DynamicGreeting/index.astro";
         <div id="loading-indicator" class="w-[50px] h-1 bg-[rgb(var(--color-accent))] rounded-sm opacity-0 dark:bg-[rgb(var(--color-accent))]"></div>
     </div>
 
-    <!-- Goal Context Menu (Right-click) -->
-    <div id="goal-context-menu" class="context-menu absolute bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
-             dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
-        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
-                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="completed">Completed</div>
-        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
-                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="delete">Delete</div>
+    import GoalManager from "../components/GoalManager.astro";" data-action="delete">Delete</div>
     </div>
 
     <div class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative">
@@ -292,6 +286,8 @@ import DynamicGreeting from "../components/DynamicGreeting/index.astro";
 
         <Menu />
 
+<GoalManager />
+
 <DynamicGreeting />
 
 
@@ -328,50 +324,7 @@ import DynamicGreeting from "../components/DynamicGreeting/index.astro";
             }
         }
 
-        function renderGoals() {
-            const userGoals = getGoals(); // Get only user-defined goals
-
-            goalsContainer.innerHTML = ''; // Clear existing goals/button
-
-            const maxVisibleSlots = 2; // Always aim for 2 slots
-
-            for (let i = 0; i < maxVisibleSlots; i++) {
-                if (userGoals[i]) {
-                    // Render existing user goal
-                    const goalItem = document.createElement('div');
-                    goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
-                                        'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] '; /* Apply unified styling */
-                    goalItem.dataset.index = i;
-                    goalItem.innerHTML = `
-                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
-                                        'text-[rgb(var(--color-text-secondary))]"></i>
-                        <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow ' +
-                                        'text-[rgb(var(--color-text-primary))]">${userGoals[i].text}</span>
-                        <span class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 ' +
-                                        'text-[rgb(var(--color-text-secondary))]">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
-                    `;
-                    goalItem.addEventListener('click', (e) => {
-                        showEditGoalPopup(e, i, false);
-                    });
-                    goalItem.addEventListener('contextmenu', (e) => showGoalContextMenu(e, i, false));
-                    goalsContainer.appendChild(goalItem);
-                } else {
-                    // Render "Click here to add goal" card
-                    const setupPrompt = document.createElement('div');
-                    setupPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] hover:text-[rgb(var(--color-text-primary))] ' +
-                                            'border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] '; /* Apply unified styling */
-                    setupPrompt.innerHTML = `
-                        <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 group-hover:text-[rgb(var(--color-text-primary))] ' +
-                                        'text-[rgb(var(--color-text-secondary))]"></i>
-                        <span>Click here to add your next goal</span>
-                    `;
-                    setupPrompt.addEventListener('click', (e) => {
-                        showEditGoalPopup(e, -1, true); // isNewGoal true for new goal
-                    });
-                    goalsContainer.appendChild(setupPrompt);
-                }
-            }
-        }
+        
 
         let currentEditGoalIndex = -1;
         let isEditingNewGoal = false; // Renamed from isEditingDefaultGoal for clarity

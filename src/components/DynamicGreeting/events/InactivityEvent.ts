@@ -52,7 +52,7 @@ export class InactivityEvent extends BaseEvent {
     // DEMO: Trigger the event after 2 seconds
     setTimeout(() => {
       this.requestDisplay();
-    }, 2000);
+    }, 20);
 
     // Example for continuous check (every 2 mins):
     // setInterval(() => this.requestDisplay(), 120000);

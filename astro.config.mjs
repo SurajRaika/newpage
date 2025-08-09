@@ -7,4 +7,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+   build: {
+    assets: 'my_assets' // change '_astro' to your own folder name
+  },  
 });

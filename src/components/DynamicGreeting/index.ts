@@ -23,7 +23,7 @@ enum HubState {
 export class DynamicGreetingHub {
   // Constants
   private readonly THROTTLE_PERIOD = 2000;         // 2 seconds
-  private readonly COOLDOWN_PERIOD = 5000;         // 5 seconds
+  private readonly COOLDOWN_PERIOD = 2000;         // 5 seconds
   private readonly MAX_QUEUE_TIME = 120000;        // 2 minutes
   private readonly MAX_RETRIES = 3;
 

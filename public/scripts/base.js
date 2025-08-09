@@ -1,4 +1,6 @@
-      const LayoutManager = (() => {
+
+ 
+ const LayoutManager = (() => {
                 // --- State & Elements ---
                 let goalsEnabled = false;
                 const goalsContainer =
@@ -51,6 +53,28 @@
                 return { init };
             })();
 
+            function initializeApp() {
+                const blankScreenOverlay = document.getElementById(
+                    "blank-screen-overlay",
+                );
+                const searchInput = document.getElementById("search-input");
 
+                // Initialize all modules
+                LayoutManager.init();
 
-            export default LayoutManager;
+                // Fix for blank screen on browser back button
+                window.addEventListener("pageshow", (event) => {
+                    if (event.persisted) {
+                        blankScreenOverlay.style.opacity = "0";
+                        blankScreenOverlay.style.pointerEvents = "none";
+                    }
+                });
+
+                // Hide loading overlay and focus search input
+                blankScreenOverlay.style.opacity = "0";
+                blankScreenOverlay.style.pointerEvents = "none";
+                setTimeout(() => searchInput.focus(), 400);
+            }
+
+            document.addEventListener("DOMContentLoaded", initializeApp);
+     

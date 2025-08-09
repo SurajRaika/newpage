@@ -39,8 +39,8 @@ export class InactivityEvent extends BaseEvent {
         "My current mood is 'no'.",
         "Don't you dare give me a task."
       ],
-      src: "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
-      position: "bottom-right",
+      src: "https://i.pinimg.com/originals/39/97/95/399795eb77f3c0d81d3e50f890d93cdb.png",
+      position: "top-right",
       size: "large"
     }
   ];

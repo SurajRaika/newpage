@@ -49,8 +49,8 @@ export class RandomTipEvent extends BaseEvent {
         "I am not amused.",
         "This is my resting annoyed face."
       ],
-      src: "https://i.pinimg.com/originals/44/b8/d9/44b8d93e9d724b08c83bf689f82a2bac.png",
-      position: "bottom-left",
+      src: "https://i.pinimg.com/originals/39/97/95/399795eb77f3c0d81d3e50f890d93cdb.png",
+      position: "top-right",
       size: "medium"
     }
   ];

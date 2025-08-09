@@ -1,0 +1,206 @@
+<style>
+    /* Edit Goal Section (Modal Overlay) specific styles for visibility transition */
+    #edit-goal-section {
+        transition: opacity 0.15s ease-out; /* Fast fade for overlay */
+    }
+    #edit-goal-section.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    /* Modal inside edit goal section for slide effect */
+    #edit-goal-section .edit-goal-modal {
+        transform: translateY(-100%); /* Start completely off-screen top */
+        transition: transform 0.15s ease-out; /* Fast slide */
+    }
+    #edit-goal-section.show .edit-goal-modal {
+        transform: translateY(0); /* Slide into view */
+    }
+</style>
+<!-- Goal Context Menu (Right-click) -->
+      <div id="edit-goal-section" class="fixed inset-0 bg-[rgb(var(--color-primary-bg),0.5)] bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none">
+            <div class="edit-goal-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-[rgb(var(--color-accent))] focus-within:shadow-md
+                        dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
+                <label for="edit-goal-input" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
+                                            dark:text-[rgb(var(--color-text-secondary))]">
+                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5 text-[rgb(var(--color-text-primary))] text-base w-full box-border focus:outline-none focus:border-[rgb(var(--color-accent))]
+                                            dark:bg-[rgb(var(--color-primary-bg))] dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))] dark:focus:border-[rgb(var(--color-accent))]">
+                </label>
+                <div class="button-group flex flex-row gap-1 items-center ml-auto">
+                    <button id="edit-goal-action-button" class="bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-[rgb(var(--color-text-secondary))]
+                                            dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))] dark:hover:bg-[rgb(var(--color-text-secondary))]"></button> <!-- This will be Save or Completed -->
+                    <button id="edit-goal-delete-button" class="delete-button bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
+                                            dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]">Delete</button>
+                </div>
+            </div>
+        </div>
+
+<script>
+    import { getGoals, saveGoals, formatTimeAgo } from '../utils/general.ts';
+
+    const GoalsManager = (() => {
+    // --- State & Elements ---
+    let currentEditIndex = -1;
+    let isNew = false;
+    
+    const goalsContainer = document.getElementById('goals-container');
+    const editSection = document.getElementById('edit-goal-section');
+    const editModal = document.querySelector('#edit-goal-section .edit-goal-modal');
+    const editInput = document.getElementById('edit-goal-input');
+    const actionButton = document.getElementById('edit-goal-action-button');
+    const deleteButton = document.getElementById('edit-goal-delete-button');
+    // const contextMenu = document.getElementById('goal-context-menu');
+
+    // --- Private Methods ---
+    const render = () => {
+        const userGoals = getGoals();
+        goalsContainer.innerHTML = '';
+        const maxSlots = 2;
+
+        for (let i = 0; i < maxSlots; i++) {
+            if (userGoals[i]) {
+                // Render existing goal
+                const goalItem = document.createElement('div');
+                goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))]';
+                goalItem.dataset.index = i;
+                goalItem.innerHTML = `
+                    <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 text-[rgb(var(--color-text-secondary))]"></i>
+                    <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow">${userGoals[i].text}</span>
+                    <span class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 text-[rgb(var(--color-text-secondary))]">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
+                `;
+                // ✅ FIX: Pass the event object 'e' to stop propagation
+                goalItem.addEventListener('click', (e) => showEditPopup(e, i));
+
+                // goalItem.addEventListener('contextmenu', (e) => showContextMenu(e, i));
+
+                goalsContainer.appendChild(goalItem);
+            } else {
+                // Render "Add Goal" prompt
+                const addPrompt = document.createElement('div');
+                addPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))]';
+                addPrompt.innerHTML = `
+                    <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2"></i>
+                    <span>Click here to add your next goal</span>
+                `;
+                // ✅ FIX: Pass the event object 'e' to stop propagation
+                addPrompt.addEventListener('click', (e) => showEditPopup(e, -1, true));
+                goalsContainer.appendChild(addPrompt);
+            }
+        }
+    };
+
+    // ✅ FIX: Accept the event 'e' and call stopPropagation()
+    const showEditPopup = (e, index, isNewGoal = false) => {
+        e.stopPropagation(); // Prevents the click from bubbling to the document
+        
+        currentEditIndex = index;
+        isNew = isNewGoal;
+        
+        const goalText = isNew ? '' : getGoals()[index]?.text || '';
+        editInput.value = goalText;
+        editInput.dataset.originalValue = goalText;
+        
+        updateActionButtonText();
+        editSection.classList.add('show');
+        editInput.focus();
+    };
+
+    const hideEditPopup = () => {
+        editSection.classList.remove('show');
+        currentEditIndex = -1;
+        isNew = false;
+    };
+    
+    const updateActionButtonText = () => {
+        actionButton.textContent = (editInput.value.trim() !== editInput.dataset.originalValue.trim()) ? "Save" : "Completed";
+    };
+
+    const handleAction = () => {
+        if (actionButton.textContent === "Save") saveGoal();
+        else completeGoal();
+    };
+
+    const saveGoal = () => {
+        const newText = editInput.value.trim();
+        if (!newText) return;
+
+        let goals = getGoals();
+        if (isNew) {
+            goals.push({ text: newText, creationTime: new Date().toISOString() });
+        } else if (currentEditIndex !== -1) {
+            goals[currentEditIndex].text = newText;
+        }
+        saveGoals(goals);
+        render();
+        hideEditPopup();
+    };
+
+    const completeGoal = () => {
+        if (isNew) {
+            hideEditPopup();
+            return;
+        }
+        deleteGoal(currentEditIndex);
+        hideEditPopup();
+    };
+    
+    const deleteGoal = (index) => {
+        if (index === -1) return;
+        let goals = getGoals();
+        goals.splice(index, 1);
+        saveGoals(goals);
+        render();
+    };
+
+    // const showContextMenu = (e, index) => {
+    //     e.preventDefault();
+    //     e.stopPropagation(); // Also good practice here
+    //     contextMenu.style.left = `${e.clientX}px`;
+    //     contextMenu.style.top = `${e.clientY}px`;
+    //     contextMenu.dataset.goalIndex = index;
+    //     contextMenu.classList.add('show');
+    // };
+
+    // const hideContextMenu = () => {
+    //     contextMenu.classList.remove('show');
+    // };
+
+    const init = () => {
+
+
+
+        document.addEventListener('render-goals-manager', ()=>{
+            render();
+        });
+
+
+        actionButton.addEventListener('click', handleAction);
+        deleteButton.addEventListener('click', () => {
+            deleteGoal(currentEditIndex);
+            hideEditPopup();
+        });
+        editInput.addEventListener('input', updateActionButtonText);
+        editInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAction(); });
+
+        // contextMenu.addEventListener('click', (e) => {
+        //     const action = e.target.dataset.action;
+        //     const index = parseInt(contextMenu.dataset.goalIndex, 10);
+        //     if (action === 'completed' || action === 'delete') {
+        //         deleteGoal(index);
+        //     }
+        //     hideContextMenu();
+        // });
+        
+        document.addEventListener('click', (e) => {
+            if (editSection.classList.contains('show') && !editModal.contains(e.target)) hideEditPopup();
+            // if (contextMenu.classList.contains('show') && !contextMenu.contains(e.target)) hideContextMenu();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideEditPopup(); hideContextMenu(); } });
+        
+        setInterval(render, 60 * 1000);
+    };
+
+    return { init, render };
+})();
+
+GoalsManager.init();
+</script>

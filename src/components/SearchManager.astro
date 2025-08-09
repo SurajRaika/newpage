@@ -1,0 +1,147 @@
+<div
+    class="search-area-wrapper flex flex-col bg-[rgb(var(--color-secondary-bg))] border-2 border-[rgb(var(--color-border-color))] rounded-sm p-1 relative focus-within:border-[rgb(var(--color-accent))]
+        dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]"
+>
+    <form
+        id="search-form"
+        class="search-form w-full flex-grow mt-0"
+    >
+        <div
+            class="input-wrapper relative flex items-center w-full"
+        >
+            <input
+                type="text"
+                id="search-input"
+                name="query"
+                class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-[rgb(var(--color-text-primary))] text-base md:text-lg leading-relaxed placeholder:text-[rgb(var(--color-text-placeholder))] focus:outline-none
+                    dark:text-[rgb(var(--color-text-primary))] dark:placeholder:text-[rgb(var(--color-text-placeholder))]"
+                placeholder="Search Google..."
+                autocomplete="off"
+            />
+            <button
+                type="submit"
+                class="search-button absolute right-0 mr-2 text-[rgb(var(--color-text-secondary))] cursor-pointer bg-none border-none p-0 flex items-center justify-center hover:text-[rgb(var(--color-text-primary))]
+                    dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]"
+                aria-label="Search"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="search-icon w-5 h-5"
+                >
+                    <path
+                        d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.5 6.5a7.5 7.5 0 0 0 10.2 10.2Z"
+                    ></path>
+                </svg>
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+    const SearchManager = (() => {
+        // --- State & Elements ---
+        let isCtrlPressed = false;
+        const searchForm = document.getElementById("search-form");
+        const searchInput = document.getElementById("search-input");
+        const blankScreenOverlay = document.getElementById(
+            "blank-screen-overlay",
+        );
+
+        // --- Private Methods ---
+        const performSearch = (query, engine, newTab = false) => {
+            if (!query) return;
+
+            if (engine === "history") {
+                engine = "google"; // Default to Google if history is selected
+                const googleRadio = document.querySelector(
+                    'input[name="engine"][value="google"]',
+                );
+                if (googleRadio) googleRadio.checked = true;
+                // Announce engine change to update UI
+                document.dispatchEvent(
+                    new Event("change", { bubbles: true }),
+                );
+            }
+
+            const urls = {
+                google: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+                perplexity: `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}`,
+                youtube: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+                chatgpt: `https://chat.openai.com/chat?q=${encodeURIComponent(query)}`,
+            };
+            const url = urls[engine];
+            if (!url) return;
+
+            // Announce search for history module
+            document.dispatchEvent(
+                new CustomEvent("add-to-history", {
+                    detail: { query, engine },
+                }),
+            );
+
+            if (newTab) {
+                window.open(url, "_blank");
+            } else {
+                blankScreenOverlay.style.opacity = "1";
+                blankScreenOverlay.style.pointerEvents = "auto";
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 200);
+            }
+        };
+
+        // --- Public Methods & Event Listeners ---
+        const init = () => {
+            searchForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                const engine = document.querySelector(
+                    'input[name="engine"]:checked',
+                ).value;
+                performSearch(query, engine, isCtrlPressed);
+            });
+
+            // Keyboard shortcuts for search
+            document.addEventListener("keydown", (e) => {
+                const isInputActive =
+                    document.activeElement === searchInput;
+                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    performSearch(
+                        searchInput.value.trim(),
+                        document.querySelector(
+                            'input[name="engine"]:checked',
+                        ).value,
+                        true,
+                    );
+                } else if (e.key === "/" && !isInputActive) {
+                    e.preventDefault();
+                    searchInput.focus();
+                } else if (e.key === "Escape" && isInputActive) {
+                    searchInput.blur();
+                }
+            });
+
+            // Track Ctrl/Cmd key state for new tab submissions
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Control" || e.key === "Meta")
+                    isCtrlPressed = true;
+            });
+            document.addEventListener("keyup", (e) => {
+                if (e.key === "Control" || e.key === "Meta")
+                    isCtrlPressed = false;
+            });
+        };
+
+        return { init };
+    })();
+
+    SearchManager.init();
+</script>

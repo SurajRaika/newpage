@@ -6,439 +6,298 @@ import DailyProgressBar from "../components/DailyProgressBar.astro";
 import TimeInfo from "../components/TimeInfo.astro";
 import DynamicGreeting from "../components/DynamicGreeting/index.astro";
 import EngineManager from "../components/EngineManager.astro";
+import GoalsManager from "../components/GoalsManager.astro";
+import SearchManager from "../components/SearchManager.astro";
 ---
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
-<head>
-      <script is:inline>
-    // The configured mode is stored in local storage
-    const theme = localStorage.getItem("themePreference");
-    // Put dark class on html tag to enable dark mode
-    document.querySelector("html").className = theme;
-  </script>
+    <head>
+        <script is:inline>
+            // The configured mode is stored in local storage
+            const theme = localStorage.getItem("themePreference");
+            // Put dark class on html tag to enable dark mode
+            document.querySelector("html").className = theme;
+        </script>
 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Minimal Search</title>   
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Minimal Search</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Schoolbell Font CDN -->
-    <link href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap" rel="stylesheet">
-    <!-- Phosphor Icons CDN for filled icons -->
-    <!-- Tailwind CSS CDN with custom config to match existing colors -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        />
 
-  
-    <style type="text/css">
-        /* CSS Variables for theming */
-        :root {
-            --color-primary-bg: 240 240 240;
-            --color-secondary-bg: 224 224 224;
-            --color-border-color: 187 187 187;
-            --color-text-primary: 26 26 26;
-            --color-text-secondary: 68 68 68;
-            --color-text-placeholder: 119 119 119;
-            --color-accent: 136 136 136;
-            --color-radio-selected-bg: 221 221 221;
-            --color-radio-selected-dot: 26 26 26;
-        }
+        <!-- Schoolbell Font CDN -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap"
+            rel="stylesheet"
+        />
+        <!-- Phosphor Icons CDN for filled icons -->
+        <!-- Tailwind CSS CDN with custom config to match existing colors -->
 
-        html.dark {
-            --color-primary-bg: 26 26 26;
-            --color-secondary-bg: 42 42 42;
-            --color-border-color: 68 68 68;
-            --color-text-primary: 240 240 240;
-            --color-text-secondary: 204 204 204;
-            --color-text-placeholder: 136 136 136;
-            --color-accent: 255 255 255;
-            --color-radio-selected-bg: 85 85 85;
-            --color-radio-selected-dot: 255 255 255;
-        }
+        <style type="text/css">
+            /* CSS Variables for theming */
+            :root {
+                --color-primary-bg: 240 240 240;
+                --color-secondary-bg: 224 224 224;
+                --color-border-color: 187 187 187;
+                --color-text-primary: 26 26 26;
+                --color-text-secondary: 68 68 68;
+                --color-text-placeholder: 119 119 119;
+                --color-accent: 136 136 136;
+                --color-radio-selected-bg: 221 221 221;
+                --color-radio-selected-dot: 26 26 26;
+            }
 
-        /* Global transition for all elements for smoother UI */
-        * {
-            transition-property: all;
-            transition-timing-function: ease-out;
-            transition-duration: 0.2s;
-        }
+            html.dark {
+                --color-primary-bg: 26 26 26;
+                --color-secondary-bg: 42 42 42;
+                --color-border-color: 68 68 68;
+                --color-text-primary: 240 240 240;
+                --color-text-secondary: 204 204 204;
+                --color-text-placeholder: 136 136 136;
+                --color-accent: 255 255 255;
+                --color-radio-selected-bg: 85 85 85;
+                --color-radio-selected-dot: 255 255 255;
+            }
 
-        /* Body font */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+            /* Global transition for all elements for smoother UI */
+            * {
+                transition-property: all;
+                transition-timing-function: ease-out;
+                transition-duration: 0.2s;
+            }
 
-        /* Specific styles not easily replaced by Tailwind without breaking design */
-        /* Active line indicator - now a single element */
-        #active-line {
-            position: absolute;
-            bottom: 0;
-            height: 2px;
-            border-radius: 1px;
-            transition: left 0.3s ease-out, width 0.3s ease-out; /* Sliding animation */
-            z-index: 10; /* Ensure it's on top */
-            background-color: rgb(var(--color-text-primary)); /* Use theme variable for color */
-        }
+            /* Body font */
+            body {
+                font-family: "Inter", sans-serif;
+            }
 
-        /* Loading indicator animation */
-        #loading-indicator {
-            animation: slide-fade 1s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
-        }
+            /* Specific styles not easily replaced by Tailwind without breaking design */
+            /* Active line indicator - now a single element */
+            #active-line {
+                position: absolute;
+                bottom: 0;
+                height: 2px;
+                border-radius: 1px;
+                transition:
+                    left 0.3s ease-out,
+                    width 0.3s ease-out; /* Sliding animation */
+                z-index: 10; /* Ensure it's on top */
+                background-color: rgb(
+                    var(--color-text-primary)
+                ); /* Use theme variable for color */
+            }
 
-        /* Keyframes for slide-fade animation */
-        @keyframes slide-fade {
-            0% { opacity: 0; transform: translateX(-50px); }
-            25% { opacity: 1; transform: translateX(0); }
-            75% { opacity: 1; transform: translateX(50px); }
-            100% { opacity: 0; transform: translateX(100px); }
-        }
+            /* Loading indicator animation */
+            #loading-indicator {
+                animation: slide-fade 1s infinite
+                    cubic-bezier(0.65, 0.05, 0.36, 1);
+            }
 
-        /* Hide the actual radio button visually */
-        .custom-radio {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-            pointer-events: none;
-        }
+            /* Keyframes for slide-fade animation */
+            @keyframes slide-fade {
+                0% {
+                    opacity: 0;
+                    transform: translateX(-50px);
+                }
+                25% {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                75% {
+                    opacity: 1;
+                    transform: translateX(50px);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateX(100px);
+                }
+            }
 
-        /* Webkit browsers (Chrome, Safari) scrollbar styles */
-        .history-list::-webkit-scrollbar {
-            width: 6px; /* width of the scrollbar */
-        }
+            /* Hide the actual radio button visually */
+            .custom-radio {
+                position: absolute;
+                opacity: 0;
+                width: 0;
+                height: 0;
+                pointer-events: none;
+            }
 
-        .history-list::-webkit-scrollbar-track {
-            background: transparent; /* color of the tracking area */
-        }
+            /* Webkit browsers (Chrome, Safari) scrollbar styles */
+            .history-list::-webkit-scrollbar {
+                width: 6px; /* width of the scrollbar */
+            }
 
-        .history-list::-webkit-scrollbar-thumb {
-            background-color: rgb(var(--color-border-color)); /* Light mode thumb color */
-            border-radius: 10px; /* roundness of the scroll thumb */
-            border: 1px solid rgb(var(--color-secondary-bg)); /* Light mode border color */
-        }
+            .history-list::-webkit-scrollbar-track {
+                background: transparent; /* color of the tracking area */
+            }
 
-        /* Dark mode scrollbar thumb */
-        html.dark .history-list::-webkit-scrollbar-thumb {
-            background-color: rgb(var(--color-border-color)); /* Dark mode thumb color */
-            border: 1px solid rgb(var(--color-secondary-bg)); /* Dark mode border color */
-        }
+            .history-list::-webkit-scrollbar-thumb {
+                background-color: rgb(
+                    var(--color-border-color)
+                ); /* Light mode thumb color */
+                border-radius: 10px; /* roundness of the scroll thumb */
+                border: 1px solid rgb(var(--color-secondary-bg)); /* Light mode border color */
+            }
 
-        /* Firefox scrollbar styles */
-        .history-list {
-            scrollbar-width: thin;
-            scrollbar-color: rgb(var(--color-border-color)) transparent; /* Light mode thumb and track color */
-        }
+            /* Dark mode scrollbar thumb */
+            html.dark .history-list::-webkit-scrollbar-thumb {
+                background-color: rgb(
+                    var(--color-border-color)
+                ); /* Dark mode thumb color */
+                border: 1px solid rgb(var(--color-secondary-bg)); /* Dark mode border color */
+            }
 
-        /* Dark mode Firefox scrollbar */
-        html.dark .history-list {
-            scrollbar-color: rgb(var(--color-border-color)) transparent; /* Dark mode thumb and track color */
-        }
+            /* Firefox scrollbar styles */
+            .history-list {
+                scrollbar-width: thin;
+                scrollbar-color: rgb(var(--color-border-color)) transparent; /* Light mode thumb and track color */
+            }
 
-      
-        /* Goal Context Menu specific styles for visibility transition */
-        #goal-context-menu {
-            display: flex; /* Keep flex display always */
-            visibility: hidden; /* Start hidden for transitions */
-            opacity: 0;
-            pointer-events: none; /* Prevent clicks when hidden */
-            transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
-        }
+            /* Dark mode Firefox scrollbar */
+            html.dark .history-list {
+                scrollbar-color: rgb(var(--color-border-color)) transparent; /* Dark mode thumb and track color */
+            }
 
-        #goal-context-menu.show {
-            visibility: visible;
-            opacity: 1;
-            pointer-events: auto;
-        }
+            /* Goal Context Menu specific styles for visibility transition */
+            #goal-context-menu {
+                display: flex; /* Keep flex display always */
+                visibility: hidden; /* Start hidden for transitions */
+                opacity: 0;
+                pointer-events: none; /* Prevent clicks when hidden */
+                transition:
+                    opacity 0.2s ease-out,
+                    visibility 0.2s ease-out;
+            }
 
-        /* Edit Goal Section (Modal Overlay) specific styles for visibility transition */
-        #edit-goal-section {
-            transition: opacity 0.15s ease-out; /* Fast fade for overlay */
-        }
-        #edit-goal-section.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        /* Modal inside edit goal section for slide effect */
-        #edit-goal-section .edit-goal-modal {
-            transform: translateY(-100%); /* Start completely off-screen top */
-            transition: transform 0.15s ease-out; /* Fast slide */
-        }
-        #edit-goal-section.show .edit-goal-modal {
-            transform: translateY(0); /* Slide into view */
-        }
+            #goal-context-menu.show {
+                visibility: visible;
+                opacity: 1;
+                pointer-events: auto;
+            }
 
-
-     
-
-        
-        #top-elements.with-engine #engine-selection {
-            flex-shrink: 0;
-            flex-grow: 0;
-        }
-    </style>
-    <!-- Inline script to prevent theme flicker -->
-   
-</head>
-<body class="bg-[rgb(var(--color-primary-bg))] text-[rgb(var(--color-text-primary))] flex items-center justify-center min-h-screen p-4 antialiased
-             dark:bg-[rgb(var(--color-primary-bg))] dark:text-[rgb(var(--color-text-primary))]">
-    <!-- Blank screen overlay for transition -->
-    <div id="blank-screen-overlay" class="fixed inset-0 opacity-0 pointer-events-none z-[9999] transition-opacity duration-50 flex items-center justify-center
-             bg-[rgb(var(--color-primary-bg))] dark:bg-[rgb(var(--color-primary-bg))]">
-        <div id="loading-indicator" class="w-[50px] h-1 bg-[rgb(var(--color-accent))] rounded-sm opacity-0 dark:bg-[rgb(var(--color-accent))]"></div>
-    </div>
-
-    <!-- Goal Context Menu (Right-click) -->
-    <div id="goal-context-menu" class="context-menu absolute bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
-             dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]">
-        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
-                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="completed">Completed</div>
-        <div class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
-                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]" data-action="delete">Delete</div>
-    </div>
-
-    <div class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative">
-        <!-- New Edit Goal Section - For single goal edit, appears from top -->
-        <div id="edit-goal-section" class="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none">
-            <div class="edit-goal-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4 focus-within:border-[rgb(var(--color-accent))] focus-within:shadow-md
-                        dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
-                <label for="edit-goal-input" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
-                                            dark:text-[rgb(var(--color-text-secondary))]">
-                    <input type="text" id="edit-goal-input" placeholder="Edit your goal title" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5 text-[rgb(var(--color-text-primary))] text-base w-full box-border focus:outline-none focus:border-[rgb(var(--color-accent))]
-                                            dark:bg-[rgb(var(--color-primary-bg))] dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))] dark:focus:border-[rgb(var(--color-accent))]">
-                </label>
-                <div class="button-group flex flex-row gap-1 items-center ml-auto">
-                    <button id="edit-goal-action-button" class="bg-[rgb(var(--color-accent))] text-[rgb(var(--color-primary-bg))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-[rgb(var(--color-text-secondary))]
-                                            dark:bg-[rgb(var(--color-accent))] dark:text-[rgb(var(--color-primary-bg))] dark:hover:bg-[rgb(var(--color-text-secondary))]"></button> <!-- This will be Save or Completed -->
-                    <button id="edit-goal-delete-button" class="delete-button bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
-                                            dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]">Delete</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top elements: Time Info and dynamically moved Engine Selection -->
-        <div id="top-elements" class="flex   justify-between gap-4 items-start w-full">
-
-
-            <TimeInfo />
-
-
-
-            <!-- The engine-selection element will be dynamically moved here or in main-content-bottom -->
-        </div>
-
-        <div class="search-area-wrapper flex flex-col bg-[rgb(var(--color-secondary-bg))] border-2 border-[rgb(var(--color-border-color))] rounded-sm p-1 relative focus-within:border-[rgb(var(--color-accent))]
-                    dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] dark:focus-within:border-[rgb(var(--color-accent))]">
-            <form id="search-form" class="search-form w-full flex-grow mt-0">
-                <div class="input-wrapper relative flex items-center w-full">
-                    <input
-                        type="text"
-                        id="search-input"
-                        name="query"
-                        class="search-input w-full bg-transparent border-none rounded-none pt-1.5 pb-1.5 pl-2 pr-10 text-[rgb(var(--color-text-primary))] text-base md:text-lg leading-relaxed placeholder:text-[rgb(var(--color-text-placeholder))] focus:outline-none
-                                dark:text-[rgb(var(--color-text-primary))] dark:placeholder:text-[rgb(var(--color-text-placeholder))]"
-                        placeholder="Search Google..."
-                        autocomplete="off"
-                    />
-                    <button type="submit" class="search-button absolute right-0 mr-2 text-[rgb(var(--color-text-secondary))] cursor-pointer bg-none border-none p-0 flex items-center justify-center hover:text-[rgb(var(--color-text-primary))]
-                                dark:text-[rgb(var(--color-text-secondary))] dark:hover:text-[rgb(var(--color-text-primary))]" aria-label="Search">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon w-5 h-5">
-                            <path d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.5 6.5a7.5 7.5 0 0 0 10.2 10.2Z"/>
-                        </svg>
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Main content bottom: Engine Selection (if goals hidden), Goals, Daily Progress -->
-        <div id="main-content-bottom" class="flex flex-col sm:flex-row gap-4 w-full justify-between items-center">
-            <EngineManager />
-
-            <div class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start" id="goals-container">
-                <!-- Goals or "Click here to set up" message will be rendered here -->
-            </div>
-            <DailyProgressBar />
             
+
+            #top-elements.with-engine #engine-selection {
+                flex-shrink: 0;
+                flex-grow: 0;
+            }
+        </style>
+        <!-- Inline script to prevent theme flicker -->
+    </head>
+    <body
+        class="bg-[rgb(var(--color-primary-bg))] text-[rgb(var(--color-text-primary))] flex items-center justify-center min-h-screen p-4 antialiased
+             dark:bg-[rgb(var(--color-primary-bg))] dark:text-[rgb(var(--color-text-primary))]"
+    >
+        <!-- Blank screen overlay for transition -->
+        <div
+            id="blank-screen-overlay"
+            class="fixed inset-0 opacity-0 pointer-events-none z-[9999] transition-opacity duration-50 flex items-center justify-center
+             bg-[rgb(var(--color-primary-bg))] dark:bg-[rgb(var(--color-primary-bg))]"
+        >
+            <div
+                id="loading-indicator"
+                class="w-[50px] h-1 bg-[rgb(var(--color-accent))] rounded-sm opacity-0 dark:bg-[rgb(var(--color-accent))]"
+            >
+            </div>
         </div>
 
-        <SearchHistory />
-    </div>
+        <!-- <div
+            id="goal-context-menu"
+            class="context-menu absolute bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm shadow-lg z-50 flex-col min-w-[120px] py-1
+             dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))]"
+        >
+            <div
+                class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]"
+                data-action="completed"
+            >
+                Completed
+            </div>
+            <div
+                class="context-menu-item px-4 py-2 text-[rgb(var(--color-text-primary))] text-sm cursor-pointer whitespace-nowrap hover:bg-[rgb(var(--color-border-color))]
+                    dark:text-[rgb(var(--color-text-primary))] dark:hover:bg-[rgb(var(--color-border-color))]"
+                data-action="delete"
+            >
+                Delete
+            </div>
+        </div> -->
+
+        <div
+            class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative"
+        >
+            <!-- New Edit Goal Section - For single goal edit, appears from top -->
+            <GoalsManager />
+            <!-- Top elements: Time Info and dynamically moved Engine Selection -->
+            <div
+                id="top-elements"
+                class="flex justify-between gap-4 items-start w-full"
+            >
+                <TimeInfo />
+
+                <!-- The engine-selection element will be dynamically moved here or in main-content-bottom -->
+            </div>
+
+                    <SearchManager />
+
+
+            <!-- Main content bottom: Engine Selection (if goals hidden), Goals, Daily Progress -->
+            <div
+                id="main-content-bottom"
+                class="flex flex-col sm:flex-row gap-4 w-full justify-between items-center"
+            >
+                <EngineManager />
+
+                <div
+                    class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start"
+                    id="goals-container"
+                >
+                    <!-- Goals or "Click here to set up" message will be rendered here -->
+                </div>
+                <DailyProgressBar />
+            </div>
+
+            <SearchHistory />
+        </div>
 
         <Menu />
 
-<DynamicGreeting />
+        <DynamicGreeting />
+        <GoalsManager />
 
+        <script>
+ 
+            import LayoutManager from "../utils/LayoutManager.ts";
 
-   <script>
-    // --- Utility Imports ---
-    import { getGoals, saveGoals, searchEnginePlaceholders, formatTimeAgo } from '../utils/general.ts';
-    // =================================================================================
-    //                           -*- SEARCH ENGINE MODULE -*-
-    // Manages the search engine switcher UI, state, and keyboard shortcuts.
-    // =it================================================================================
+            function initializeApp() {
+                const blankScreenOverlay = document.getElementById(
+                    "blank-screen-overlay",
+                );
+                const searchInput = document.getElementById("search-input");
 
+                // Initialize all modules
+                LayoutManager.init();
 
-    // =================================================================================
-    //                               -*- GOALS MODULE -*-
-    //   Manages creating, rendering, editing, and deleting goals.
-    // =================================================================================
+                // Fix for blank screen on browser back button
+                window.addEventListener("pageshow", (event) => {
+                    if (event.persisted) {
+                        blankScreenOverlay.style.opacity = "0";
+                        blankScreenOverlay.style.pointerEvents = "none";
+                    }
+                });
 
-import GoalsManager from '../utils/GoalsManager.ts';    
-
-
-
-
-
-    // =================================================================================
-    //                              -*- SEARCH MODULE -*-
-    //             Handles search form submission and search logic.
-    // =================================================================================
-
-    const SearchManager = (() => {
-        // --- State & Elements ---
-        let isCtrlPressed = false;
-        const searchForm = document.getElementById('search-form');
-        const searchInput = document.getElementById('search-input');
-        const blankScreenOverlay = document.getElementById('blank-screen-overlay');
-
-        // --- Private Methods ---
-        const performSearch = (query, engine, newTab = false) => {
-            if (!query) return;
-
-            if (engine === 'history') {
-                engine = 'google'; // Default to Google if history is selected
-                const googleRadio = document.querySelector('input[name="engine"][value="google"]');
-                if (googleRadio) googleRadio.checked = true;
-                // Announce engine change to update UI
-                document.dispatchEvent(new Event('change', { bubbles: true }));
+                // Hide loading overlay and focus search input
+                blankScreenOverlay.style.opacity = "0";
+                blankScreenOverlay.style.pointerEvents = "none";
+                setTimeout(() => searchInput.focus(), 400);
             }
-            
-            const urls = {
-                google: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
-                perplexity: `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}`,
-                youtube: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
-                chatgpt: `https://chat.openai.com/chat?q=${encodeURIComponent(query)}`,
-            };
-            const url = urls[engine];
-            if (!url) return;
-            
-            // Announce search for history module
-            document.dispatchEvent(new CustomEvent('add-to-history', { detail: { query, engine } }));
-            
-            if (newTab) {
-                window.open(url, '_blank');
-            } else {
-                blankScreenOverlay.style.opacity = '1';
-                blankScreenOverlay.style.pointerEvents = 'auto';
-                setTimeout(() => { window.location.href = url; }, 200);
-            }
-        };
 
-        // --- Public Methods & Event Listeners ---
-        const init = () => {
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const query = searchInput.value.trim();
-                const engine = document.querySelector('input[name="engine"]:checked').value;
-                performSearch(query, engine, isCtrlPressed);
-            });
-            
-            // Keyboard shortcuts for search
-            document.addEventListener('keydown', (e) => {
-                const isInputActive = document.activeElement === searchInput;
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    performSearch(searchInput.value.trim(), document.querySelector('input[name="engine"]:checked').value, true);
-                } else if (e.key === '/' && !isInputActive) {
-                    e.preventDefault();
-                    searchInput.focus();
-                } else if (e.key === 'Escape' && isInputActive) {
-                    searchInput.blur();
-                }
-            });
-
-            // Track Ctrl/Cmd key state for new tab submissions
-            document.addEventListener('keydown', e => { if (e.key === 'Control' || e.key === 'Meta') isCtrlPressed = true; });
-            document.addEventListener('keyup', e => { if (e.key === 'Control' || e.key === 'Meta') isCtrlPressed = false; });
-        };
-        
-        return { init };
-    })();
-
-
-    // =================================================================================
-    //                              -*- LAYOUT MODULE -*-
-    //           Manages the overall layout based on feature visibility.
-    // =================================================================================
-    
-    const LayoutManager = (() => {
-        // --- State & Elements ---
-        let goalsEnabled = false;
-        const goalsContainer = document.getElementById('goals-container');
-        const engineSelection = document.getElementById('engine-selection');
-        const topElementsContainer = document.getElementById('top-elements');
-        const mainContentBottomContainer = document.getElementById('main-content-bottom');
-
-        // --- Private Methods ---
-        const update = () => {
-            goalsEnabled = localStorage.getItem('goalsEnabled') === 'true';
-            if (goalsEnabled) {
-                goalsContainer.classList.remove('hidden');
-                topElementsContainer.appendChild(engineSelection);
-                topElementsContainer.classList.add('with-engine');
-            } else {
-                goalsContainer.classList.add('hidden');
-                mainContentBottomContainer.prepend(engineSelection);
-                topElementsContainer.classList.remove('with-engine');
-            }
-            // Ask other modules to update their UI
-            // GoalsManager.render();
-            setTimeout(() =>document.dispatchEvent(new CustomEvent('render-goals-manager')), 0);
-            setTimeout(() => document.dispatchEvent(new CustomEvent('update-active-line')), 0);
-        };
-        
-        // --- Public Methods & Event Listeners ---
-        const init = () => {
-
-            document.addEventListener('toggle-tasks', update);
-            update(); // Initial layout setup
-        };
-        
-        return { init };
-    })();
-
-
-    // =================================================================================
-    //                             -*- APP INITIALIZATION -*-
-    //                      Sets up the application on page load.
-    // =================================================================================
-    
-    function initializeApp() {
-        const blankScreenOverlay = document.getElementById('blank-screen-overlay');
-        const searchInput = document.getElementById('search-input');
-
-        // Initialize all modules
-        LayoutManager.init();
-        GoalsManager.init();
-        SearchManager.init();
-
-        // Fix for blank screen on browser back button
-        window.addEventListener('pageshow', (event) => {
-            if (event.persisted) {
-                blankScreenOverlay.style.opacity = '0';
-                blankScreenOverlay.style.pointerEvents = 'none';
-            }
-        });
-
-        // Hide loading overlay and focus search input
-        blankScreenOverlay.style.opacity = '0';
-        blankScreenOverlay.style.pointerEvents = 'none';
-        setTimeout(() => searchInput.focus(), 400);
-    }
-
-    document.addEventListener('DOMContentLoaded', initializeApp);
-
-</script>
-</body>
+            document.addEventListener("DOMContentLoaded", initializeApp);
+        </script>
+    </body>
 </html>
-

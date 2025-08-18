@@ -14,7 +14,9 @@ export class TimeOfDayEvent extends BaseEvent {
 
   // Local storage key to manage cooldown period
   private localStorageKey = 'time_of_day_event_expiry';
-
+  private probability = 50; // 50% chance by default
+  private waitTime = 1000; // in milisec
+  private Priority = EventPriority.MEDIUM; 
   /**
    * Greeting images grouped by time of day.
    * Each key represents a time of day, containing an array of objects:
@@ -98,7 +100,7 @@ export class TimeOfDayEvent extends BaseEvent {
       if (this.canTrigger()) {
         this.requestDisplay(); // Requests the hub to display this event
       }
-    }, 2000);
+    }, this.waitTime);
   }
 
   /**
@@ -118,17 +120,38 @@ export class TimeOfDayEvent extends BaseEvent {
    */
   canTrigger(): boolean {
     if (typeof window === 'undefined' || !window.localStorage) {
-      return true; // No local storage, always allow
+      return Math.random() * 100 < this.probability;
     }
 
-    const expiryTime = localStorage.getItem(this.localStorageKey);
-    if (expiryTime) {
-      const now = Date.now();
-      if (now < parseInt(expiryTime, 10)) {
-        return false; // Still in cooldown
-      }
+    const raw = localStorage.getItem(this.localStorageKey);
+    if (!raw) {
+      return Math.random() * 100 < this.probability;
     }
-    return true;
+
+    try {
+      const parsed = JSON.parse(raw) as {
+        period: 'morning' | 'afternoon' | 'evening' | 'night';
+        date: string;
+        expiry: number;
+      };
+
+      const now = Date.now();
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (
+        parsed.expiry &&
+        now < parsed.expiry &&
+        parsed.period === this.getTimeOfDay() &&
+        parsed.date === today
+      ) {
+        return false; // cooldown active
+      }
+    } catch (e) {
+      console.warn(`[${this.eventId}] Failed to parse stored expiry, clearing key.`, e);
+      localStorage.removeItem(this.localStorageKey);
+    }
+
+    return Math.random() * 100 < this.probability;
   }
 
   /**
@@ -137,7 +160,8 @@ export class TimeOfDayEvent extends BaseEvent {
    * Higher priority = shown first.
    */
   getPriority(): EventPriority {
-    return EventPriority.MEDIUM; // Medium priority for this event
+    return this.Priority;
+    // return EventPriority.MEDIUM; // Medium priority for this event
   }
 
   /**
@@ -154,10 +178,23 @@ export class TimeOfDayEvent extends BaseEvent {
    * Handles user interaction responses from the hub.
    * Updates the cooldown period when dismissed or clicked.
    */
-  onEventResponse(response: EventResponse): void {
-    if (response.action === 'clicked' || response.action === 'dismissed') {
-      const expiryTime = Date.now() + 60 * 60 * 1000; // 1 hour cooldown
-      localStorage.setItem(this.localStorageKey, expiryTime.toString());
-    }
+ onEventResponse(response: EventResponse): void {
+  if (response.action === 'clicked' || response.action === 'dismissed') {
+    const expiryTime = Date.now() + 60 * 60 * 1000; // 1 hour cooldown
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const payload = {
+      period: this.getTimeOfDay() as 'morning' | 'afternoon' | 'evening' | 'night',
+      date: today,
+      expiry: expiryTime
+    };
+    localStorage.setItem(this.localStorageKey, JSON.stringify(payload));
+  }
+}
+
+  onDisplay(hideCallback: () => void): void {
+    console.log(`[${this.eventId}] Displayed! Will hide in 4 seconds.`);
+    setTimeout(() => {
+      hideCallback(); // Hide myself after 4 seconds
+    }, 4000);
   }
 }

@@ -1,4 +1,10 @@
-     // The configured mode is stored in local storage
-            const theme = localStorage.getItem("themePreference");
-            // Put dark class on html tag to enable dark mode
-            document.querySelector("html").className = theme;
+(function() {
+  const themePreference = localStorage.getItem('themePreference');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  if (themePreference === 'dark' || (themePreference === null && prefersDark)) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+})();

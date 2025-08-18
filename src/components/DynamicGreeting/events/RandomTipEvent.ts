@@ -9,6 +9,10 @@ import { BaseEvent, EventPriority, type EventResponse, type ImageData } from '..
 export class RandomTipEvent extends BaseEvent {
   eventId = 'random_tip_event';
 
+  private probability = 50; // 50% chance by default
+  private waitTime = 1000; // in milisec
+  private Priority = EventPriority.MEDIUM;
+
   /**
    * Array of tips with multiple text options for variety.
    * Each tip contains:
@@ -61,7 +65,7 @@ export class RandomTipEvent extends BaseEvent {
     // DEMO: Trigger this event after 2 seconds
     setTimeout(() => {
       this.requestDisplay();
-    }, 2000);
+    }, 10);
 
     // Example: trigger every 2 minutes
     // setInterval(() => this.requestDisplay(), 120000);
@@ -72,11 +76,11 @@ export class RandomTipEvent extends BaseEvent {
    * Example: 15% chance -> return Math.random() < 0.15;
    */
   canTrigger(): boolean {
-    return true;
+    return Math.random() * 100 < this.probability;
   }
 
   getPriority(): EventPriority {
-    return EventPriority.LOW;
+    return this.Priority;
   }
 
   /**
@@ -100,5 +104,32 @@ export class RandomTipEvent extends BaseEvent {
 
   onEventResponse(response: EventResponse): void {
     // Handle user interactions (if needed)
+  }
+
+  onDisplay(hideCallback: () => void): void {
+    console.log(`[${this.eventId}] Displayed! Will hide in 80 seconds.`);
+    let count = 0;
+const intervalId = setInterval(() => {
+  console.log("Count is", count);
+
+  if (count >= 8) {
+    console.log("Closing the displayed image");
+    hideCallback(); // Hide myself after 8 seconds
+
+    clearInterval(intervalId); // stop the interval
+  }
+
+  count += 1;
+}, 1000);
+
+
+
+    setTimeout(() => {
+      hideCallback(); // Hide myself after 8 seconds
+    }, 80000);
+
+
+
+
   }
 }

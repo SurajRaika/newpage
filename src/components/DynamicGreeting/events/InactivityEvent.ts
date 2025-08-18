@@ -1,5 +1,3 @@
-// /home/karma/Documents/astro_tailwind_config/src/components/DynamicGreeting/events/InactivityEvent.ts
-
 import { BaseEvent, EventPriority, type EventResponse, type ImageData } from '../types';
 
 /**
@@ -9,20 +7,11 @@ import { BaseEvent, EventPriority, type EventResponse, type ImageData } from '..
 export class InactivityEvent extends BaseEvent {
   eventId = 'inactivity_event';
 
-  /**
-   * Array of inactivity image data.
-   * Each object includes:
-   *  - texts: multiple text options (we will choose one randomly)
-   *  - src: image URL
-   *  - position: where to display
-   *  - size: image size
-   */
-  private inactivityImages: {
-    texts: string[];
-    src: string;
-    position: string;
-    size: string;
-  }[] = [
+  private probability = 50; // 50% chance by default
+  private waitTime = 1000; // in milisec
+  private Priority = EventPriority.MEDIUM;
+
+  private inactivityImages = [
     {
       texts: [
         "I'm not lazy, I'm just on energy-saving mode.",
@@ -45,39 +34,40 @@ export class InactivityEvent extends BaseEvent {
     }
   ];
 
+  private inactivityTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly inactivityDelay = 60000; // 2 minutes
+
   constructor() {
     super();
     this.initializeListener();
+    this.setupInactivityDetection();
+  }
 
-    // DEMO: Trigger the event after 2 seconds
-    setTimeout(() => {
-      this.requestDisplay();
-    }, 20);
+  private setupInactivityDetection() {
+    const resetTimer = () => {
+      if (this.inactivityTimeout) clearTimeout(this.inactivityTimeout);
+      this.inactivityTimeout = setTimeout(() => {
+        this.requestDisplay();
+      }, this.inactivityDelay);
+    };
 
-    // Example for continuous check (every 2 mins):
-    // setInterval(() => this.requestDisplay(), 120000);
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+
+    resetTimer(); // Start timer on load
   }
 
   canTrigger(): boolean {
-    return true;
+    return Math.random() * 100 < this.probability;
   }
 
   getPriority(): EventPriority {
-    return EventPriority.MEDIUM;
+    return this.Priority;
   }
 
-  /**
-   * Return a random image data with a randomly selected text.
-   * The hub expects { src, position, size, text } (based on ImageData type).
-   */
   getImageData(): Omit<ImageData, 'id'> {
-    // Pick a random image object
     const randomImage = this.inactivityImages[Math.floor(Math.random() * this.inactivityImages.length)];
-    
-    // Pick a random text from the selected image's texts array
     const randomText = randomImage.texts[Math.floor(Math.random() * randomImage.texts.length)];
-
-    // Return in correct format
     return {
       src: randomImage.src,
       position: randomImage.position,
@@ -90,5 +80,12 @@ export class InactivityEvent extends BaseEvent {
     if (response.action === 'clicked') {
       console.log("User interacted with inactivity event.");
     }
+  }
+
+  onDisplay(hideCallback: () => void): void {
+    console.log(`[${this.eventId}] Displayed! Will hide in 4 seconds.`);
+    setTimeout(() => {
+      hideCallback(); // Hide myself after 4 seconds
+    }, 4000);
   }
 }

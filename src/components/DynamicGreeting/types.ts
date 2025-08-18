@@ -86,6 +86,12 @@ export abstract class BaseEvent {
   abstract getImageData(): Omit<ImageData, 'id'>;
   abstract onEventResponse(response: EventResponse): void;
 
+  /**
+   * Optional: Called when the event's image is successfully displayed.
+   * @param hideCallback A function to call to hide the currently displayed greeting.
+   */
+  onDisplay?(hideCallback: () => void): void;
+
   // --- Core logic ---
   protected requestDisplay(): void {
     if (!this.canTrigger()) return;
@@ -101,6 +107,16 @@ export abstract class BaseEvent {
     window.dispatchEvent(new CustomEvent('greeting:requestDisplay', { detail: request }));
   }
 }
+
+/**
+ * Extends EventRequest to include additional properties for internal hub management.
+ */
+export interface QueuedRequest extends EventRequest {
+  timestamp: number;
+  retryCount?: number;
+  eventInstance: BaseEvent; // Reference to the actual event instance
+}
+
 
 
 

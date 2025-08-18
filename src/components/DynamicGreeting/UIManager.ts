@@ -1,11 +1,6 @@
 // UIManager.ts - Handles all UI/UX related operations
-import { EventPriority, type EventRequest, type EventResponse } from './types';
+import { EventPriority, type EventResponse, type QueuedRequest } from './types';
 import { EventUtils } from './utils';
-
-interface QueuedRequest extends EventRequest {
-  timestamp: number;
-  retryCount?: number;
-}
 
 export class UIManager {
   private currentImageElement: HTMLElement | null = null;
@@ -41,6 +36,17 @@ export class UIManager {
     
     // Animate in with a subtle effect
     this.animateSubtlyIn();
+
+    // NEW: Call onDisplay if implemented by the event
+    if (request.eventInstance && typeof request.eventInstance.onDisplay === 'function') {
+      request.eventInstance.onDisplay(() => {
+        // This is the hideCallback passed to the event
+        // Ensure we only hide if this is still the current displayed request
+        if (this.currentImageElement && this.currentImageElement.dataset.eventId === request.imageData.id) {
+          onResponse('dismissed', request); // Notify hub that it was dismissed by event itself
+        }
+      });
+    }
 
     return this.currentImageElement;
   }
@@ -198,6 +204,12 @@ export class UIManager {
     request: QueuedRequest,
     onTimeout: () => void
   ): number | null {
+    // If the event instance has its own onDisplay method, it will handle its own dismissal.
+    // So, we don't set up an auto-timeout here to avoid conflicts.
+    if (request.eventInstance && typeof request.eventInstance.onDisplay === 'function') {
+      return null;
+    }
+
     if (request.priority >= EventPriority.CRITICAL) {
       return null; // Critical events don't auto-dismiss
     }

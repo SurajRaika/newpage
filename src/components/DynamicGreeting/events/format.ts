@@ -12,6 +12,10 @@ export class InactivityEvent extends BaseEvent {
   // A unique identifier for this event (used by the event hub)
   eventId = 'inactivity_event';
 
+  private probability = 50; // 50% chance by default
+  private waitTime = 1000; // in milisec
+  private Priority = EventPriority.MEDIUM;
+
   /**
    * Array of images and text that will be randomly displayed
    * - We omit 'id' because it will be added dynamically by the hub when needed.
@@ -45,7 +49,7 @@ export class InactivityEvent extends BaseEvent {
   constructor() {
     super(); // Call BaseEvent constructor
 
-    this.initializeListener(); // Hook up any activity listeners  very important
+    this.initializeListener(); // Hook up any activity listeners  very important , must be called
 
     // DEMO: Automatically trigger this event after 2 seconds
     setTimeout(() => {
@@ -72,14 +76,7 @@ export class InactivityEvent extends BaseEvent {
    * Higher priority = shown first.
    */
   getPriority(): EventPriority {
-    return EventPriority.MEDIUM;
-    // export enum EventPriority {
-  // LOW = 1,
-  // MEDIUM = 2,
-  // HIGH = 3,
-  // CRITICAL = 4
-}
-
+    return this.Priority;
   }
 
   /**

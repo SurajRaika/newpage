@@ -1,16 +1,12 @@
 // Refactored DynamicGreetingHub/index.ts - UI/UX logic moved to UIManager
-import { BaseEvent, EventPriority, type EventRequest, type EventResponse } from './types';
+import { BaseEvent, EventPriority, type EventRequest, type EventResponse, type QueuedRequest } from './types';
 import { UIManager } from './UIManager';
 
 // Import all your event classes here
 import { InactivityEvent } from './events/InactivityEvent';
+import { OfflineEvent } from './events/offlineEvent';
 import { RandomTipEvent } from './events/RandomTipEvent';
 import { TimeOfDayEvent } from './events/TimeOfDayEvent';
-
-interface QueuedRequest extends EventRequest {
-  timestamp: number;
-  retryCount?: number;
-}
 
 // State machine to simplify logic
 enum HubState {
@@ -52,7 +48,7 @@ export class DynamicGreetingHub {
 
   /** Instantiates all event classes. */
   private registerEvents(): void {
-    this.events = [new RandomTipEvent(), new InactivityEvent(), new TimeOfDayEvent()];
+    this.events = [new RandomTipEvent(), new InactivityEvent(), new TimeOfDayEvent(), new OfflineEvent()];
     console.log(`📋 Registered ${this.events.length} event types.`);
   }
 
@@ -80,10 +76,17 @@ export class DynamicGreetingHub {
 
     console.log(`📥 [QUEUE] Queuing request from ${request.eventId} with priority ${EventPriority[request.priority]}.`);
     
+    const eventInstance = this.events.find(e => e.eventId === request.eventId);
+    if (!eventInstance) {
+      console.warn(`⚠️ [QUEUE] No matching event instance found for eventId: ${request.eventId}. Request ignored.`);
+      return;
+    }
+
     const queuedRequest: QueuedRequest = {
       ...request,
       timestamp: Date.now(),
       retryCount: 0,
+      eventInstance: eventInstance, // Assign the found event instance
     };
 
     const existingIndex = this.requestQueue.findIndex((q) => q.eventId === request.eventId);

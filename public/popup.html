@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Tab Tracker</title>
+  <style>
+    body { font-family: system-ui, Arial; padding: 12px; width: 420px; }
+    h2 { margin: 0 0 8px 0; font-size: 16px; }
+    #controls { display:flex; gap:8px; margin-bottom:10px; }
+    button { padding:6px 8px; border-radius:6px; cursor:pointer; }
+    #list { max-height: 420px; overflow:auto; border-top:1px solid #eee; padding-top:8px; }
+    .entry { margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #f0f0f0; }
+    .url { font-size:12px; word-break:break-all; color:#0b66c3; text-decoration:underline; cursor:pointer; }
+    .meta { font-size:11px; color:#666; }
+    .title { font-weight: bold; font-size: 14px; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <h2>Tab History</h2>
+  <div id="controls">
+    <button id="refresh">Refresh</button>
+    <button id="clear">Clear History</button>
+    <select id="filter">
+      <option value="all">All</option>
+      <option value="reload">Reloads</option>
+      <option value="navigated">Navigations</option>
+      <option value="created">Created</option>
+      <option value="closed">Closed</option>
+    </select>
+  </div>
+
+  <div id="list">Loading…</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

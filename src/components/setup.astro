@@ -1,0 +1,59 @@
+<style>
+   /* Custom Inter font (if needed) */
+   body {
+   font-family: 'Inter', sans-serif;
+   }
+   /* Modal transitions */
+   .modal-container.show {
+   opacity: 1;
+   pointer-events: auto;
+   }
+   .modal-content {
+   transform: translateY(-20px);
+   transition: transform 0.25s ease, opacity 0.25s ease;
+   opacity: 0;
+   }
+   .modal-container.show .modal-content {
+   transform: translateY(0);
+   opacity: 1;
+   }
+   /* Loading animation */
+   .loading {
+   border: 2px solid #f3f3f3;
+   border-top: 2px solid #000;
+   border-radius: 50%;
+   width: 16px;
+   height: 16px;
+   animation: spin 1s linear infinite;
+   }
+   @keyframes spin {
+   0% { transform: rotate(0deg); }
+   100% { transform: rotate(360deg); }
+   }
+</style>
+<!-- Setup Modal -->
+<div id="setup-container" class="modal-container fixed inset-0 bg-black/60 flex justify-center items-start z-50 opacity-0 pointer-events-none">
+   <div class="modal-content bg-white border border-black rounded-lg flex flex-col w-[90%] max-w-xl mt-10 shadow-lg">
+      <div class="flex items-center gap-2 p-4">
+         <input type="text" id="api-key" placeholder="Enter your Gemini API Key" class="flex-grow p-2 border border-black rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-black">
+         <button id="setup-save-button" class="px-4 py-2 text-xs font-medium bg-black text-white rounded-sm hover:bg-gray-800 transition-colors flex items-center gap-2">
+         <span class="loading hidden"></span>
+         <span id="save-text">Save & Test</span>
+         </button>
+         <button id="setup-delete-button" class="px-4 py-2 text-xs font-medium bg-white text-black border border-black rounded-sm hover:bg-black hover:text-white transition-colors">Delete</button>
+      </div>
+      <div class="p-2 pt-0">
+         <p id="status-message" class="text-xs text-gray-600 pl-2 mb-2"></p>
+         <p class="text-xs text-gray-500 pl-2">
+            Don't have an API key? <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-black underline hover:no-underline">Get one here</a>.
+         </p>
+      </div>
+      <!-- Test Result Section -->
+      <div id="test-result-section" class="border-t border-gray-200 p-4 hidden">
+         <h3 class="text-sm font-medium mb-2">API Test Result:</h3>
+         <div id="test-result" class="bg-gray-50 p-3 rounded text-xs border min-h-[60px] max-h-[200px] overflow-y-auto"></div>
+      </div>
+   </div>
+</div>
+
+  <script type="module" src="/scripts/setupManager.js"></script>

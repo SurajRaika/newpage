@@ -8,6 +8,8 @@ import DynamicGreeting from "../components/DynamicGreeting/index.astro";
 import EngineManager from "../components/EngineManager.astro";
 import GoalsManager from "../components/GoalsManager.astro";
 import SearchManager from "../components/SearchManager.astro";
+import SetupManager from "../components/setup.astro";
+
 ---
 
 <!doctype html>
@@ -197,7 +199,7 @@ import SearchManager from "../components/SearchManager.astro";
         >
             <div
                 id="loading-indicator"
-                class="w-[50px] h-1 bg-[rgb(var(--color-accent))] rounded-sm opacity-0 dark:bg-[rgb(var(--color-accent))]"
+                class="w-[50px]    h-1 bg-[rgb(var(--color-accent))] rounded-sm opacity-0 dark:bg-[rgb(var(--color-accent))]"
             >
             </div>
         </div>
@@ -222,6 +224,8 @@ import SearchManager from "../components/SearchManager.astro";
                 Delete
             </div>
         </div> -->
+
+        <SetupManager/>
 
         <div
             class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative"

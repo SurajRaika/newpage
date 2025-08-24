@@ -61,7 +61,6 @@ async function callGeminiApi(prompt, apiKey) {
 
 // Listener: Handle messages from other parts of the extension
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  // Use an async IIFE to handle async operations
   (async () => {
     try {
       if (msg.action === "askGemini") {
@@ -69,19 +68,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const result = await callGeminiApi(msg.prompt, apiKey);
         sendResponse(result);
       } else if (msg.action === "testGemini") {
-        // Test prompt to verify the connection
-        const testPrompt = "In one short sentence, say 'API connection successful. but in funny tone'";
-        const result = await callGeminiApi(testPrompt, msg.apiKey);
+        const apiKey = msg.apiKey || await getApiKey();
+        const testPrompt = "In one short sentence, say 'API connection successful.' in a funny tone. Return only the sentence.";
+        const result = await callGeminiApi(testPrompt, apiKey);
         sendResponse(result);
+      } else {
+        sendResponse({ success: false, error: "Unknown action: " + (msg.action || "<none>") });
       }
     } catch (err) {
       sendResponse({ success: false, error: err.message });
     }
   })();
 
-  // Return true to keep the message channel open for async sendResponse
+  // Keep message channel open for async response
   return true;
 });
+
 
 
 

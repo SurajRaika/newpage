@@ -1,0 +1,37 @@
+<div
+  class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start __web-inspector-hide-shortcut__"
+  id="goals-container"
+>
+  <!-- Slot 1: Primary Goal -->
+  <div
+    class="add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))]"
+    data-id="undefined"
+    data-slot="primary"
+  >
+    <i
+      class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 text-[rgb(var(--color-text-secondary))]"
+    ></i>
+    <span
+      class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow"
+      >Add Primary Goal (Slot 1)</span
+    >
+    <span
+      class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 text-[rgb(var(--color-text-secondary))]"
+      >15d ago</span
+    >
+  </div>
+
+  <!-- Slot 2: Secondary Goal -->
+  <div
+    class="add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))]"
+    data-slot="secondary"
+  >
+    <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2"></i>
+    <span>Add Secondary Goal (Slot 2)</span>
+       <span
+      class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 text-[rgb(var(--color-text-secondary))]"
+      >15d ago</span
+    >
+  </div>
+</div>
+

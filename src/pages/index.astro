@@ -6,9 +6,11 @@ import DailyProgressBar from "../components/DailyProgressBar.astro";
 import TimeInfo from "../components/TimeInfo.astro";
 import DynamicGreeting from "../components/DynamicGreeting/index.astro";
 import EngineManager from "../components/EngineManager.astro";
-import GoalsManager from "../components/GoalsManager.astro";
+import CommandPalette from "../components/CommandPalette.astro";
+// import GoalsManager from "../components/GoalsManager.astro";
 import SearchManager from "../components/SearchManager.astro";
 import SetupManager from "../components/setup.astro";
+import TaskManager from "../components/taskManager.astro";
 
 ---
 
@@ -231,7 +233,6 @@ import SetupManager from "../components/setup.astro";
             class="container-wrapper w-full max-w-3xl flex flex-col gap-4 relative"
         >
             <!-- New Edit Goal Section - For single goal edit, appears from top -->
-            <GoalsManager />
             <!-- Top elements: Time Info and dynamically moved Engine Selection -->
             <div
                 id="top-elements"
@@ -239,8 +240,8 @@ import SetupManager from "../components/setup.astro";
             >
                 <TimeInfo />
 
-                <!-- The engine-selection element will be dynamically moved here or in main-content-bottom -->
-            </div>
+                <EngineManager />
+                </div>
 
                     <SearchManager />
 
@@ -250,14 +251,8 @@ import SetupManager from "../components/setup.astro";
                 id="main-content-bottom"
                 class="flex flex-col sm:flex-row gap-4 w-full justify-between items-center"
             >
-                <EngineManager />
-
-                <div
-                    class="goals-container w-full flex-grow max-w-none pr-0 grid grid-cols-2 gap-4 items-start"
-                    id="goals-container"
-                >
-                    <!-- Goals or "Click here to set up" message will be rendered here -->
-                </div>
+<TaskManager></TaskManager>
+            
                 <DailyProgressBar />
             </div>
 
@@ -267,8 +262,7 @@ import SetupManager from "../components/setup.astro";
         <Menu />
 
         <DynamicGreeting />
-        <GoalsManager />
-
+        <CommandPalette ></CommandPalette>
         <script  is:inline  src="/scripts/base.js"></script>
     </body>
 </html>

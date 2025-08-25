@@ -1,0 +1,281 @@
+---
+// CommandPalette.astro
+// Reusable Astro/Tailwind component — keep UI/UX identical to your original.
+---
+
+<style>
+    /* Edit CommandPalette Section (Modal Overlay) specific styles for visibility transition */
+    #edit-CommandPalette-section {
+        transition: opacity 0.15s ease-out; /* Fast fade for overlay */
+    }
+    #edit-CommandPalette-section.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    /* Modal inside edit CommandPalette section for slide effect */
+    #edit-CommandPalette-section .edit-CommandPalette-modal {
+        transform: translateY(-100%); /* Start completely off-screen top */
+        transition: transform 0.15s ease-out; /* Fast slide */
+    }
+    #edit-CommandPalette-section.show .edit-CommandPalette-modal {
+        transform: translateY(0); /* Slide into view */
+    }
+</style>
+
+
+
+
+
+<!-- CommandPalette Context Menu (Right-click) -->
+<div id="edit-CommandPalette-section" class="fixed inset-0 bg-[rgb(var(--color-primary-bg),0.5)] bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none ">
+      <div class="edit-CommandPalette-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4  focus-within:shadow-md
+                  dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] ">
+          <label for="edit-CommandPalette-input" id="command-palette-label" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
+                                      dark:text-[rgb(var(--color-text-secondary))]">
+              <input type="text" id="edit-CommandPalette-input" placeholder="Edit your CommandPalette title" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5  focus:outline-none text-[rgb(var(--color-text-primary))] text-base w-full box-border 
+                                      dark:bg-[rgb(var(--color-primary-bg))] dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))] ">
+          </label>
+
+          <div class="button-group flex flex-row gap-1 items-center ml-auto">
+            <button id="edit-CommandPalette-delete-button" class="delete-button bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
+                                      dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]">Enter</button>
+          </div>
+      </div>
+</div>
+
+
+
+
+
+
+<script>
+(function () {
+  const SECTION_ID = 'edit-CommandPalette-section';
+  const INPUT_ID = 'edit-CommandPalette-input';
+  const BUTTON_ID = 'edit-CommandPalette-delete-button';
+  const LABEL_ID = 'command-palette-label';
+
+  const paletteSection = document.getElementById(SECTION_ID);
+  let paletteInput = document.getElementById(INPUT_ID);
+  const paletteButton = document.getElementById(BUTTON_ID);
+  const paletteLabel = document.getElementById(LABEL_ID);
+
+  // save default label html so we can restore it if needed
+  const defaultLabelHTML = paletteLabel ? paletteLabel.innerHTML : '';
+
+  // Keep original availableCommands behaviour (optional use)
+  const availableCommands = [
+      { name: 'toggle theme', action: () => { console.log('Toggling theme...'); /* Your theme toggle logic */ } },
+      { name: 'open settings', action: () => { console.log('Opening settings...'); /* Your settings logic */ } },
+      { name: 'log out', action: () => { console.log('Logging out...'); /* Your logout logic */ } }
+  ];
+
+  // Internal state
+  let resolvePromise = null;
+  let rejectPromise = null;
+  let currentOptions = {};
+
+  // Restore the original label markup (if we replaced it earlier)
+  function restoreDefaultLabel() {
+    if (!paletteLabel) return;
+    paletteLabel.innerHTML = defaultLabelHTML;
+    paletteInput = document.getElementById(INPUT_ID);
+    _inputRef = paletteInput;
+  }
+
+  // Helpers
+  function show(options = {}) {
+    // options:
+    // title, placeholder, initialValue, submitLabel, htmlContent (string), source (string/object), commands (array)
+    currentOptions = options || {};
+
+    // Apply placeholder/initial value
+    if (options.placeholder !== undefined && paletteInput) paletteInput.placeholder = options.placeholder;
+    if (options.initialValue !== undefined && paletteInput) paletteInput.value = options.initialValue;
+    else if (paletteInput) paletteInput.value = '';
+
+    // If htmlContent is provided, replace label's inner content but keep the label element for layout.
+    if (options.htmlContent !== undefined && options.htmlContent !== null && paletteLabel) {
+      // replace innerHTML of label but keep the input element inside if user wants. We wrap provided HTML inside a container
+      // to avoid removing the input accidentally unless they intentionally include an input.
+      paletteLabel.innerHTML = options.htmlContent;
+      // If they didn't provide an input inside htmlContent, ensure there's still a fallback input for keyboard capture
+      const providedInput = paletteLabel.querySelector('input');
+      if (!providedInput) {
+        // append the real input so things work as before
+        paletteLabel.insertAdjacentHTML('beforeend', `<input type="text" id="${INPUT_ID}" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5 focus:outline-none text-[rgb(var(--color-text-primary))] text-base w-full box-border" />`);
+      }
+      // re-bind paletteInput reference to the possibly new input
+      paletteInput = document.getElementById(INPUT_ID);
+      _inputRef = paletteInput;
+    } else {
+      // restore original label & input markup if asked or if no htmlContent provided
+      if (options.resetToDefaultLabel) restoreDefaultLabel();
+    }
+
+    // Custom submit button text
+    if (options.submitLabel && paletteButton) paletteButton.textContent = options.submitLabel;
+    else if (paletteButton) paletteButton.textContent = 'Enter';
+
+    // If commands array provided, override availableCommands locally
+    if (Array.isArray(options.commands)) {
+      // expect objects {name, action}
+      // shallow replace
+      availableCommands.length = 0;
+      options.commands.forEach(c => availableCommands.push(c));
+    }
+
+    paletteSection.classList.add('show');
+    setTimeout(() => {
+      // focus next tick to ensure visible
+      if (paletteInput) {
+        paletteInput.focus();
+        // place caret at end
+        const val = paletteInput.value || '';
+        try { paletteInput.setSelectionRange(val.length, val.length); } catch (e) {}
+      }
+    }, 10);
+
+    // Emit open event
+    window.dispatchEvent(new CustomEvent('command-palette-open', { detail: { options } }));
+
+    // Return a Promise that resolves on submit or rejects on cancel
+    return new Promise((resolve, reject) => {
+      resolvePromise = resolve;
+      rejectPromise = reject;
+    });
+  }
+
+  function hide() {
+    paletteSection.classList.remove('show');
+    // clear input value
+    try { if (paletteInput) paletteInput.value = ''; } catch (e) {}
+    // emit close
+    window.dispatchEvent(new CustomEvent('command-palette-close', { detail: { options: currentOptions } }));
+  }
+
+  function handleAction() {
+    const value = paletteInput && paletteInput.value ? paletteInput.value.trim() : '';
+
+    // try to match a command exactly (preserve existing behaviour)
+    const foundCommand = availableCommands.find(cmd => (cmd.name || '').toLowerCase() === value.toLowerCase());
+    if (foundCommand && typeof foundCommand.action === 'function') {
+      try { foundCommand.action(); } catch (e) { console.error(e); }
+    }
+
+    const payload = {
+      value,
+      source: currentOptions.source || null,
+      options: currentOptions
+    };
+
+    // dispatch a global event
+    window.dispatchEvent(new CustomEvent('command-palette-submit', { detail: payload }));
+
+    // resolve the Promise returned by show()
+    if (typeof resolvePromise === 'function') {
+      resolvePromise(payload);
+      resolvePromise = null;
+      rejectPromise = null;
+    }
+
+    hide();
+  }
+
+  function handleCancel() {
+    if (typeof rejectPromise === 'function') {
+      rejectPromise({ reason: 'cancel', options: currentOptions });
+      resolvePromise = null;
+      rejectPromise = null;
+    }
+    hide();
+  }
+
+  // input ref used by inputHandler
+  let _inputRef = paletteInput;
+  function inputHandler(e) {
+    const query = _inputRef && _inputRef.value ? _inputRef.value.trim().toLowerCase() : '';
+    // you could show suggestions here by using availableCommands
+    // keep current behaviour: log to console
+    console.log(`User is typing: ${query}`);
+  }
+
+  // wire initial listeners
+  function initListeners() {
+    // keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'Q') {
+        e.preventDefault();
+        show({});
+      } else if (e.key === 'Escape') {
+        if (paletteSection.classList.contains('show')) {
+          handleCancel();
+        }
+      }
+    });
+
+    // input event (delegated)
+    document.addEventListener('input', (ev) => {
+      const target = ev.target;
+      const ourInput = document.getElementById(INPUT_ID);
+      if (!ourInput) return;
+      if (target === ourInput) {
+        _inputRef = ourInput;
+        inputHandler(ev);
+      }
+    });
+
+    // Enter on the input
+    document.addEventListener('keydown', (ev) => {
+      const ourInput = document.getElementById(INPUT_ID);
+      if (!ourInput) return;
+      if (ev.key === 'Enter' && document.activeElement === ourInput) {
+        ev.preventDefault();
+        handleAction();
+      }
+    });
+
+    // click on submit button
+    if (paletteButton) {
+      paletteButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleAction();
+      });
+    }
+
+    // click outside modal to hide
+    document.addEventListener('click', (e) => {
+      const paletteModal = document.querySelector('#edit-CommandPalette-section .edit-CommandPalette-modal');
+      if (paletteSection.classList.contains('show') && paletteModal && !paletteModal.contains(e.target)) {
+        handleCancel();
+      }
+    });
+
+    // listen for global event to open palette
+    window.addEventListener('open-command-palette', (ev) => {
+      // ev.detail should contain the same options as show(options)
+      show(ev.detail || {});
+    });
+  }
+
+  // Public API on window
+  const API = {
+    show,
+    hide,
+    on: (eventName, cb) => window.addEventListener(eventName, cb),
+    off: (eventName, cb) => window.removeEventListener(eventName, cb),
+    // convenience: open via dispatch
+    openViaEvent: (options) => window.dispatchEvent(new CustomEvent('open-command-palette', { detail: options }))
+  };
+
+  // attach API (safe-guard existing global)
+  if (!window.CommandPalette) window.CommandPalette = API;
+  else {
+    // merge functions without overwriting existing ones
+    Object.assign(window.CommandPalette, API);
+  }
+
+  // init
+  initListeners();
+})();
+</script>

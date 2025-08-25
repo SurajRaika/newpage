@@ -23,8 +23,9 @@ const searchEnginePlaceholders = {
         };
         const updateUI = () => {
             const selectedEngine = document.querySelector('input[name="engine"]:checked').value;
-            searchInput.placeholder = searchEnginePlaceholders[selectedEngine];
-            setTimeout(updateActiveLinePosition, 0);
+    if (searchInput && selectedEngine) {
+        searchInput.placeholder = searchEnginePlaceholders[selectedEngine];
+    }            setTimeout(updateActiveLinePosition, 0);
             const eventToShow = selectedEngine === 'history' ? 'show-history' : 'hide-history';
             document.dispatchEvent(new CustomEvent(eventToShow));
         };

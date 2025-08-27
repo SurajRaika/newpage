@@ -3,6 +3,12 @@
 // Reusable Astro/Tailwind component — keep UI/UX identical to your original.
 ---
 
+
+
+
+
+
+
 <style>
     /* Edit CommandPalette Section (Modal Overlay) specific styles for visibility transition */
     #edit-CommandPalette-section {
@@ -28,9 +34,11 @@
 
 <!-- CommandPalette Context Menu (Right-click) -->
 <div id="edit-CommandPalette-section" class="fixed inset-0 bg-[rgb(var(--color-primary-bg),0.5)] bg-opacity-30 flex justify-center items-start z-[10000] opacity-0 pointer-events-none ">
-      <div class="edit-CommandPalette-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-row items-center gap-2 w-[90%] max-w-xl shadow-none mt-4  focus-within:shadow-md
+      <div class="edit-CommandPalette-modal bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2 flex flex-col items-center gap-2 w-[90%] max-w-xl shadow-none mt-4  focus-within:shadow-md
                   dark:bg-[rgb(var(--color-secondary-bg))] dark:border-[rgb(var(--color-border-color))] ">
-          <label for="edit-CommandPalette-input" id="command-palette-label" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
+          <div class=" w-full flex flex-row items-center gap-2">
+
+                  <label for="edit-CommandPalette-input" id="command-palette-label" class="text-[rgb(var(--color-text-secondary))] text-sm flex flex-col gap-1 flex-grow
                                       dark:text-[rgb(var(--color-text-secondary))]">
               <input type="text" id="edit-CommandPalette-input" placeholder="Edit your CommandPalette title" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5  focus:outline-none text-[rgb(var(--color-text-primary))] text-base w-full box-border 
                                       dark:bg-[rgb(var(--color-primary-bg))] dark:border-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))] ">
@@ -40,6 +48,10 @@
             <button id="edit-CommandPalette-delete-button" class="delete-button bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white
                                       dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]">Enter</button>
           </div>
+          </div>
+          <div id="edit-CommandPalette-extra" class=" hidden w-full mt-2 bg-[rgb(var(--color-secondary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm p-2  overflow-y-scroll max-h-[50vh] "></div>
+          <div id="edit-CommandPalette-action-buttons" class="w-full flex justify-between gap-1 items-center ml-auto"></div>
+
       </div>
 </div>
 
@@ -59,23 +71,25 @@
   let paletteInput = document.getElementById(INPUT_ID);
   const paletteButton = document.getElementById(BUTTON_ID);
   const paletteLabel = document.getElementById(LABEL_ID);
+  const extraContainer = document.getElementById('edit-CommandPalette-extra');
+  const actionButtonsContainer = document.getElementById('edit-CommandPalette-action-buttons');
 
-  // save default label html so we can restore it if needed
   const defaultLabelHTML = paletteLabel ? paletteLabel.innerHTML : '';
 
-  // Keep original availableCommands behaviour (optional use)
   const availableCommands = [
-      { name: 'toggle theme', action: () => { console.log('Toggling theme...'); /* Your theme toggle logic */ } },
-      { name: 'open settings', action: () => { console.log('Opening settings...'); /* Your settings logic */ } },
-      { name: 'log out', action: () => { console.log('Logging out...'); /* Your logout logic */ } }
+      { name: 'toggle theme', action: () => { console.log('Toggling theme...'); } },
+      { name: 'open settings', action: () => { console.log('Opening settings...'); } },
+      { name: 'log out', action: () => { console.log('Logging out...'); } }
   ];
 
   // Internal state
   let resolvePromise = null;
   let rejectPromise = null;
   let currentOptions = {};
+  let ignoreDocumentClick = false;
+  let _inputRef = paletteInput;
 
-  // Restore the original label markup (if we replaced it earlier)
+  // Restore default label
   function restoreDefaultLabel() {
     if (!paletteLabel) return;
     paletteLabel.innerHTML = defaultLabelHTML;
@@ -83,60 +97,117 @@
     _inputRef = paletteInput;
   }
 
-  // Helpers
+  // --------- NEW: extra/content & buttons helpers ----------
+function setExtraContent(htmlOrNode) {
+  if (!extraContainer) return;
+  // clear previous
+  extraContainer.innerHTML = '';
+
+  if (typeof htmlOrNode === 'string') {
+    extraContainer.innerHTML = htmlOrNode;
+  } else if (htmlOrNode instanceof Node) {
+    extraContainer.appendChild(htmlOrNode);
+  }
+
+  // make sure it's visible
+  extraContainer.classList.remove('hidden');
+
+  // dispatch a small event so callers can react to insertion
+  window.dispatchEvent(new CustomEvent('command-palette-extra-updated', { detail: { html: htmlOrNode } }));
+}
+
+  function clearExtraContent() {
+    if (!extraContainer) return;
+    extraContainer.innerHTML = '';
+  }
+
+  function setActionButtons(buttons = []) {
+    // buttons: [{ id?, label, action:function(payload){}, closeOnClick?:true|false, className?:'' }]
+    if (!actionButtonsContainer) return;
+    actionButtonsContainer.innerHTML = '';
+    buttons.forEach((b, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = b.label || `Action ${idx+1}`;
+      btn.className = b.className || 'bg-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))] px-2.5 py-1.5 border-none rounded-sm cursor-pointer font-semibold text-xs transition-colors duration-200 hover:bg-red-500 hover:text-white                                       dark:bg-[rgb(var(--color-border-color))] dark:text-[rgb(var(--color-text-primary))]';
+      btn.addEventListener('click', (ev) => {
+        try {
+          const payload = {
+            value: paletteInput && paletteInput.value ? paletteInput.value.trim() : '',
+            source: currentOptions.source || null,
+            options: currentOptions
+          };
+          if (typeof b.action === 'function') b.action(payload, ev);
+        } catch (err) {
+          console.error('Action button error', err);
+        }
+        if (b.closeOnClick !== false) {
+          // default behavior: close palette
+          hide();
+          // If there is a pending reject/resolve, reject with reason 'action' if unresolved
+          if (typeof rejectPromise === 'function') {
+            rejectPromise({ reason: 'action', options: currentOptions });
+            resolvePromise = null;
+            rejectPromise = null;
+          }
+        }
+      });
+      actionButtonsContainer.appendChild(btn);
+    });
+  }
+
+  function clearActionButtons() {
+    if (!actionButtonsContainer) return;
+    actionButtonsContainer.innerHTML = '';
+  }
+
+  // --------- show/hide/resolve API ----------
   function show(options = {}) {
-    // options:
-    // title, placeholder, initialValue, submitLabel, htmlContent (string), source (string/object), commands (array)
     currentOptions = options || {};
 
-    // Apply placeholder/initial value
     if (options.placeholder !== undefined && paletteInput) paletteInput.placeholder = options.placeholder;
     if (options.initialValue !== undefined && paletteInput) paletteInput.value = options.initialValue;
     else if (paletteInput) paletteInput.value = '';
 
-    // If htmlContent is provided, replace label's inner content but keep the label element for layout.
     if (options.htmlContent !== undefined && options.htmlContent !== null && paletteLabel) {
-      // replace innerHTML of label but keep the input element inside if user wants. We wrap provided HTML inside a container
-      // to avoid removing the input accidentally unless they intentionally include an input.
       paletteLabel.innerHTML = options.htmlContent;
-      // If they didn't provide an input inside htmlContent, ensure there's still a fallback input for keyboard capture
       const providedInput = paletteLabel.querySelector('input');
       if (!providedInput) {
-        // append the real input so things work as before
         paletteLabel.insertAdjacentHTML('beforeend', `<input type="text" id="${INPUT_ID}" class="bg-[rgb(var(--color-primary-bg))] border border-[rgb(var(--color-border-color))] rounded-sm px-2 py-1.5 focus:outline-none text-[rgb(var(--color-text-primary))] text-base w-full box-border" />`);
       }
-      // re-bind paletteInput reference to the possibly new input
       paletteInput = document.getElementById(INPUT_ID);
       _inputRef = paletteInput;
     } else {
-      // restore original label & input markup if asked or if no htmlContent provided
       if (options.resetToDefaultLabel) restoreDefaultLabel();
     }
 
-    // Custom submit button text
     if (options.submitLabel && paletteButton) paletteButton.textContent = options.submitLabel;
     else if (paletteButton) paletteButton.textContent = 'Enter';
 
-    // If commands array provided, override availableCommands locally
+    // override availableCommands if provided
     if (Array.isArray(options.commands)) {
-      // expect objects {name, action}
-      // shallow replace
       availableCommands.length = 0;
       options.commands.forEach(c => availableCommands.push(c));
     }
 
+    // if options.extraContentHtml provided at show time, set it
+    if (options.extraContentHtml) setExtraContent(options.extraContentHtml);
+    if (options.actionButtons) setActionButtons(options.actionButtons);
+
+    // Show overlay/modal
     paletteSection.classList.add('show');
+
+    ignoreDocumentClick = true;
+    setTimeout(() => { ignoreDocumentClick = false; }, 0);
+
     setTimeout(() => {
-      // focus next tick to ensure visible
       if (paletteInput) {
         paletteInput.focus();
-        // place caret at end
         const val = paletteInput.value || '';
         try { paletteInput.setSelectionRange(val.length, val.length); } catch (e) {}
       }
     }, 10);
 
-    // Emit open event
     window.dispatchEvent(new CustomEvent('command-palette-open', { detail: { options } }));
 
     // Return a Promise that resolves on submit or rejects on cancel
@@ -148,16 +219,37 @@
 
   function hide() {
     paletteSection.classList.remove('show');
-    // clear input value
     try { if (paletteInput) paletteInput.value = ''; } catch (e) {}
-    // emit close
+    // clear extra content & buttons only if asked (default: keep them)
+    if (!currentOptions.preserveExtraOnClose) {
+      clearExtraContent();
+      clearActionButtons();
+    }
     window.dispatchEvent(new CustomEvent('command-palette-close', { detail: { options: currentOptions } }));
   }
 
+  // Allow external resolution/rejection if the caller wants to control promise lifecycle
+  function resolve(payload) {
+    if (typeof resolvePromise === 'function') {
+      resolvePromise(payload);
+      resolvePromise = null;
+      rejectPromise = null;
+    }
+    hide();
+  }
+  function reject(payload) {
+    if (typeof rejectPromise === 'function') {
+      rejectPromise(payload);
+      resolvePromise = null;
+      rejectPromise = null;
+    }
+    hide();
+  }
+
+  // --------- submit/cancel handlers ----------
   function handleAction() {
     const value = paletteInput && paletteInput.value ? paletteInput.value.trim() : '';
 
-    // try to match a command exactly (preserve existing behaviour)
     const foundCommand = availableCommands.find(cmd => (cmd.name || '').toLowerCase() === value.toLowerCase());
     if (foundCommand && typeof foundCommand.action === 'function') {
       try { foundCommand.action(); } catch (e) { console.error(e); }
@@ -169,16 +261,25 @@
       options: currentOptions
     };
 
-    // dispatch a global event
+    // If caller requested to keep palette open on Enter, dispatch a special event and DO NOT hide
+    if (currentOptions.keepOpenOnSubmit) {
+      window.dispatchEvent(new CustomEvent('command-palette-enter', { detail: payload }));
+      // Optionally clear input if requested
+      if (currentOptions.clearInputOnEnter) {
+        if (paletteInput) paletteInput.value = '';
+      }
+      // Do NOT resolve/reject the promise here. Caller will call CommandPalette.resolve(...) when done.
+      return;
+    }
+
+    // default behaviour: dispatch submit event and resolve promise and hide
     window.dispatchEvent(new CustomEvent('command-palette-submit', { detail: payload }));
 
-    // resolve the Promise returned by show()
     if (typeof resolvePromise === 'function') {
       resolvePromise(payload);
       resolvePromise = null;
       rejectPromise = null;
     }
-
     hide();
   }
 
@@ -191,18 +292,13 @@
     hide();
   }
 
-  // input ref used by inputHandler
-  let _inputRef = paletteInput;
   function inputHandler(e) {
     const query = _inputRef && _inputRef.value ? _inputRef.value.trim().toLowerCase() : '';
-    // you could show suggestions here by using availableCommands
-    // keep current behaviour: log to console
-    console.log(`User is typing: ${query}`);
+    // console.log(`User is typing: ${query}`);
   }
 
-  // wire initial listeners
+  // --------- init listeners ----------
   function initListeners() {
-    // keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'Q') {
         e.preventDefault();
@@ -214,7 +310,6 @@
       }
     });
 
-    // input event (delegated)
     document.addEventListener('input', (ev) => {
       const target = ev.target;
       const ourInput = document.getElementById(INPUT_ID);
@@ -225,7 +320,6 @@
       }
     });
 
-    // Enter on the input
     document.addEventListener('keydown', (ev) => {
       const ourInput = document.getElementById(INPUT_ID);
       if (!ourInput) return;
@@ -235,7 +329,6 @@
       }
     });
 
-    // click on submit button
     if (paletteButton) {
       paletteButton.addEventListener('click', (e) => {
         e.preventDefault();
@@ -243,39 +336,57 @@
       });
     }
 
-    // click outside modal to hide
+    // click outside modal to hide/cancel
     document.addEventListener('click', (e) => {
+      if (ignoreDocumentClick) {
+        ignoreDocumentClick = false;
+        return;
+      }
+
       const paletteModal = document.querySelector('#edit-CommandPalette-section .edit-CommandPalette-modal');
       if (paletteSection.classList.contains('show') && paletteModal && !paletteModal.contains(e.target)) {
         handleCancel();
       }
     });
 
-    // listen for global event to open palette
+    // listen to events from other components to set content/buttons
+    window.addEventListener('command-palette-set-content', (ev) => {
+      const html = ev.detail && ev.detail.html;
+      setExtraContent(html);
+    });
+    window.addEventListener('command-palette-clear-content', () => clearExtraContent());
+
+    window.addEventListener('command-palette-set-buttons', (ev) => {
+      const buttons = ev.detail && ev.detail.buttons;
+      setActionButtons(Array.isArray(buttons) ? buttons : []);
+    });
+    window.addEventListener('command-palette-clear-buttons', () => clearActionButtons());
+
+    // listen for global open event
     window.addEventListener('open-command-palette', (ev) => {
-      // ev.detail should contain the same options as show(options)
       show(ev.detail || {});
     });
   }
 
-  // Public API on window
+  // Public API
   const API = {
     show,
     hide,
+    resolve,
+    reject,
     on: (eventName, cb) => window.addEventListener(eventName, cb),
     off: (eventName, cb) => window.removeEventListener(eventName, cb),
-    // convenience: open via dispatch
-    openViaEvent: (options) => window.dispatchEvent(new CustomEvent('open-command-palette', { detail: options }))
+    openViaEvent: (options) => window.dispatchEvent(new CustomEvent('open-command-palette', { detail: options })),
+    // convenience helpers to inject content / buttons programmatically
+    setExtraContent,
+    clearExtraContent,
+    setActionButtons,
+    clearActionButtons
   };
 
-  // attach API (safe-guard existing global)
   if (!window.CommandPalette) window.CommandPalette = API;
-  else {
-    // merge functions without overwriting existing ones
-    Object.assign(window.CommandPalette, API);
-  }
+  else Object.assign(window.CommandPalette, API);
 
-  // init
   initListeners();
 })();
 </script>

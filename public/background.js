@@ -12,7 +12,7 @@ async function getApiKey() {
 // Function: Call the Gemini API using fetch
 async function callGeminiApi(prompt, apiKey) {
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: 'POST',
@@ -59,17 +59,77 @@ async function callGeminiApi(prompt, apiKey) {
   }
 }
 
+
+
+ async function callGeminiApiscehma(prompt, apiKey, responseStructure) {
+            try {
+                // Construct the API URL
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                // Set up the request body with the generation configuration
+                const payload = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: responseStructure
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // For JSON structured responses, the content is in the 'text' field.
+                const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                return {
+                    success: true,
+                    prompt,
+                    response: JSON.parse(responseText), // Parse the JSON string
+                    timestamp: new Date().toISOString(),
+                };
+            } catch (err) {
+                console.error("Gemini API Error:", err);
+                
+                let errorMessage = err.message;
+                if (err.message.includes("API_KEY_INVALID") || err.message.includes("403")) {
+                    errorMessage = "The provided API key is not valid. Please check it.";
+                } else if (err.message.includes("PERMISSION_DENIED")) {
+                    errorMessage = "Permission denied. Please check your API key has the correct permissions.";
+                } else if (err.message.includes("QUOTA_EXCEEDED")) {
+                    errorMessage = "API quota exceeded. Please try again later.";
+                } else if (err.message.includes("Unexpected token")) {
+                    errorMessage = "API returned an unexpected response. Please try a different prompt.";
+                }
+                
+                return { success: false, error: errorMessage };
+            }
+        }
+
+
 // Listener: Handle messages from other parts of the extension
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       if (msg.action === "askGemini") {
         const apiKey = await getApiKey();
-        const result = await callGeminiApi(msg.prompt, apiKey);
+        const result = await callGeminiApiscehma(msg.prompt, apiKey,msg.responseStructure);
         sendResponse(result);
       } else if (msg.action === "testGemini") {
         const apiKey = msg.apiKey || await getApiKey();
-        const testPrompt = "In one short sentence, say 'API connection successful.' in a funny tone. Return only the sentence.";
+        const testPrompt = "In one short sentence, say 'API connection successful.' in a funny tone. Return only the sentence. with which model are you ";
         const result = await callGeminiApi(testPrompt, apiKey);
         sendResponse(result);
       } else {

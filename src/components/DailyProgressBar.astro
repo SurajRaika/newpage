@@ -1,3 +1,13 @@
+---
+const buildTime = new Date();
+const formattedBuildTime = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+}).format(buildTime);
+---
+
+
+
 <div class="daily-progress-container flex-1 max-w-[30%]   flex-col gap-2 w-full pl-1 sm:w-auto sm:pl-0">
     <div class="progress-label text-xs py-2 font-medium text-[rgb(var(--color-text-secondary))] uppercase
                 dark:text-[rgb(var(--color-text-secondary))]">
@@ -9,6 +19,16 @@
                     dark:bg-[rgb(var(--color-accent))] transition-all duration-1000 ease-out"></div>
     </div>
 </div>
+
+
+
+
+
+
+<div class="fixed top-0 left-0 z-50 text-xs text-gray-400 opacity-50 px-2 py-1 pointer-events-none select-none">
+  Built Time:{formattedBuildTime}
+</div>
+
 
 <style>
     #day-remaining-percent {

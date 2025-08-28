@@ -39,24 +39,81 @@ class BrowserActionAgentSystem {
     }
   }
 
-  // Agent 1: Browser Action Detector - Identifies what can be done in browser RIGHT NOW
+  // Agent 1: Vision Agent - Simple session-based vision
+  async createVision(userInput) {
+    const visionPrompt = `
+You are a lightweight Vision Agent. 
+Your job is NOT to make a big long-term plan, 
+but just to set a simple direction for THIS browsing session , ai agent can do.
+
+User Request: "${userInput}"
+
+Create a short vision that includes:
+1. What is the immediate goal for this browsing session?
+2. What does "done" look like today?
+Keep it simple, short, and practical browsing realted for right now. No big life strategy.
+`;
+
+    const visionSchema = {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          sessionGoal: { type: "STRING" },
+          doneDefinition: { type: "STRING" },
+        },
+        required: ["sessionGoal", "doneDefinition"]
+      }
+    };
+
+    console.log("🎯 Vision Agent: Setting simple browsing session goal...");
+    const result = await this.callGeminiApi(visionPrompt, visionSchema);
+
+    if (result.success) {
+      this.currentContext.vision = result.response;
+      console.log("✅ Session vision set!");
+      console.log(`   Goal: ${result.response.sessionGoal}`);
+      console.log(`   Done = ${result.response.doneDefinition}`);
+      
+      this.displayVision(result.response);
+    }
+
+    return result;
+  }
+
+  displayVision(vision) {
+    console.log("\n" + "═".repeat(60));
+    console.log("🌐 SIMPLE SESSION VISION");
+    console.log("═".repeat(60));
+    
+    console.log(`\n🎯 Goal for this session:`);
+    console.log(`   ${vision.sessionGoal}`);
+    
+    console.log(`\n✅ Done looks like:`);
+    console.log(`   ${vision.doneDefinition}`);
+    
+    
+
+    console.log("\n" + "═".repeat(60));
+  }
+
+  // Agent 2: Browser Action Detector - Session context applied
   async detectBrowserActions(userInput) {
+    const vision = this.currentContext.vision;
     const detectorPrompt = `
-You are a Browser Action Detector. Your job is to identify ONLY actions the user can do RIGHT NOW in their browser.
+You are a Browser Action Detector. Identify ONLY actions the user can do RIGHT NOW in their browser.
+
+SESSION CONTEXT:
+- Session Goal: ${vision.sessionGoal}
+- Done Definition: ${vision.doneDefinition}
+- Considerations: ${vision.considerations?.join(', ') || "None"}
+- Quick Limits: ${vision.quickLimits?.join(', ') || "None"}
 
 User wants: "${userInput}"
 
-Focus ONLY on immediate browser actions like:
-- Visit specific websites
-- Sign up for services  
-- Download tools/resources
-- Use online tools (design, code editors, etc.)
-- Search for specific things
-- Create accounts
-- Fill out forms
-
-IGNORE abstract tasks like "research", "plan", "think", "decide".
-Only return actions they can click/type/do immediately.
+Focus ONLY on immediate browser actions that match the session goal.
+Examples: visit websites, sign up, download tools, search, create accounts, fill forms.
+IGNORE abstract tasks like "research", "plan", "think".
 `;
 
     const detectorSchema = {
@@ -87,7 +144,7 @@ Only return actions they can click/type/do immediately.
 
     console.log("🔍 Browser Action Detector: Finding immediate actions...");
     const result = await this.callGeminiApi(detectorPrompt, detectorSchema);
-    
+
     if (result.success) {
       this.currentContext.detectedActions = result.response;
       console.log("✅ Actions detected!");
@@ -97,7 +154,7 @@ Only return actions they can click/type/do immediately.
     return result;
   }
 
-  // Agent 2: Action Prioritizer - Orders actions by what makes most sense to do first
+  // Agent 3: Action Prioritizer - unchanged except context already applied
   async prioritizeActions() {
     const actions = this.currentContext.detectedActions.immediateActions;
     
@@ -142,7 +199,7 @@ Return them in priority order (most important first).
 
     console.log("\n📊 Action Prioritizer: Ordering tasks by priority...");
     const result = await this.callGeminiApi(prioritizerPrompt, prioritizerSchema);
-    
+
     if (result.success) {
       this.currentContext.prioritizedActions = result.response;
       console.log("✅ Actions prioritized!");
@@ -152,7 +209,7 @@ Return them in priority order (most important first).
     return result;
   }
 
-  // Agent 3: Step Generator - Creates exact browser steps for current action
+  // Agent 4: Step Generator - unchanged
   async generateActionSteps(actionName) {
     const action = this.currentContext.prioritizedActions.prioritizedActions
       .find(a => a.action === actionName);
@@ -170,8 +227,6 @@ Generate step-by-step browser instructions:
 3. What to type in forms
 4. What to look for on the page
 5. Expected result
-
-Be extremely specific - like you're giving instructions to someone who can't see the screen.
 `;
 
     const stepGeneratorSchema = {
@@ -189,9 +244,9 @@ Be extremely specific - like you're giving instructions to someone who can't see
                 stepNumber: { type: "NUMBER" },
                 instruction: { type: "STRING" },
                 elementToFind: { type: "STRING" },
-                actionType: { type: "STRING" }, // click, type, scroll, wait
+                actionType: { type: "STRING" },
                 expectedResult: { type: "STRING" },
-                screenshot: { type: "STRING" } // what user should see
+                screenshot: { type: "STRING" }
               },
               required: ["stepNumber", "instruction", "actionType", "expectedResult"]
             }
@@ -208,7 +263,7 @@ Be extremely specific - like you're giving instructions to someone who can't see
 
     console.log(`\n🎯 Step Generator: Creating exact steps for "${actionName}"...`);
     const result = await this.callGeminiApi(stepGeneratorPrompt, stepGeneratorSchema);
-    
+
     if (result.success) {
       this.actionHistory.push({
         action: actionName,
@@ -224,7 +279,7 @@ Be extremely specific - like you're giving instructions to someone who can't see
     return result;
   }
 
-  // Agent 4: Progress Tracker - Confirms completion and suggests next action
+  // Agent 5: Progress Tracker - unchanged except context
   async trackProgress(completedAction, userFeedback) {
     const trackerPrompt = `
 You are a Progress Tracker. The user just completed this action: "${completedAction}"
@@ -248,7 +303,7 @@ Current available actions: ${this.currentContext.prioritizedActions.prioritizedA
           completionNotes: { type: "STRING" },
           immediateFollowUp: { type: "STRING" },
           nextRecommendedAction: { type: "STRING" },
-          estimatedProgress: { type: "NUMBER" } // percentage
+          estimatedProgress: { type: "NUMBER" }
         },
         required: ["wasSuccessful", "nextRecommendedAction", "estimatedProgress"]
       }
@@ -256,9 +311,8 @@ Current available actions: ${this.currentContext.prioritizedActions.prioritizedA
 
     console.log(`\n📈 Progress Tracker: Checking completion of "${completedAction}"...`);
     const result = await this.callGeminiApi(trackerPrompt, trackerSchema);
-    
+
     if (result.success) {
-      // Update action history
       const actionRecord = this.actionHistory.find(a => a.action === completedAction);
       if (actionRecord) {
         actionRecord.status = result.response.wasSuccessful ? 'completed' : 'failed';
@@ -278,7 +332,9 @@ Current available actions: ${this.currentContext.prioritizedActions.prioritizedA
   async getNextBrowserAction(userInput) {
     console.log("🚀 Finding your next browser action...\n");
 
-    // Step 1: Detect browser actions
+    const visionCreation = await this.createVision(userInput);
+    if (!visionCreation.success) return visionCreation;
+
     const detection = await this.detectBrowserActions(userInput);
     if (!detection.success) return detection;
 
@@ -289,11 +345,9 @@ Current available actions: ${this.currentContext.prioritizedActions.prioritizedA
       };
     }
 
-    // Step 2: Prioritize actions
     const prioritization = await this.prioritizeActions();
     if (!prioritization.success) return prioritization;
 
-    // Step 3: Generate steps for the top priority action
     const nextAction = prioritization.response.nextAction;
     const steps = await this.generateActionSteps(nextAction);
 
@@ -306,7 +360,6 @@ Current available actions: ${this.currentContext.prioritizedActions.prioritizedA
     };
   }
 
-  // Continue to next action after current one is done
   async continueToNextAction(completedAction, feedback = "completed") {
     const progress = await this.trackProgress(completedAction, feedback);
     
@@ -327,14 +380,21 @@ Current available actions: ${this.currentContext.prioritizedActions.prioritizedA
   }
 }
 
+
+
+
+
 // Usage Example
 async function main() {
   const apiKey = Bun.env.GEMINI_API_KEY;
   const browserAgent = new BrowserActionAgentSystem(apiKey);
 
-  // User wants to build startup website
   const userRequest = "I want to create a website for my startup";
-  
+  let somedata="";
+
+
+
+
   const result = await browserAgent.getNextBrowserAction(userRequest);
   
   if (result.success) {
@@ -370,9 +430,16 @@ async function main() {
     console.log("\n" + "-".repeat(40));
     console.log("When done, call:");
     console.log(`browserAgent.continueToNextAction("${result.nextAction}", "completed");`);
+    somedata=result.nextAction;
     
   } else {
     console.error("❌ Error:", result.error || result.message);
+  }
+  
+
+
+  if (somedata) {
+    browserAgent.continueToNextAction(somedata, "completed");
   }
 }
 

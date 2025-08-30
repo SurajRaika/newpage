@@ -1,7 +1,3 @@
-// content.js
-
-
-
 function getVisibleScreenText() {
   // prefer main content if present
   const root = document.querySelector('main, [role="main"], article, #content, .main') || document.body;
@@ -70,15 +66,7 @@ function getVisibleScreenText() {
   return out; // array of visible text blocks in page order (deduplicated)
 }
 
-// Send the collected data to the background script
+// usage example:
 const visibleBlocks = getVisibleScreenText();
-const description = document.querySelector('meta[name="description"]')?.content || '';
-
-chrome.runtime.sendMessage({
-  type: "CONTENT_DATA",
-  payload: {
-    title: document.title,          // ✅ send title
-    description: description,
-    visibleText: visibleBlocks.join('\n\n') // Sending as a single string
-  }
-}); 
+console.log('Visible text blocks:', visibleBlocks);
+console.log('Joined output:\n\n' + visibleBlocks.join('\n\n'));

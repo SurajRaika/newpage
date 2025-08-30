@@ -6,8 +6,7 @@
   "permissions": [
     "tabs",
     "webNavigation",
-    "storage",
-    "scripting"
+    "storage"
   ],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*"
@@ -19,13 +18,14 @@
     }
   ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "background/index.js",
     "type": "module"
   },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Tab History"
   },
+  "options_page": "options.html",
   "chrome_url_overrides": {
     "newtab": "index.html"
   }

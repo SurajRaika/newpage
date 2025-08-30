@@ -41,7 +41,9 @@ class BasicBrowserAgent {
       return { success: false, error: err.message };
     }
   }
+  async CheckCurrentPage(website_url , Website_title , desciption , headings  , bodyPreview , ){
 
+  };
   // A single, basic agent function that uses the API call.
   async findVision(userInput) {
     this.task = userInput;

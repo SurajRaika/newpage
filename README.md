@@ -1,46 +1,34 @@
-# Astro Starter Kit: Basics
+# Tab Tracker Chrome Extension
 
-```sh
-bun create astro@latest -- --template basics
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+This Chrome extension records your tab visits, including navigation and reloads, and saves the data to `chrome.storage.local`. It also extracts the title, description, and visible text from the pages you visit.
 
 ## 🚀 Project Structure
 
-Inside of your Astro project, you'll see the following folders and files:
+Here is the structure of the project:
 
 ```text
 /
 ├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
+│   ├── background/
+│   │   ├── index.js
+│   │   ├── messenger.js
+│   │   └── tabs.js
+│   ├── content.js
+│   ├── manifest.json
+│   ├── popup.html
+│   └── ...
+├── src/
+│   └── ...
 └── package.json
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## 🧞 How to Load the Extension
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
+1.  Open Chrome and navigate to `chrome://extensions`.
+2.  Enable "Developer mode" in the top right corner.
+3.  Click on "Load unpacked".
+4.  Select the `public` directory in this project.
 
 ## 👀 Want to learn more?
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Feel free to check the [Chrome Extension Development documentation](https://developer.chrome.com/docs/extensions/reference/).

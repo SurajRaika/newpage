@@ -23,9 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = visit.url || '(No URL)';
             const time = formatTime(visit.timeISO);
             const action = visit.action || 'unknown';
+            const visibleText = visit.visibleText || 'NOTHING';
             const tabId = visit.tabId !== undefined ? `<span>Tab ID: ${visit.tabId}</span><br>` : '';
             const description = visit.description ? `<br><span>Description: ${visit.description}</span>` : '';
             const extractedContent = visit.extractedContent ? `<br><span>Extracted Content (partial): ${visit.extractedContent.substring(0, 200)}...</span>` : '';
+
+            if (visibleText == 'NOTHING') {
+return false;                
+            }
+            
 
             let rawData = '';
             for (const key in visit) {
@@ -36,14 +42,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             div.innerHTML = `
                 <strong><a href="${visit.url}" target="_blank">${title}</a></strong>
-                <span>Page First Title: ${pageFirstTitle}</span><br>
+                <span>tabId: ${tabId}</span><br>
                 <span>URL: ${url}</span><br>
                 <span>Time: ${time}</span><br>
                 <span>Action: ${action}</span><br>
-                ${tabId}
-                ${description}
-                ${extractedContent}
-                ${rawData}
+                
+                <span>visibleText: ${visibleText}</span><br>
+                <span>description: ${description}</span><br>
             `;
             historyList.appendChild(div);
         });

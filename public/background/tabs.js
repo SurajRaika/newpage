@@ -45,6 +45,10 @@ export async function updateVisitWithContentData(visitId, contentData = {}) {
 }
 
 export function setupTabListeners() {
+
+
+
+
   chrome.tabs.onCreated.addListener((tab) => {
     saveVisit({
       tabId: tab.id,

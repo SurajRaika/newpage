@@ -21,6 +21,7 @@ export function setupMessenger() {
           sendResponse(result);
 
         } else if (msg.type === "CONTENT_DATA") {
+          console.log("Received CONTENT_DATA message", msg);
           const tabId = sender.tab?.id;
           if (!tabId) {
             sendResponse({ success: false, error: "No valid tab ID" });

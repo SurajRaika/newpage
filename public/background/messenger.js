@@ -2,8 +2,15 @@
 // Central runtime message listener
 
 import { getApiKey, callGeminiApi, callGeminiApiscehma } from "./gemini.js";
-import { updateVisitWithContentData, storageGet, storageSet } from "./tabs.js";
-
+import {  storageGet, saveVisit } from "./tabs.js";
+// exmaple of saveVisit
+//  saveVisit({
+//       tabId: tab.id,
+//       url: tab.pendingUrl || tab.url || '',
+//       title: tab.title || "New Tab",
+//       timeISO: new Date().toISOString(),
+//       action: "created"
+//     });
 
 export function setupMessenger() {
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -42,12 +49,21 @@ export function setupMessenger() {
             return;
           }
 
-          const result = await updateVisitWithContentData(visitId, {
-            description: description?.trim() || '',
-            visibleText: visibleText?.trim() || '',
-            title: title || sender.tab?.title || '',
-            url: url || sender.tab?.url || '',
-          });
+          // const result = await updateVisitWithContentData(visitId, {
+          //   description: description?.trim() || '',
+          //   visibleText: visibleText?.trim() || '',
+          //   title: title || sender.tab?.title || '',
+          //   url: url || sender.tab?.url || '',
+          // });
+          await saveVisit({
+      tabId: sender.tab.id,
+url: url || sender.tab?.url || '',
+      visibleText: visibleText?.trim(),
+      description: description?.trim(),
+      title: title || sender.tab?.title,
+      timeISO: new Date().toISOString(),
+      action: "created"
+    });
 
           sendResponse({ success: true, visitId: visitId });
         } else {

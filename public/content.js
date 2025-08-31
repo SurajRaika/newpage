@@ -8,90 +8,23 @@ if (document.documentElement.dataset.tabTrackerInjected === "1") {
   document.documentElement.dataset.tabTrackerInjected = "1";
 
   /***********************
-   * Visible text capture
+   * Configuration
    ***********************/
-  function getVisibleScreenText() {
-    const root =
-      document.querySelector("main, [role='main'], article, #content, .main") ||
-      document.body;
+  const CONFIG = {
+    DEBOUNCE_MS: 300,
+    SPA_STABILITY_WAIT: 500, // Wait for SPA to stabilize after navigation
+    MAX_STABILITY_WAIT: 3000, // Maximum wait time
+    POLL_INTERVAL: 2000,
+    MIN_TEXT_LENGTH: 50, // Minimum text length to consider page loaded
+    MAX_RETRIES: 3
+  };
 
-    const walker = document.createTreeWalker(
-      root,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode(node) {
-          if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-          const p = node.parentElement;
-          if (!p) return NodeFilter.FILTER_REJECT;
-          const tag = p.tagName.toUpperCase();
-          if (["SCRIPT", "STYLE", "NOSCRIPT", "SVG", "IFRAME"].includes(tag)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          return NodeFilter.FILTER_ACCEPT;
-        },
-      },
-      false
-    );
-
-    function isRenderedVisible(node) {
-      let el = node.parentElement;
-      while (el) {
-        const cs = getComputedStyle(el);
-        if (cs.display === "none" || cs.visibility === "hidden" || parseFloat(cs.opacity) === 0) {
-          return false;
-        }
-        el = el.parentElement;
-      }
-
-      try {
-        const range = document.createRange();
-        range.selectNodeContents(node);
-        const rects = range.getClientRects();
-        for (let i = 0; i < rects.length; i++) {
-          const r = rects[i];
-          if (
-            r.width > 0 &&
-            r.height > 0 &&
-            r.bottom > 0 &&
-            r.top < window.innerHeight &&
-            r.right > 0 &&
-            r.left < window.innerWidth
-          ) {
-            return true;
-          }
-        }
-        return false;
-      } catch (e) {
-        console.warn("⚠️ Error while checking node visibility:", e);
-        return false;
-      }
-    }
-
-    const seen = new Set();
-    const out = [];
-    let n;
-    while ((n = walker.nextNode())) {
-      if (!isRenderedVisible(n)) continue;
-      const txt = n.nodeValue.replace(/\s+/g, " ").trim();
-      if (!txt) continue;
-      if (!seen.has(txt)) {
-        seen.add(txt);
-        out.push(txt);
-      }
-    }
-
-    return out;
-  }
-
-  /****************************
-   * Send data helper + dedupe
-   ****************************/
-  let lastSentKey = null;
-  let sendTimeout = null;
-
+  /***********************
+   * Utility functions
+   ***********************/
   function simpleHash(str) {
-    // quick non-crypto hash for dedupe
     let h = 0;
+    if (!str) return "0";
     for (let i = 0; i < str.length; i++) {
       h = (h << 5) - h + str.charCodeAt(i);
       h |= 0;
@@ -99,138 +32,388 @@ if (document.documentElement.dataset.tabTrackerInjected === "1") {
     return String(h);
   }
 
-  function buildPayload() {
-    const visibleBlocks = getVisibleScreenText();
-    const description = document.querySelector('meta[name="description"]')?.content || "";
-    const payloadObj = {
-      title: document.title || "",
-      description,
-      visibleText: visibleBlocks.join("\n\n"),
-      url: location.href,
-      timestamp: Date.now(),
-    };
-    return payloadObj;
+  function isElementVisible(element) {
+    if (!element || !element.offsetParent) return false;
+    
+    try {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.display !== 'none' &&
+        style.visibility !== 'hidden' &&
+        parseFloat(style.opacity) > 0 &&
+        rect.bottom > 0 &&
+        rect.top < window.innerHeight &&
+        rect.right > 0 &&
+        rect.left < window.innerWidth
+      );
+    } catch (e) {
+      return false;
+    }
   }
 
-  function sendContentData(debounceMs = 200) {
-    if (sendTimeout) clearTimeout(sendTimeout);
-    sendTimeout = setTimeout(() => {
-      const payload = buildPayload();
-      const key = payload.url + "|" + simpleHash(payload.visibleText || payload.title || "");
-      if (key === lastSentKey) {
-        console.log("🔁 No changes since last send — skipping message for", payload.url);
-        return;
-      }
-      lastSentKey = key;
+  function waitForStableContent(maxWait = CONFIG.MAX_STABILITY_WAIT) {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      let lastContentHash = null;
+      const maxAttempts = Math.ceil(maxWait / 200);
 
-      try {
-        chrome.runtime.sendMessage({
-          type: "CONTENT_DATA",
-          payload: {
-            title: payload.title,
-            description: payload.description,
-            visibleText: payload.visibleText,
-            url: payload.url,
+      const checkStability = () => {
+        attempts++;
+        const currentContent = document.body ? document.body.innerText.substring(0, 1000) : '';
+        const currentHash = simpleHash(currentContent);
+
+        // If content hasn't changed from last check, consider it stable
+        if (currentHash === lastContentHash && currentContent.length > CONFIG.MIN_TEXT_LENGTH) {
+          console.log("📍 Content appears stable, proceeding with capture");
+          resolve();
+          return;
+        }
+
+        lastContentHash = currentHash;
+
+        // If we've reached max attempts or reasonable content exists, resolve
+        if (attempts >= maxAttempts || (currentContent.length > CONFIG.MIN_TEXT_LENGTH && attempts >= 3)) {
+          console.log(`📍 Content capture proceeding after ${attempts} attempts`);
+          resolve();
+          return;
+        }
+
+        setTimeout(checkStability, 200);
+      };
+
+      // Start checking after initial wait
+      setTimeout(checkStability, CONFIG.SPA_STABILITY_WAIT);
+    });
+  }
+
+  /***********************
+   * Visible text capture
+   ***********************/
+  function getVisibleScreenText() {
+    try {
+      // Wait a moment for DOM to be ready
+      if (!document.body) {
+        console.warn("⚠️ Document body not ready");
+        return [];
+      }
+
+      const root =
+        document.querySelector("main, [role='main'], article, #content, .content, .main") ||
+        document.body;
+
+      if (!root) {
+        console.warn("⚠️ No suitable root element found");
+        return [];
+      }
+
+      const walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            try {
+              if (!node.nodeValue || !node.nodeValue.trim()) {
+                return NodeFilter.FILTER_REJECT;
+              }
+              
+              const parent = node.parentElement;
+              if (!parent) return NodeFilter.FILTER_REJECT;
+              
+              const tagName = parent.tagName?.toUpperCase();
+              if (["SCRIPT", "STYLE", "NOSCRIPT", "SVG", "IFRAME", "HEAD"].includes(tagName)) {
+                return NodeFilter.FILTER_REJECT;
+              }
+
+              // Check if the parent element is visible
+              if (!isElementVisible(parent)) {
+                return NodeFilter.FILTER_REJECT;
+              }
+
+              return NodeFilter.FILTER_ACCEPT;
+            } catch (e) {
+              console.warn("⚠️ Error in acceptNode:", e);
+              return NodeFilter.FILTER_REJECT;
+            }
           },
-        }, (resp) => {
-          // optional: handle response if needed
-        });
-        console.log("📤 Visible blocks sent for", payload.url);
-      } catch (e) {
-        console.warn("❌ Failed to send message to background:", e);
+        },
+        false
+      );
+
+      const seen = new Set();
+      const textBlocks = [];
+      let node;
+
+      while ((node = walker.nextNode())) {
+        try {
+          const text = node.nodeValue.replace(/\s+/g, " ").trim();
+          if (text.length < 3) continue; // Skip very short text
+          
+          if (!seen.has(text)) {
+            seen.add(text);
+            textBlocks.push(text);
+          }
+        } catch (e) {
+          console.warn("⚠️ Error processing text node:", e);
+        }
+      }
+
+      console.log(`📄 Captured ${textBlocks.length} visible text blocks`);
+      return textBlocks;
+
+    } catch (error) {
+      console.error("❌ Error in getVisibleScreenText:", error);
+      return [];
+    }
+  }
+
+  /****************************
+   * Page data builder
+   ****************************/
+  function buildPagePayload() {
+    try {
+      const visibleBlocks = getVisibleScreenText();
+      const title = document.title || "";
+      const description = document.querySelector('meta[name="description"]')?.content || "";
+      const visibleText = visibleBlocks.join("\n\n");
+
+      const payload = {
+        title: title.trim(),
+        description: description.trim(),
+        visibleText: visibleText,
+        url: location.href,
+        timestamp: Date.now(),
+        textLength: visibleText.length,
+        blockCount: visibleBlocks.length
+      };
+
+      console.log(`📊 Page payload: ${payload.textLength} chars, ${payload.blockCount} blocks`);
+      return payload;
+
+    } catch (error) {
+      console.error("❌ Error building page payload:", error);
+      return {
+        title: document.title || "",
+        description: "",
+        visibleText: "",
+        url: location.href,
+        timestamp: Date.now(),
+        textLength: 0,
+        blockCount: 0,
+        error: error.message
+      };
+    }
+  }
+
+  /****************************
+   * Send data with retry logic
+   ****************************/
+  let lastSentKey = null;
+  let sendTimeout = null;
+  let isNavigating = false;
+
+  function sendContentData(options = {}) {
+    const { 
+      debounceMs = CONFIG.DEBOUNCE_MS, 
+      waitForStability = true,
+      retryCount = 0 
+    } = options;
+
+    if (sendTimeout) clearTimeout(sendTimeout);
+    
+    sendTimeout = setTimeout(async () => {
+      try {
+        // For SPA navigation, wait for content to stabilize
+        if (waitForStability && isNavigating) {
+          console.log("⏳ Waiting for SPA content to stabilize...");
+          await waitForStableContent();
+          isNavigating = false;
+        }
+
+        const payload = buildPagePayload();
+        
+        // Skip if no meaningful content
+        if (payload.textLength < CONFIG.MIN_TEXT_LENGTH && retryCount < CONFIG.MAX_RETRIES) {
+          console.log(`🔄 Content too short (${payload.textLength} chars), retrying in 500ms...`);
+          setTimeout(() => {
+            sendContentData({ ...options, retryCount: retryCount + 1, debounceMs: 0 });
+          }, 500);
+          return;
+        }
+
+        // Create deduplication key
+        const contentKey = simpleHash(payload.visibleText + payload.title);
+        const dedupeKey = `${payload.url}|${contentKey}`;
+
+        if (dedupeKey === lastSentKey) {
+          console.log("🔁 No changes detected — skipping duplicate send");
+          return;
+        }
+
+        lastSentKey = dedupeKey;
+
+        // Send to background script
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+          chrome.runtime.sendMessage({
+            type: "CONTENT_DATA",
+            payload: {
+              title: payload.title,
+              description: payload.description,
+              visibleText: payload.visibleText,
+              url: payload.url,
+              timestamp: payload.timestamp,
+                    action: "created",
+
+              metadata: {
+                textLength: payload.textLength,
+                blockCount: payload.blockCount
+              }
+            }
+          }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.warn("⚠️ Runtime error:", chrome.runtime.lastError.message);
+            } else {
+              console.log("✅ Content data sent successfully");
+            }
+          });
+        } else {
+          console.warn("⚠️ Chrome runtime not available");
+        }
+
+        console.log(`📤 Sent ${payload.textLength} chars from ${payload.url}`);
+
+      } catch (error) {
+        console.error("❌ Error in sendContentData:", error);
       }
     }, debounceMs);
   }
 
   /*******************************
-   * SPA URL-change detection
+   * CSP-compliant SPA URL detection
    *******************************/
-  // 1) inject a tiny page script to patch history methods and dispatch 'locationchange'
-  //    so we catch pushState/replaceState invoked by the page.
-  (function injectHistoryListener() {
+  function setupSPADetection() {
+    // Use external script file instead of inline script to avoid CSP issues
     try {
-      const script = document.createElement("script");
-      script.textContent = `
-        (function() {
-          if (window.__tabTrackerHistoryPatched) return;
-          window.__tabTrackerHistoryPatched = true;
-          const _push = history.pushState;
-          const _replace = history.replaceState;
-          function dispatchLocationChange() {
-            window.dispatchEvent(new Event('locationchange'));
-          }
-          history.pushState = function() {
-            _push.apply(this, arguments);
-            dispatchLocationChange();
-          };
-          history.replaceState = function() {
-            _replace.apply(this, arguments);
-            dispatchLocationChange();
-          };
-          window.addEventListener('popstate', dispatchLocationChange);
-        })();
-      `;
-      // add + remove quickly (we don't want this script to persist in DOM)
-      (document.head || document.documentElement).appendChild(script);
-      script.parentNode.removeChild(script);
-    } catch (e) {
-      console.warn("⚠️ Could not inject history patcher:", e);
-    }
-  })();
+      // Method 1: Override history methods directly in content script context
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
 
-  // 2) listen for locationchange (dispatched by page-patched script), popstate and hashchange
-  window.addEventListener("locationchange", () => {
-    console.log("🔁 locationchange event detected (history API)");
-    sendContentData();
-  });
+      function onHistoryChange(method) {
+        console.log(`🔁 History ${method} detected`);
+        isNavigating = true;
+        sendContentData({ waitForStability: true });
+      }
 
-  window.addEventListener("popstate", () => {
-    console.log("🔁 popstate detected");
-    sendContentData();
-  });
+      history.pushState = function(...args) {
+        originalPushState.apply(this, args);
+        onHistoryChange('pushState');
+      };
 
-  window.addEventListener("hashchange", () => {
-    console.log("🔁 hashchange detected");
-    sendContentData();
-  });
+      history.replaceState = function(...args) {
+        originalReplaceState.apply(this, args);
+        onHistoryChange('replaceState');
+      };
 
-  // 3) fallback polling (in case page uses weird navigation without history API)
-  let lastHref = location.href;
-  const pollInterval = 1000; // 1s — light but responsive
-  const pollId = setInterval(() => {
-    if (location.href !== lastHref) {
-      lastHref = location.href;
-      console.log("🔁 URL changed (poller) to", lastHref);
-      sendContentData();
-    }
-  }, pollInterval);
+      // Listen for popstate events
+      window.addEventListener("popstate", () => {
+        console.log("🔁 Popstate detected");
+        isNavigating = true;
+        sendContentData({ waitForStability: true });
+      });
 
-  // Optional: stop polling after a long time if you prefer — left running for reliability
+      // Listen for hashchange events
+      window.addEventListener("hashchange", () => {
+        console.log("🔁 Hashchange detected");
+        sendContentData({ waitForStability: false }); // Hash changes usually don't need stability wait
+      });
 
-  /*******************************
-   * DOM readiness & initial send
-   *******************************/
-  function onReady(fn) {
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-      fn();
-    } else {
-      document.addEventListener("DOMContentLoaded", fn, { once: true });
+    } catch (error) {
+      console.error("❌ Error setting up SPA detection:", error);
     }
   }
 
-  onReady(() => {
-    // initial send once DOM is mounted
-    sendContentData(0);
-  });
+  /*******************************
+   * Fallback URL polling
+   *******************************/
+  function setupFallbackPolling() {
+    let lastHref = location.href;
+    
+    const pollId = setInterval(() => {
+      if (location.href !== lastHref) {
+        console.log("🔁 URL change detected by polling:", location.href);
+        lastHref = location.href;
+        isNavigating = true;
+        sendContentData({ waitForStability: true });
+      }
+    }, CONFIG.POLL_INTERVAL);
+
+    // Store pollId for potential cleanup
+    if (window.__tabTracker) {
+      window.__tabTracker.stopPoll = () => clearInterval(pollId);
+    }
+
+    return pollId;
+  }
 
   /*******************************
-   * Expose a small API for debugging (optional)
+   * Initialization
+   *******************************/
+  function initialize() {
+    try {
+      console.log("🔧 Initializing tab tracker...");
+
+      // Setup SPA detection
+      setupSPADetection();
+
+      // Setup fallback polling
+      setupFallbackPolling();
+
+      // Send initial data when DOM is ready
+      function sendInitialData() {
+        console.log("📍 Sending initial page data...");
+        sendContentData({ 
+          debounceMs: 100, 
+          waitForStability: true 
+        });
+      }
+
+      if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(sendInitialData, 100);
+      } else {
+        document.addEventListener("DOMContentLoaded", sendInitialData, { once: true });
+        // Backup listener for edge cases
+        document.addEventListener("readystatechange", () => {
+          if (document.readyState === "complete") {
+            setTimeout(sendInitialData, 200);
+          }
+        }, { once: true });
+      }
+
+      console.log("✅ Tab tracker initialized successfully");
+
+    } catch (error) {
+      console.error("❌ Error during initialization:", error);
+    }
+  }
+
+  /*******************************
+   * Debug API
    *******************************/
   try {
-    window.__tabTracker = window.__tabTracker || {};
-    window.__tabTracker.sendNow = () => sendContentData(0);
-    window.__tabTracker.stopPoll = () => clearInterval(pollId);
+    window.__tabTracker = {
+      sendNow: () => sendContentData({ debounceMs: 0, waitForStability: false }),
+      getPageData: buildPagePayload,
+      getVisibleText: getVisibleScreenText,
+      config: CONFIG,
+      version: "2.0.0"
+    };
   } catch (e) {
-    // ignore if page blocks it
+    // Ignore if page blocks global assignment
   }
+
+  // Start the show
+  initialize();
 }

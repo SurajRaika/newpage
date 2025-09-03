@@ -31,23 +31,21 @@ export function setupMessenger() {
           console.log("Received CONTENT_DATA message", msg);
           const tabId = sender.tab?.id;
           if (!tabId) {
+            console.log("if (!tabId) {");
             sendResponse({ success: false, error: "No valid tab ID" });
             return;
           }
 
           const { description, visibleText, title, url } = msg.payload || {};
           if (!description && !visibleText) {
+            console.log("          if (!description && !visibleText) {");
+
             sendResponse({ success: false, error: "No content data provided" });
             return;
           }
           
           const data = await storageGet({ latestVisitByTab: {} });
-          const visitId = data.latestVisitByTab[tabId];
           
-          if (!visitId) {
-            sendResponse({ success: false, error: "No active visit found for this tab" });
-            return;
-          }
 
           // const result = await updateVisitWithContentData(visitId, {
           //   description: description?.trim() || '',
@@ -55,10 +53,24 @@ export function setupMessenger() {
           //   title: title || sender.tab?.title || '',
           //   url: url || sender.tab?.url || '',
           // });
+
+
+          console.log("DATA ::::")
+          console.log({
+      tabId: sender.tab.id,
+url: url || sender.tab?.url || '',
+      visibleText: visibleText,
+      description: description?.trim(),
+      title: title || sender.tab?.title,
+      timeISO: new Date().toISOString(),
+      action: "created"
+    });
+          
           await saveVisit({
       tabId: sender.tab.id,
 url: url || sender.tab?.url || '',
-      visibleText: visibleText?.trim(),
+      visibleText: visibleText,
+      
       description: description?.trim(),
       title: title || sender.tab?.title,
       timeISO: new Date().toISOString(),

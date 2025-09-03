@@ -19,6 +19,8 @@ if (document.documentElement.dataset.tabTrackerInjected === "1") {
     MAX_RETRIES: 3
   };
 
+
+  
   /***********************
    * Utility functions
    ***********************/
@@ -31,6 +33,7 @@ if (document.documentElement.dataset.tabTrackerInjected === "1") {
     }
     return String(h);
   }
+
 
   function isElementVisible(element) {
     if (!element || !element.offsetParent) return false;
@@ -143,26 +146,33 @@ if (document.documentElement.dataset.tabTrackerInjected === "1") {
         false
       );
 
-      const seen = new Set();
-      const textBlocks = [];
-      let node;
-
-      while ((node = walker.nextNode())) {
-        try {
-          const text = node.nodeValue.replace(/\s+/g, " ").trim();
-          if (text.length < 3) continue; // Skip very short text
-          
-          if (!seen.has(text)) {
-            seen.add(text);
-            textBlocks.push(text);
-          }
-        } catch (e) {
-          console.warn("⚠️ Error processing text node:", e);
-        }
+ const seen = new Set();
+  const textBlocks = [];
+  let node;
+ while ((node = walker.nextNode())) {
+    try {
+      const parent = node.parentElement;
+      if (!parent) continue; // Safety check
+      
+      const text = node.nodeValue.replace(/\s+/g, " ").trim();
+      if (text.length < 3) continue;
+      
+      const elementTag = parent.tagName.toLowerCase(); // Capture the tag name
+      
+      // Check if we've already seen this text
+      if (!seen.has(text)) {
+        seen.add(text);
+        textBlocks.push({ tag: elementTag, text: text }); // Push an object
       }
+    } catch (e) {
+      console.warn("⚠️ Error processing text node:", e);
+    }
+  }
 
-      console.log(`📄 Captured ${textBlocks.length} visible text blocks`);
-      return textBlocks;
+
+ console.log(`📄 Captured ${textBlocks.length} visible text blocks`);
+  return textBlocks;
+
 
     } catch (error) {
       console.error("❌ Error in getVisibleScreenText:", error);
@@ -170,23 +180,26 @@ if (document.documentElement.dataset.tabTrackerInjected === "1") {
     }
   }
 
+
   /****************************
    * Page data builder
    ****************************/
   function buildPagePayload() {
     try {
       const visibleBlocks = getVisibleScreenText();
+      
       const title = document.title || "";
       const description = document.querySelector('meta[name="description"]')?.content || "";
-      const visibleText = visibleBlocks.join("\n\n");
 
+
+      
       const payload = {
         title: title.trim(),
         description: description.trim(),
-        visibleText: visibleText,
+        visibleText: visibleBlocks,
         url: location.href,
         timestamp: Date.now(),
-        textLength: visibleText.length,
+        textLength: visibleBlocks.reduce((acc, block) => acc + block.text.length, 0),
         blockCount: visibleBlocks.length
       };
 
@@ -198,7 +211,7 @@ if (document.documentElement.dataset.tabTrackerInjected === "1") {
       return {
         title: document.title || "",
         description: "",
-        visibleText: "",
+        visibleText: [],
         url: location.href,
         timestamp: Date.now(),
         textLength: 0,

@@ -1,7 +1,23 @@
-
-    document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
         const historyList = document.getElementById('historyList');
         const downloadBtn = document.getElementById('downloadBtn');
+        const darkModeBtn = document.getElementById('darkModeBtn');
+
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+        }
+
+        darkModeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+
+            // Save preference to localStorage
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
 
         function formatTime(iso) {
             const d = new Date(iso);
@@ -33,7 +49,18 @@
                 const url = visit.url || '(No URL)';
                 const time = formatTime(visit.timeISO);
                 const action = visit.action || 'unknown';
-                const visibleText = visit.visibleText || 'NOTHING';
+                let visibleText = visit.visibleText || 'NOTHING';
+
+                if (typeof visibleText === 'string' && visibleText.startsWith('[')) {
+                    try {
+                        const blocks = JSON.parse(visibleText);
+                        visibleText = blocks.map(block => `&lt;${block.tag}&gt; ${block.text}`).join('<br>');
+                    } catch (e) {
+                        // Not a valid JSON string, leave as is
+                    }
+                }
+
+
                 const tabId = visit.tabId !== undefined ? `<span>Tab ID: ${visit.tabId}</span><br>` : '';
                 const description = visit.description ? `<span>Description: ${visit.description}</span><br>` : '';
                 const favicon = getFavicon(url);
@@ -84,4 +111,3 @@
             historyList.innerText = 'Chrome extension storage not available.';
         }
     });
- 

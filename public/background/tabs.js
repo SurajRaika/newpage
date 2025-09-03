@@ -9,6 +9,12 @@ function makeVisitId() {
 }
 
 export async function saveVisit(visitData) {
+  console.log("saveVisit fn start running ..." );
+  
+  if (Array.isArray(visitData.visibleText)) {
+    visitData.visibleText = JSON.stringify(visitData.visibleText);
+  }
+  
   const visitId = makeVisitId();
   const visit = { visitId, ...visitData };
 

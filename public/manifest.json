@@ -8,8 +8,8 @@
     "webNavigation",
     "storage", "scripting"
   ],
-  "host_permissions": [
-    "https://generativelanguage.googleapis.com/*"
+ "host_permissions": [
+    "<all_urls>"
   ],
 "content_scripts": [
   {

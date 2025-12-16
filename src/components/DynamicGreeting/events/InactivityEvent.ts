@@ -1,5 +1,19 @@
 import { BaseEvent, EventPriority, type EventResponse, type ImageData } from '../types';
 
+// Define the literal types based on the error messages.
+type ImagePosition = 'top-right' | 'bottom-left' | 'top-left' | 'bottom-right' | 'center';
+type ImageSize = 'small' | 'medium' | 'large';
+
+/**
+ * Type definition for the array elements in the image list.
+ */
+type InactivityImageItem = {
+  texts: string[];
+  src: string;
+  position: ImagePosition;
+  size: ImageSize;
+};
+
 /**
  * InactivityEvent:
  * Displays a random image and one of several funny texts when the user is inactive.
@@ -10,8 +24,10 @@ export class InactivityEvent extends BaseEvent {
   private probability = 50; // 50% chance by default
   private waitTime = 1000; // in milisec
   private Priority = EventPriority.MEDIUM;
+  private readonly dataStorageKey = 'inactivity_event_data'; // New key for data persistence
 
-  private inactivityImages = [
+  // Renamed to defaultInactivityImages to clarify it is the fallback.
+  private defaultInactivityImages: InactivityImageItem[] = [
     {
       texts: [
         "I'm not lazy, I'm just on energy-saving mode.",
@@ -35,11 +51,21 @@ export class InactivityEvent extends BaseEvent {
   ];
 
   private inactivityTimeout: ReturnType<typeof setTimeout> | null = null;
-  private readonly inactivityDelay = 60000; // 2 minutes
+  private readonly inactivityDelay = 60000; // 60 seconds (1 minute)
 
   constructor() {
     super();
-    this.initializeListener();
+
+    // Initialize localStorage data if it doesn't exist
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const storedData = localStorage.getItem(this.dataStorageKey); 
+      if (!storedData) {
+        // Store the default data if the key is not found
+        localStorage.setItem(this.dataStorageKey, JSON.stringify(this.defaultInactivityImages));
+      }
+    }
+
+    this.initializeListener(); // Assuming this method is defined in BaseEvent or handles its own cleanup
     this.setupInactivityDetection();
   }
 
@@ -47,12 +73,18 @@ export class InactivityEvent extends BaseEvent {
     const resetTimer = () => {
       if (this.inactivityTimeout) clearTimeout(this.inactivityTimeout);
       this.inactivityTimeout = setTimeout(() => {
-        this.requestDisplay();
+        // Only request display if the trigger check passes
+        if (this.canTrigger()) {
+            this.requestDisplay();
+        }
       }, this.inactivityDelay);
     };
 
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('keydown', resetTimer);
+    // Global listeners to detect user activity
+    if (typeof window !== 'undefined') {
+        window.addEventListener('mousemove', resetTimer);
+        window.addEventListener('keydown', resetTimer);
+    }
 
     resetTimer(); // Start timer on load
   }
@@ -65,9 +97,36 @@ export class InactivityEvent extends BaseEvent {
     return this.Priority;
   }
 
+  /**
+   * Returns a random image and text combination.
+   * Prioritizes loading data from localStorage.
+   */
   getImageData(): Omit<ImageData, 'id'> {
-    const randomImage = this.inactivityImages[Math.floor(Math.random() * this.inactivityImages.length)];
+    let imageOptions: InactivityImageItem[] = this.defaultInactivityImages;
+    
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const storedData = localStorage.getItem(this.dataStorageKey);
+      
+      if (storedData) {
+        try {
+          // Attempt to parse the stored string into the expected array structure
+          const loadedImages = JSON.parse(storedData) as InactivityImageItem[];
+          
+          // Basic validation: ensure it's an array and not empty
+          if (Array.isArray(loadedImages) && loadedImages.length > 0) {
+            imageOptions = loadedImages;
+          }
+        } catch (e) {
+          console.error(`[${this.eventId}] Failed to parse inactivity data from localStorage. Falling back to defaults.`, e);
+          // If parsing fails, imageOptions remains the default
+        }
+      }
+    }
+
+    // Select a random item from the determined imageOptions array
+    const randomImage = imageOptions[Math.floor(Math.random() * imageOptions.length)];
     const randomText = randomImage.texts[Math.floor(Math.random() * randomImage.texts.length)];
+    
     return {
       src: randomImage.src,
       position: randomImage.position,
@@ -79,7 +138,10 @@ export class InactivityEvent extends BaseEvent {
   onEventResponse(response: EventResponse): void {
     if (response.action === 'clicked') {
       console.log("User interacted with inactivity event.");
+      // Optional: Restart the inactivity timer immediately after a click
+      // this.setupInactivityDetection(); 
     }
+    // If the event is dismissed, the inactivity timer will naturally restart on the next activity.
   }
 
   onDisplay(hideCallback: () => void): void {

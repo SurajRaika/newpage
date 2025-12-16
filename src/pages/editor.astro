@@ -1,5 +1,5 @@
 ---
-
+import "../styles/global.css";
 ---
 
 <!DOCTYPE html>
@@ -9,518 +9,341 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Configuration Editor</title>
     <!-- Tailwind CSS CDN for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tailwind CSS Custom Configuration for Dark Mode -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class', // Enable class-based dark mode
-            theme: {
-                extend: {
-                    colors: {
-                        'custom-dark-bg': 'rgb(26, 26, 26)',
-                        'custom-light-bg': 'white',
-                        'custom-dark-text': 'white',
-                        'custom-light-text': 'rgb(26, 26, 26)',
-                        'custom-border-light': 'rgb(26, 26, 26)',
-                        'custom-border-dark': 'white',
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Inter font for better readability -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Material Icons for browser UI -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        /* Custom scrollbar for better aesthetics, rgb(26, 26, 26) for minimalist design */
-        .overflow-y-auto::-webkit-scrollbar {
-            width: 6px; /* Thinner scrollbar */
-        }
-        .overflow-y-auto::-webkit-scrollbar-track {
-            background: white; /* White track */
-            border-radius: 0; /* Sharp corners */
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb {
-            background: rgb(26, 26, 26); /* Soft black thumb */
-            border-radius: 0; /* Sharp corners */
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-            background: rgb(51, 51, 51); /* Darker soft black on hover */
-        }
-
-        /* Styles for the message box - soft black and white theme */
-        #messageBox {
-            opacity: 0;
-            pointer-events: none; /* Allows clicks to pass through when hidden */
-        }
-        #messageBox.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        /* Specific error and success styles using subtle shades */
-        #messageBox.error {
-            background-color: #ffe0e0; /* Light red */
-            color: #cc0000; /* Darker red */
-            border-color: #cc0000;
-        }
-        #messageBox.success {
-            background-color: #e0ffe0; /* Light green */
-            color: #008000; /* Darker green */
-            border-color: #008000;
-        }
-
-        /* Custom aspect ratio for the right column - 16:9 */
-        .aspect-ratio-16-9 {
-            padding-bottom: 56.25%; /* 9 / 16 = 0.5625 */
-            height: 0; /* Essential for padding-bottom trick */
-        }
-
-        /* Specific styles for message set positions in preview - soft black and white theme */
-        .preview-message-block {
-            box-shadow: none; /* No shadow */
-        }
-        /* Positioning classes for preview message blocks */
-        .pos-bottom-left { bottom: 0; left: 0; }
-        .pos-bottom-right { bottom: 0; right: 0; }
-        .pos-top-left { top: 0; left: 0; }
-        .pos-top-right { top: 0; right: 0; }
-        .pos-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-
-        /* Sizing classes */
-        .size-small { width: 8rem; }
-        .size-medium { width: 11rem; }
-        .size-large { width: 15rem; }
-
-        /* Responsive font sizes based on message card size */
-        .size-small .text-content {
-            font-size: 0.55rem; /* Smaller font for small cards */
-        }
-        .size-medium .text-content {
-            font-size: 0.65rem; /* Medium font for medium cards */
-        }
-        .size-large .text-content {
-            font-size: 0.75rem; /* Larger font for large cards (original text-xs) */
-        }
-
-        /* Styling for radio buttons to fit the theme */
-        input[type="radio"] {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border: 1px solid rgb(26, 26, 26);
-            border-radius: 0; /* Sharp corners */
-            margin-right: 0.5rem;
-            vertical-align: middle;
-            position: relative;
-            top: -1px;
-            cursor: pointer;
-        }
-
-        input[type="radio"]:checked {
-            background-color: rgb(26, 26, 26);
-            border-color: rgb(26, 26, 26);
-        }
-        input[type="radio"]:checked::before {
-            content: '';
-            display: block;
-            width: 6px;
-            height: 6px;
-            background-color: white;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+        /* Reverted to a simpler, basic design as requested */
+        body { font-family: sans-serif; }
     </style>
 </head>
-<body class="bg-white  h-screen flex flex-col justify-between overflow-hidden">
-    <header class="bg-custom-dark-bg text-white py-0.5 border-b border-custom-dark-bg">
-        <div class="container  flex justify-between items-center">
-            <div class=" flex px-2">
-                <button id="backButton" class="bg-custom-light-bg text-custom-light-text font-bold py-0.5 px-2 text-xs border border-custom-light-text rounded-none hover:bg-gray-200 transition duration-150 hidden">back arroy</button>               
-                <h1 id="appTitle" class="text-lg font-bold">Event Configuration Editor</h1>
-            </div>    
-            <div id="headerButtons" class="flex flex-row-reverse space-x-2 z-10">
-                <button id="downloadOption" class="bg-custom-light-bg text-custom-light-text font-bold py-0.5 px-2 text-xs border border-custom-light-text rounded-none hover:bg-gray-200 transition duration-150 ">Download</button>
-                <button id="uploadOption" class="bg-custom-light-bg text-custom-light-text font-bold py-0.5 px-2 text-xs border border-custom-light-text rounded-none hover:bg-gray-200 transition duration-150 ">Upload</button>
-            </div>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-white p-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-2">
+            <!-- Simplified Back Button -->
+            <button id="backButton" class="text-gray-600 hover:text-gray-900 hidden p-1 font-bold">
+                &larr; Back
+            </button>
+            <h1 id="appTitle" class="text-xl font-bold text-gray-800">Event Configuration Editor</h1>
         </div>
+        
+        <div class="flex space-x-2">
+            <button id="uploadOption" class="text-sm font-semibold py-1 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-100 transition">
+                Upload Config
+            </button>
+            <button id="downloadOption" class="text-sm font-semibold py-1 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-100 transition">
+                Download Config
+            </button>
+        </div>
+        <input type="file" id="fileInput" accept=".json" class="hidden">
     </header>
 
     <div class="flex flex-col-reverse md:flex-row flex-1 overflow-hidden"> <!-- Main two-column container -->
 
         <!-- Left Column: User Interaction -->
-        <div id="leftColumn" class="w-1/3 flex flex-col overflow-hidden">
+        <div id="leftColumn" class="md:w-1/3 w-full flex flex-col overflow-hidden border-r bg-white">
             <!-- Event Selection Page -->
             <div id="eventSelectionPage" class="p-4 flex-grow flex flex-col justify-between overflow-y-auto">
                 <div>
-                    <h2 class="text-xl font-semibold mb-4">Choose an Event to Edit</h2>
-                    <div class="space-y-2">
-                        <label class="block text-custom-light-text">
-                            <input type="radio" name="selectEventType" value="offlineEvent" checked> Offline Event
+                    <h2 class="text-xl font-semibold mb-4">Choose Event Type</h2>
+                    <div class="space-y-3">
+                        <label class="block cursor-pointer p-3 border border-gray-300 hover:bg-gray-50 rounded transition">
+                            <input type="radio" name="selectEventType" value="default_event_data" checked> Default / Offline Event
                         </label>
-                        <label class="block text-custom-light-text">
-                            <input type="radio" name="selectEventType" value="inactivityEvent"> Inactivity Event
+                        <label class="block cursor-pointer p-3 border border-gray-300 hover:bg-gray-50 rounded transition">
+                            <input type="radio" name="selectEventType" value="inactivity_event_data"> Inactivity Event
                         </label>
-                        <label class="block text-custom-light-text">
-                            <input type="radio" name="selectEventType" value="randomTipsEvent"> Random Tips Event
+                        <label class="block cursor-pointer p-3 border border-gray-300 hover:bg-gray-50 rounded transition">
+                            <input type="radio" name="selectEventType" value="random_tip_event_data"> Random Tips Event
                         </label>
-                        <label class="block text-custom-light-text">
-                            <input type="radio" name="selectEventType" value="timeOfDayEvent"> Time of Day Event
+                        <label class="block cursor-pointer p-3 border border-gray-300 hover:bg-gray-50 rounded transition">
+                            <input type="radio" name="selectEventType" value="time_of_day_event_data"> Time of Day Event
                         </label>
                     </div>
                 </div>
-                <button id="goToEditorBtn" class="bg-custom-dark-bg text-white font-bold py-2 px-4 border border-custom-dark-bg rounded-none hover:bg-gray-800 transition duration-150 mt-4">Go to Editor</button>
+                <button id="goToEditorBtn" class="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 transition duration-150 mt-4">
+                    Configure Selected Event
+                </button>
             </div>
 
             <!-- Configuration Editor Page (initially hidden) -->
-            <div id="configEditorPage" class="hidden p-2 flex-grow flex flex-col overflow-y-auto">
-                <!-- Event Configuration Section -->
-                <section class="mb-4 border-b border-custom-light-text pb-2">
-                    <h2 class="text-lg font-semibold mb-2">Event Details</h2>
-                    <div class="space-y-2">
-                        <div>
-                            <label for="probability" class="block text-custom-light-text text-xs font-medium mb-1">Probability (%):</label>
-                            <input type="number" id="probability" min="0" max="100" value="50"
-                                class="w-full p-1 border border-custom-light-text rounded-none text-xs bg-custom-light-bg text-custom-light-text">
-                        </div>
-                        <div>
-                            <label for="waitTime" class="block text-custom-light-text text-xs font-medium mb-1">Wait Time (ms):</label>
-                            <input type="number" id="waitTime" min="0" value="5000"
-                                class="w-full p-1 border border-custom-light-text rounded-none text-xs bg-custom-light-bg text-custom-light-text">
-                        </div>
-                        <div>
-                            <label for="priority" class="block text-custom-light-text text-xs font-medium mb-1">Priority:</label>
-                            <select id="priority" class="w-full p-1 border border-custom-light-text rounded-none text-xs bg-custom-light-bg text-custom-light-text">
-                                <option value="1">1: LOW</option>
-                                <option value="2">2: MEDIUM</option>
-                                <option value="3">3: HIGH</option>
-                                <option value="4">4: CRITICAL</option>
-                            </select>
-                        </div>
-                    </div>
+            <div id="configEditorPage" class="hidden p-4 flex-grow flex flex-col overflow-y-auto">
+                
+                <!-- Time of Day Selector (Hidden by default) -->
+                <section id="timeOfDaySelectorSection" class="mb-4 border-b pb-4 hidden">
+                    <h2 class="text-lg font-semibold mb-2 text-blue-700">Select Time Period</h2>
+                    <select id="timePeriodSelect" class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="morning">Morning</option>
+                        <option value="afternoon">Afternoon</option>
+                        <option value="evening">Evening</option>
+                        <option value="night">Night</option>
+                    </select>
                 </section>
 
                 <!-- Message Sets Section -->
-                <section class="flex-grow flex flex-col border-b border-custom-light-text pb-2">
-                    <h2 class="text-lg font-semibold mb-2 flex justify-between items-center">
+                <section class="flex-grow flex flex-col">
+                    <h2 class="text-lg font-semibold mb-3 flex justify-between items-center text-blue-700">
                         Message Sets
-                        <button id="addMessageSetBtn" class="bg-custom-dark-bg text-white font-bold py-1 px-2 text-xs border border-custom-dark-bg rounded-none hover:bg-gray-800 transition duration-150">
-                            + Add
+                        <button id="addMessageSetBtn" class="bg-blue-500 text-white font-bold py-1 px-2 text-xs rounded hover:bg-blue-600 transition duration-150">
+                            + Add Set
                         </button>
                     </h2>
-                    <div id="messageSetsContainer" class="space-y-2  ">
+                    <div id="messageSetsContainer" class="space-y-4 pb-4">
                         <!-- Message sets will be dynamically added here -->
                     </div>
+                    <p id="noMessageSetsMessage" class="text-center text-gray-500 italic text-sm py-4 hidden">
+                        Click 'Add Set' to create your first message configuration.
+                    </p>
                 </section>
             </div>
         </div>
 
         <!-- Right Column: Dynamic Display / Preview -->
-        <div class="w-2/3 flex flex-col justify-center  py-1 p-2">
+        <div class="md:w-2/3 w-full flex flex-col justify-center p-4 bg-gray-100">
             
-        <!-- Browser Container -->
-<div id="rightColumnContainer" class="relative w-full overflow-hidden flex items-center justify-center aspect-video">
- <div id="browserContainer"
-    class="absolute top-0 left-0 w-full h-full rounded-sm shadow-xl ring-1 ring-gray-300 overflow-hidden flex flex-col
-           bg-gray-50 text-custom-light-text border-gray-500 border
-           dark:bg-custom-dark-bg dark:text-custom-dark-text dark:border-gray-600">
-    
-    <!-- Top bar -->
-    <div id="browserHeader"
-        class="flex items-center gap-3 px-4 py-3 border-b
-               bg-gray-200 border-gray-300
-               dark:bg-gray-800 dark:border-gray-700">
-        
-        <!-- Traffic lights -->
-        <div class="flex gap-2 items-center">
-            <span class="w-3 h-3 rounded-full bg-red-500"></span>
-            <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
-            <span class="w-3 h-3 rounded-full bg-green-500"></span>
-        </div>
+            <!-- Browser Container -->
+            <div id="rightColumnContainer" class="relative w-full h-full md:aspect-video flex items-center justify-center">
+                <div id="browserContainer"
+                    class="w-full h-full rounded shadow-lg overflow-hidden flex flex-col border border-gray-300 bg-white">
+                    
+                    <!-- Top bar -->
+                    <div id="browserHeader"
+                        class="flex items-center gap-3 px-4 py-2 border-b bg-gray-200">
+                        <div class="flex gap-2 items-center">
+                            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                            <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        </div>
+                        <div id="addressBar"
+                            class="flex-1 mx-4 rounded-full border px-3 py-0.5 text-xs truncate bg-white text-gray-700 border-gray-300">
+                            https://event-config-preview.com/app
+                        </div>
+                    </div>
 
-        <!-- Address bar -->
-        <div id="addressBar"
-            class="flex-1 mx-4 rounded-sm border px-3 py-1 text-sm truncate
-                   bg-white text-gray-800 border-gray-400
-                   dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
-            https://event-config-editor.com
-        </div>
-
-        <!-- Action icons -->
-        <div id="actionIcons" class="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-            <span class="material-icons cursor-pointer">refresh</span>
-
-            <!-- Theme Toggle Button -->
-            <button id="themeToggleBtn"
-                class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition">
-                <span id="themeIcon" class="material-icons text-lg">dark_mode</span>
-            </button>
-
-            <span class="material-icons cursor-pointer">more_vert</span>
-        </div>
-    </div>
-
-    <!-- Content area -->
-    <div id="browserContent"
-        class="p-6 flex-grow relative overflow-y-auto
-               bg-gray-50 text-gray-800
-               dark:bg-custom-dark-bg dark:text-custom-dark-text">
-        <div id="rightColumnContent"
-            class="absolute inset-0 flex flex-col  items-center justify-center  ">
-            <div class="text-gray-800 text-base font-bold dark:text-white  ">
-                How to Use This Editor
-            </div>
-            <div class="text-gray-600 text-xs mt-1 dark:text-gray-300">
-                Select an event type on the left and click 'Go to Editor' to configure it.
-            </div>
-            <div class="text-gray-900 text-xs mt-2 dark:text-gray-100">
-                Configurations are saved locally in your browser.
+                    <!-- Content area -->
+                    <div id="browserContent"
+                        class="p-4 flex-grow relative overflow-y-auto">
+                        <div id="rightColumnContent"
+                            class="absolute inset-0 flex flex-col items-center justify-center p-4">
+                            <div class="text-lg font-bold mb-2">Event Configuration Preview</div>
+                            <div class="text-gray-500 text-center text-sm">
+                                Select an event and configure a message set to see the live preview here.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-</div>
-
-<!-- Script for Theme Toggle -->
-<script>
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const themeIcon = document.getElementById('themeIcon');
-    const htmlElement = document.documentElement;
-
-    themeToggleBtn.addEventListener('click', () => {
-        htmlElement.classList.toggle('dark');
-        themeIcon.textContent = htmlElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
-    });
-</script>
-
-
-          
-        </div>
-    </div>
-
-    <div id="messageBox" class="fixed top-4 right-4 p-3 border border-custom-light-text rounded-none z-10 text-sm bg-custom-light-bg text-custom-light-text transition duration-500"></div>
+    <!-- Message Box -->
+    <div id="messageBox" class="fixed top-4 right-4 p-3 border border-gray-300 rounded bg-white text-gray-800 z-50 text-sm shadow-md hidden"></div>
 
     <script>
-        // Define EventPriority enum values for clarity and consistency
-        const EventPriority = {
-            LOW: 1,
-            MEDIUM: 2,
-            HIGH: 3,
-            CRITICAL: 4
-        };
-
-        // DOM elements references
-        const probabilityInput = document.getElementById('probability');
-        const waitTimeInput = document.getElementById('waitTime');
-        const prioritySelect = document.getElementById('priority');
+        // --- DOM Elements ---
         const messageSetsContainer = document.getElementById('messageSetsContainer');
         const addMessageSetBtn = document.getElementById('addMessageSetBtn');
         const messageBox = document.getElementById('messageBox');
-
-        // New DOM elements for page navigation and preview controls
         const eventSelectionPage = document.getElementById('eventSelectionPage');
         const configEditorPage = document.getElementById('configEditorPage');
         const goToEditorBtn = document.getElementById('goToEditorBtn');
         const backButton = document.getElementById('backButton');
         const appTitle = document.getElementById('appTitle');
         const selectEventTypeRadios = document.querySelectorAll('input[name="selectEventType"]');
-        const browserContainer = document.getElementById('browserContainer'); // Main browser window div
-        const browserContent = document.getElementById('browserContent'); // Content area within the browser window
-        const rightColumnContent = document.getElementById('rightColumnContent'); // Actual message preview content, now nested
-
-
-        // Moved Save/Download buttons
+        const rightColumnContent = document.getElementById('rightColumnContent');
         const downloadOption = document.getElementById('downloadOption');
+        const uploadOption = document.getElementById('uploadOption');
+        const fileInput = document.getElementById('fileInput');
+        const noMessageSetsMessage = document.getElementById('noMessageSetsMessage');
+        const timeOfDaySelectorSection = document.getElementById('timeOfDaySelectorSection');
+        const timePeriodSelect = document.getElementById('timePeriodSelect');
 
-        // Current configuration object, initialized with a default structure
-        let currentConfig = {
-            data: [], // Array of MessageSet objects
-            probability: 50,
-            waitTime: 5000,
-            priority: EventPriority.MEDIUM
-        };
+        // --- State ---
+        
+        // This will hold different structures depending on the event type:
+        // For standard events: Array<Item>
+        // For Time of Day: { morning: [], afternoon: [], evening: [], night: [] }
+        let currentConfigData = []; 
 
-        let currentSelectedEventType = "offlineEvent"; // Tracks the currently selected event type
+        // Tracks the currently selected LocalStorage Key
+        let currentSelectedKey = "default_event_data";
+        
+        // Tracks the time period for TimeOfDay events ('morning', 'afternoon', etc.)
+        let currentTimePeriod = "morning";
 
-        // Default placeholder image for the preview when no image URL is provided
-        const PLACEHADER_IMAGE_URL = 'https://placehold.co/150x100/1A1A1A/FFFFFF?text=No+Image'; // Updated placeholder background
+        const PLACEHOLDER_IMAGE_URL = 'https://placehold.co/150x100/3b82f6/FFFFFF?text=No+Image';
 
-        /**
-         * Displays a temporary message box for success or error feedback.
-         * @param {string} message - The message to display.
-         * @param {string} type - 'success' or 'error'.
-         */
-        function showMessage(message, type = 'success') {
+        // --- Constants ---
+        const KEY_TIME_OF_DAY = "time_of_day_event_data";
+
+        // --- Utility Functions ---
+
+        function showMessage(message, type = 'info') {
+            let bgColor = 'bg-white', borderColor = 'border-gray-300', textColor = 'text-gray-800';
+            if (type === 'success') {
+                bgColor = 'bg-green-100'; borderColor = 'border-green-400'; textColor = 'text-green-800';
+            } else if (type === 'error') {
+                bgColor = 'bg-red-100'; borderColor = 'border-red-400'; textColor = 'text-red-800';
+            } else if (type === 'info') {
+                 bgColor = 'bg-blue-100'; borderColor = 'border-blue-400'; textColor = 'text-blue-800';
+            }
+            
             messageBox.textContent = message;
-            messageBox.className = 'fixed top-4 right-4 p-3 border rounded-none z-10 opacity-0 transition duration-500 pointer-events-none'; // Reset classes for new design
-
-            if (type === 'error') {
-                messageBox.classList.add('error'); // Add error styling
-            } else {
-                messageBox.classList.add('success'); // Add success styling
-            }
-            messageBox.classList.add('show'); // Show it
-
-            setTimeout(() => {
-                messageBox.classList.remove('show');
+            messageBox.className = `fixed top-4 right-4 p-3 border rounded z-50 text-sm shadow-md ${bgColor} ${borderColor} ${textColor}`;
+            
+            // Auto-hide after 3 seconds
+            clearTimeout(messageBox.hideTimeout);
+            messageBox.hideTimeout = setTimeout(() => {
+                messageBox.classList.add('hidden');
             }, 3000);
+            messageBox.classList.remove('hidden');
         }
 
-        /**
-         * Shows the specified page (event selection or config editor) and updates the header/right column content.
-         * @param {string} pageName - 'selection' or 'editor'.
-         */
-        function showPage(pageName) {
-            if (pageName === 'selection') {
-                eventSelectionPage.classList.remove('hidden');
-                configEditorPage.classList.add('hidden');
-                backButton.classList.add('hidden');
-                appTitle.textContent = 'Event Configuration Editor';
-
-                rightColumnContent.innerHTML = `
-                    <div class="text-custom-light-text text-base font-bold dark:text-white  ">How to Use This Editor</div>
-                    <div class="text-custom-light-text text-xs mt-1 dark:text-white">Select an event type on the left and click 'Go to Editor' to configure it.</div>
-                    <div class="text-gray-800 text-xs mt-2 dark:text-white">Configurations are saved locally in your browser.</div>
-                `;
-            } else { // 'editor' page
-                eventSelectionPage.classList.add('hidden');
-                configEditorPage.classList.remove('hidden');
-                backButton.classList.remove('hidden');
-                appTitle.textContent = `Editing: ${currentSelectedEventType.replace('Event', '')} Event`;
-
-                loadConfiguration(); // Load specific event config when entering editor
-                updatePreview(); // Ensure preview is updated after loading
+        function getReadableEventName(key) {
+            switch(key) {
+                case 'default_event_data': return 'Default / Offline Event';
+                case 'inactivity_event_data': return 'Inactivity Event';
+                case 'random_tip_event_data': return 'Random Tips Event';
+                case 'time_of_day_event_data': return 'Time of Day Event';
+                default: return 'Event';
             }
         }
 
+        // --- Configuration Management ---
+
         /**
-         * Loads configuration from localStorage based on `currentSelectedEventType`.
-         * If no configuration is found, initializes with a default empty structure.
+         * Loads configuration from localStorage based on current key.
          */
         function loadConfiguration() {
-            const storedConfig = localStorage.getItem(`${currentSelectedEventType}Config`);
+            const storedConfig = localStorage.getItem(currentSelectedKey);
 
-            if (storedConfig) {
-                try {
-                    currentConfig = JSON.parse(storedConfig);
-                    if (!Array.isArray(currentConfig.data)) {
-                        currentConfig.data = [];
-                    }
-                } catch (e) {
-                    console.error("Error parsing stored configuration:", e);
-                    showMessage("Error loading configuration. Using default.", "error");
-                    resetToDefaultConfig();
+            try {
+                if (storedConfig) {
+                    currentConfigData = JSON.parse(storedConfig);
+                } else {
+                    // Initialize if empty
+                    currentConfigData = getInitialConfigStructure();
                 }
-            } else {
-                resetToDefaultConfig();
+
+                // Validation fix: ensure structure is correct if it was somehow corrupted or empty
+                if (currentSelectedKey === KEY_TIME_OF_DAY) {
+                    if (Array.isArray(currentConfigData) || !currentConfigData.morning) {
+                        currentConfigData = getInitialConfigStructure();
+                    }
+                } else {
+                    if (!Array.isArray(currentConfigData)) {
+                        currentConfigData = [];
+                    }
+                }
+
+            } catch (e) {
+                console.error("Error parsing stored configuration", e);
+                currentConfigData = getInitialConfigStructure();
             }
-            updateUIFromConfig();
+
+            renderMessageSets();
+            updatePreview();
+        }
+
+        function getInitialConfigStructure() {
+            if (currentSelectedKey === KEY_TIME_OF_DAY) {
+                return {
+                    morning: [],
+                    afternoon: [],
+                    evening: [],
+                    night: []
+                };
+            }
+            return [];
         }
 
         /**
-         * Resets the current configuration to its default empty state.
+         * Returns the active array array we are currently editing.
+         * For standard events, it's the root array.
+         * For TimeOfDay, it's the specific period array.
          */
-        function resetToDefaultConfig() {
-            currentConfig = {
-                data: [],
-                probability: 50,
-                waitTime: 5000,
-                priority: EventPriority.MEDIUM
-            };
+        function getActiveArray() {
+            if (currentSelectedKey === KEY_TIME_OF_DAY) {
+                if (!currentConfigData[currentTimePeriod]) {
+                    currentConfigData[currentTimePeriod] = [];
+                }
+                return currentConfigData[currentTimePeriod];
+            }
+            return currentConfigData;
         }
 
         /**
-         * Updates the UI elements (inputs) based on the currentConfig object.
-         */
-        function updateUIFromConfig() {
-            probabilityInput.value = currentConfig.probability;
-            waitTimeInput.value = currentConfig.waitTime;
-            prioritySelect.value = currentConfig.priority;
-            renderMessageSets(); // Re-render all message set input fields
-        }
-
-        /**
-         * Saves the currentConfig to localStorage under the appropriate key.
+         * Saves currentConfigData to localStorage.
          */
         function saveConfiguration() {
             try {
-                localStorage.setItem(`${currentSelectedEventType}Config`, JSON.stringify(currentConfig));
-                showMessage("Configuration saved successfully!", "success");
+                localStorage.setItem(currentSelectedKey, JSON.stringify(currentConfigData));
             } catch (e) {
-                console.error("Error saving configuration to localStorage:", e);
-                showMessage("Failed to save configuration. Storage might be full.", "error");
+                console.error("Error saving configuration:", e);
+                showMessage("Failed to save configuration.", "error");
             }
         }
 
-        /**
-         * Adds a new, empty message set object to the currentConfig.data array.
-         * Then re-renders all message sets.
-         */
+        // --- Message Set Management ---
+
         function addMessageSet() {
-            currentConfig.data.push({
-                texts: ["New message"], // Default text for a new message set
+            const activeArray = getActiveArray();
+            activeArray.push({
+                texts: ["New message text"],
                 src: "",
                 position: "bottom-right",
                 size: "medium"
             });
+            saveConfiguration(); 
             renderMessageSets();
             updatePreview();
-            // Scroll to the newly added message set
-            messageSetsContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            
+            // Scroll to bottom
+            const lastItem = messageSetsContainer.lastElementChild;
+            if (lastItem) {
+                lastItem.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
         }
 
-        /**
-         * Removes a message set from the currentConfig.data array at the specified index.
-         * Then re-renders all message sets and updates the preview.
-         * @param {number} index - The index of the message set to remove.
-         */
         function removeMessageSet(index) {
-            currentConfig.data.splice(index, 1);
+            const activeArray = getActiveArray();
+            activeArray.splice(index, 1);
+            saveConfiguration();
             renderMessageSets();
             updatePreview();
-            showMessage(`Message Set ${index + 1} removed.`, "success");
         }
 
-        /**
-         * Renders (or re-renders) all message set input fields in the UI.
-         * Clears existing fields and creates new ones based on currentConfig.data.
-         */
         function renderMessageSets() {
-            messageSetsContainer.innerHTML = ''; // Clear existing message sets
+            messageSetsContainer.innerHTML = '';
+            
+            const activeArray = getActiveArray();
+            noMessageSetsMessage.classList.toggle('hidden', activeArray.length > 0);
 
-            currentConfig.data.forEach((messageSet, index) => {
+            activeArray.forEach((messageSet, index) => {
                 const messageSetDiv = document.createElement('div');
-                // Use custom rgb for border
-                messageSetDiv.className = 'message-set-item bg-custom-light-bg p-2 border-2 border-black/30 hover:border-black rounded-none text-xs';
-                messageSetDiv.setAttribute('tabindex', '0'); // Make it focusable
+                messageSetDiv.className = 'message-set-item p-3 border border-gray-300 bg-gray-50 rounded shadow-sm hover:shadow-md transition duration-150';
+                messageSetDiv.setAttribute('tabindex', '0');
 
                 messageSetDiv.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-sm font-semibold text-custom-light-text">Message Set ${index + 1}</h3>
-                        <button class="remove-message-set-btn bg-custom-dark-bg text-white font-bold py-0.5 px-1.5 text-xs border border-custom-dark-bg rounded-none hover:bg-gray-800 transition duration-150"
-                                data-index="${index}">Remove</button>
+                    <div class="flex justify-between items-center mb-3 border-b pb-2">
+                        <h3 class="text-sm font-semibold text-blue-700">Message Set ${index + 1}</h3>
+                        <button class="remove-message-set-btn text-red-500 hover:text-red-700 transition"
+                                data-index="${index}" title="Remove">X</button>
                     </div>
-                    <div class="grid grid-cols-1 gap-2">
-                        <div>
-                            <label for="texts-${index}" class="block text-custom-light-text text-xs font-medium mb-1">Texts (comma-separated):</label>
-                            <textarea id="texts-${index}" rows="2"
-                                class="w-full p-1 border border-custom-light-text rounded-none text-xs bg-custom-light-bg text-custom-light-text resize-y"
-                                placeholder="Enter messages, separated by commas">${messageSet.texts.join(', ')}</textarea>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium mb-1">Texts (comma-separated):</label>
+                            <textarea id="texts-${index}" rows="3"
+                                class="w-full p-2 border border-gray-300 rounded text-sm bg-white resize-y focus:ring-blue-500 focus:border-blue-500"
+                                >${messageSet.texts.join(', ')}</textarea>
                         </div>
-                        <div>
-                            <label for="src-${index}" class="block text-custom-light-text text-xs font-medium mb-1">Image URL:</label>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium mb-1">Image URL:</label>
                             <input type="url" id="src-${index}" value="${messageSet.src}"
-                                class="w-full p-1 border border-custom-light-text rounded-none text-xs bg-custom-light-bg text-custom-light-text"
-                                placeholder="e.g., https://example.com/image.jpg">
+                                class="w-full p-2 border border-gray-300 rounded text-sm bg-white focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Optional image link">
                         </div>
                         <div>
-                            <label for="position-${index}" class="block text-custom-light-text text-xs font-medium mb-1">Position:</label>
-                            <select id="position-${index}" class="w-full p-1 border border-custom-light-text rounded-none text-xs bg-custom-light-bg text-custom-light-text">
+                            <label class="block text-xs font-medium mb-1">Position:</label>
+                            <select id="position-${index}" class="w-full p-2 border border-gray-300 rounded text-sm bg-white focus:ring-blue-500 focus:border-blue-500">
                                 <option value="bottom-left" ${messageSet.position === 'bottom-left' ? 'selected' : ''}>Bottom Left</option>
                                 <option value="bottom-right" ${messageSet.position === 'bottom-right' ? 'selected' : ''}>Bottom Right</option>
                                 <option value="top-left" ${messageSet.position === 'top-left' ? 'selected' : ''}>Top Left</option>
@@ -529,8 +352,8 @@
                             </select>
                         </div>
                         <div>
-                            <label for="size-${index}" class="block text-custom-light-text text-xs font-medium mb-1">Size:</label>
-                            <select id="size-${index}" class="w-full p-1 border border-custom-light-text rounded-none text-xs bg-custom-light-bg text-custom-light-text">
+                            <label class="block text-xs font-medium mb-1">Size:</label>
+                            <select id="size-${index}" class="w-full p-2 border border-gray-300 rounded text-sm bg-white focus:ring-blue-500 focus:border-blue-500">
                                 <option value="small" ${messageSet.size === 'small' ? 'selected' : ''}>Small</option>
                                 <option value="medium" ${messageSet.size === 'medium' ? 'selected' : ''}>Medium</option>
                                 <option value="large" ${messageSet.size === 'large' ? 'selected' : ''}>Large</option>
@@ -540,78 +363,77 @@
                 `;
                 messageSetsContainer.appendChild(messageSetDiv);
 
-                // Add event listeners to the newly created inputs
-                document.getElementById(`texts-${index}`).addEventListener('input', (e) => {
+                // --- Event Listeners for Inputs ---
+                const textsInput = document.getElementById(`texts-${index}`);
+                const srcInput = document.getElementById(`src-${index}`);
+                const posInput = document.getElementById(`position-${index}`);
+                const sizeInput = document.getElementById(`size-${index}`);
+
+                textsInput.addEventListener('input', (e) => {
                     messageSet.texts = e.target.value.split(',').map(text => text.trim()).filter(text => text !== '');
-                    updatePreview();
                     saveConfiguration();
+                    updatePreview(messageSet);
                 });
-                document.getElementById(`src-${index}`).addEventListener('input', (e) => {
+
+                srcInput.addEventListener('input', (e) => {
                     messageSet.src = e.target.value;
-                    updatePreview();
                     saveConfiguration();
+                    updatePreview(messageSet);
                 });
-                document.getElementById(`position-${index}`).addEventListener('change', (e) => {
+
+                posInput.addEventListener('change', (e) => {
                     messageSet.position = e.target.value;
-                    updatePreview();
                     saveConfiguration();
+                    updatePreview(messageSet);
                 });
-                document.getElementById(`size-${index}`).addEventListener('change', (e) => {
+
+                sizeInput.addEventListener('change', (e) => {
                     messageSet.size = e.target.value;
-                    updatePreview();
                     saveConfiguration();
-                });
-
-                // Add hover (mouseenter/mouseleave) and focus (focusin/focusout) listeners
-                messageSetDiv.addEventListener('mouseenter', () => {
                     updatePreview(messageSet);
                 });
-                messageSetDiv.addEventListener('mouseleave', () => {
-                    updatePreview(); // Revert to default (first message set)
-                });
-                messageSetDiv.addEventListener('focusin', () => {
-                    updatePreview(messageSet);
-                });
-                messageSetDiv.addEventListener('focusout', () => {
-                    updatePreview(); // Revert to default (first message set)
-                });
-            });
 
-            // Attach event listeners to remove buttons after all are rendered
-            document.querySelectorAll('.remove-message-set-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const indexToRemove = parseInt(e.target.dataset.index);
-                    removeMessageSet(indexToRemove);
+                // Remove Listener
+                messageSetDiv.querySelector('.remove-message-set-btn').addEventListener('click', (e) => {
+                    removeMessageSet(index);
                 });
+
+                // Preview Handlers
+                const previewHandler = () => updatePreview(messageSet);
+                const revertHandler = () => updatePreview(); // Reverts to first item
+
+                messageSetDiv.addEventListener('mouseenter', previewHandler);
+                messageSetDiv.addEventListener('mouseleave', revertHandler);
+                messageSetDiv.addEventListener('focusin', previewHandler);
+                messageSetDiv.addEventListener('focusout', revertHandler);
             });
         }
 
-        /**
-         * Updates the live preview area based on the first message set in currentConfig.data.
-         * Displays a placeholder if no message sets exist or if image URL is invalid/empty.
-         * The content is now injected into the #browserContent div.
-         * @param {object} [messageSetToPreview=null] - Optional: The specific message set object to preview.
-         * If null, defaults to the first message set in currentConfig.data.
-         */
+        // --- Preview Logic ---
+
         function updatePreview(messageSetToPreview = null) {
-            // Clear only the #rightColumnContent div, not the entire browserContent
-            rightColumnContent.innerHTML = '';
+            rightColumnContent.innerHTML = ''; 
 
             let messageSetToUse = null;
+            const activeArray = getActiveArray();
 
-            if (currentConfig.data.length > 0) { // Only attempt to preview if there's data
-                if (messageSetToPreview) {
-                    messageSetToUse = messageSetToPreview;
-                } else {
-                    messageSetToUse = currentConfig.data[0]; // Default to the first message set
-                }
+            if (messageSetToPreview) {
+                messageSetToUse = messageSetToPreview;
+            } else if (activeArray.length > 0) {
+                messageSetToUse = activeArray[0]; 
             }
             
             if (!messageSetToUse) {
-                 // Display appropriate message based on current theme
                 rightColumnContent.innerHTML = `
-                    <div class="text-custom-light-text text-sm font-bold dark:text-custom-dark-text">No preview available. Add at least one message set.</div>
-                    <div class="text-custom-light-text text-xs mt-1 dark:text-custom-dark-text">Configure messages to see a preview here.</div>
+                    <div class="text-lg font-bold mb-2">Event Configuration Preview</div>
+                    <div class="text-gray-500 text-center text-sm">
+                        ${configEditorPage.classList.contains('hidden') 
+                            ? "Select an event type."
+                            : (currentSelectedKey === KEY_TIME_OF_DAY 
+                                ? `No messages for ${currentTimePeriod}. Add one.`
+                                : "No message sets configured.")
+                        }
+                    </div>
                 `;
                 return;
             }
@@ -619,110 +441,150 @@
             const textsToDisplay = messageSetToUse.texts.length > 0 ?
                                    messageSetToUse.texts[messageSetToUse.texts.length - 1] :
                                    'No text provided.';
+            
+            const imageUrl = messageSetToUse.src || PLACEHOLDER_IMAGE_URL;
+            
+            const positionClasses = {
+                'bottom-left': 'absolute bottom-0 left-0',
+                'bottom-right': 'absolute bottom-0 right-0',
+                'top-left': 'absolute top-0 left-0',
+                'top-right': 'absolute top-0 right-0',
+                'center': 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+            };
 
-            const imageUrl = messageSetToUse.src || PLACEHADER_IMAGE_URL;
+            const sizeClasses = {
+                'small': 'w-32',
+                'medium': 'w-48',
+                'large': 'w-64'
+            };
 
             const previewBlock = document.createElement('div');
-            // Applying Tailwind classes directly here, including absolute positioning
-            previewBlock.className = `absolute flex flex-col gap-1 max-w-[90%] text-center p-0  rounded-none bg-custom-light-bg text-custom-light-text
-                                      dark:bg-custom-dark-bg dark:text-custom-dark-text 
-                                      ${'pos-' + messageSetToUse.position} ${'size-' + messageSetToUse.size}`;
+            previewBlock.className = `${positionClasses[messageSetToUse.position] || positionClasses['bottom-right']} ${sizeClasses[messageSetToUse.size] || sizeClasses['medium']}
+                                      flex flex-col gap-1 max-w-[90%] text-center p-2 rounded shadow-md border border-gray-200 bg-white text-gray-800`;
 
             if (imageUrl) {
                 const img = document.createElement('img');
                 img.src = imageUrl;
                 img.alt = 'Event Image';
-                img.onerror = () => {
-                    img.src = PLACEHADER_IMAGE_URL;
-                };
-                // Applying Tailwind classes directly here
-                img.className = 'max-w-full h-auto rounded-none object-contain border border-[#ccc] dark:border-custom-dark-text'; /* Adjusted dark mode border */
+                img.onerror = () => { img.src = PLACEHOLDER_IMAGE_URL; };
+                img.className = 'max-w-full h-auto rounded object-cover w-full';
                 previewBlock.appendChild(img);
             }
 
             const textParagraph = document.createElement('p');
             textParagraph.textContent = textsToDisplay;
-            textParagraph.className = 'text-content';
+            textParagraph.className = 'text-xs pt-1 font-medium';
             previewBlock.appendChild(textParagraph);
 
             rightColumnContent.appendChild(previewBlock);
         }
 
-        /**
-         * Handles the selection of Save/Download options.
-         * Ensures only one option is "selected" at a time.
-         * @param {HTMLElement} selectedButton - The button element that was clicked.
-         */
-        function handleSaveDownloadOptionSelection(selectedButton) {
-            const allOptionButtons = document.querySelectorAll('#saveDownloadButtons .footer-option-button');
-            allOptionButtons.forEach(button => {
-                if (button === selectedButton) {
-                    button.classList.add('selected', 'bg-custom-dark-bg', 'text-custom-dark-text', 'border-custom-dark-bg');
-                    button.classList.remove('bg-custom-light-bg', 'text-custom-light-text', 'border-custom-light-text');
-                    button.setAttribute('aria-checked', 'true');
-                    if (selectedButton.dataset.option === 'download') {
-                        // Placeholder for download functionality
-                        showMessage("Download functionality not implemented yet.", "info");
-                    }
-                } else {
-                    button.classList.remove('selected', 'bg-custom-dark-bg', 'text-custom-dark-text', 'border-custom-dark-bg');
-                    button.classList.add('bg-custom-light-bg', 'text-custom-light-text', 'border-custom-light-text');
-                    button.setAttribute('aria-checked', 'false');
-                }
-            });
+        // --- Upload / Download ---
+
+        function downloadConfiguration() {
+            saveConfiguration(); // Ensure latest state
+            const filename = `${currentSelectedKey}.json`;
+            const dataStr = JSON.stringify(currentConfigData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage(`Downloaded ${filename}`, "success");
         }
 
-        // --- Event Listeners ---
+        function handleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-        // Load config when the selected radio button changes (on selection page)
-        selectEventTypeRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                currentSelectedEventType = e.target.value;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const uploadedConfig = JSON.parse(e.target.result);
+                    
+                    // Basic validation based on current key
+                    if (currentSelectedKey === KEY_TIME_OF_DAY) {
+                        if (!uploadedConfig.morning) throw new Error("Missing 'morning' key in Time of Day config.");
+                    } else {
+                        if (!Array.isArray(uploadedConfig)) throw new Error("Config must be an array.");
+                    }
+
+                    currentConfigData = uploadedConfig;
+                    saveConfiguration();
+                    renderMessageSets();
+                    updatePreview();
+                    showMessage(`Loaded config for ${getReadableEventName(currentSelectedKey)}.`, "success");
+
+                } catch (error) {
+                    console.error("File upload failed:", error);
+                    showMessage(`Invalid file: ${error.message}`, "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- Navigation & Initialization ---
+
+        function showPage(pageName) {
+            if (pageName === 'selection') {
+                eventSelectionPage.classList.remove('hidden');
+                configEditorPage.classList.add('hidden');
+                backButton.classList.add('hidden');
+                appTitle.textContent = 'Event Configuration Editor';
+            } else { 
+                eventSelectionPage.classList.add('hidden');
+                configEditorPage.classList.remove('hidden');
+                backButton.classList.remove('hidden');
+                appTitle.textContent = `Editing: ${getReadableEventName(currentSelectedKey)}`;
+                
+                // Show/Hide Time of Day Selector
+                if (currentSelectedKey === KEY_TIME_OF_DAY) {
+                    timeOfDaySelectorSection.classList.remove('hidden');
+                } else {
+                    timeOfDaySelectorSection.classList.add('hidden');
+                }
+                
+                loadConfiguration(); 
+            }
+            updatePreview();
+        }
+
+        function setupEventListeners() {
+            // Radio Buttons: Update currentKey
+            selectEventTypeRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    currentSelectedKey = e.target.value;
+                });
             });
-        });
 
-        // "Go to Editor" button click
-        goToEditorBtn.addEventListener('click', () => {
-            showPage('editor');
-        });
+            // Navigation
+            goToEditorBtn.addEventListener('click', () => showPage('editor'));
+            backButton.addEventListener('click', () => showPage('selection'));
 
-        // "Back" button click
-        backButton.addEventListener('click', () => {
+            // Time Period Selector
+            timePeriodSelect.addEventListener('change', (e) => {
+                currentTimePeriod = e.target.value;
+                renderMessageSets(); // Re-render lists for the new time period
+                updatePreview();
+            });
+
+            // Add Button
+            addMessageSetBtn.addEventListener('click', addMessageSet);
+
+            // File Ops
+            downloadOption.addEventListener('click', downloadConfiguration);
+            uploadOption.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleUpload);
+            
             showPage('selection');
-        });
+        }
 
-        // Update currentConfig when probability changes
-        probabilityInput.addEventListener('input', (e) => {
-            currentConfig.probability = parseInt(e.target.value, 10);
-        });
-
-        // Update currentConfig when wait time changes
-        waitTimeInput.addEventListener('input', (e) => {
-            currentConfig.waitTime = parseInt(e.target.value, 10);
-        });
-
-        // Update currentConfig when priority changes
-        prioritySelect.addEventListener('change', (e) => {
-            currentConfig.priority = parseInt(e.target.value, 10);
-        });
-
-        // Add message set button click
-        addMessageSetBtn.addEventListener('click', addMessageSet);
-
-        // Preview button click
-       
-
-        // Theme toggle button click
-
-
-        downloadOption.addEventListener('click', () => handleSaveDownloadOptionSelection(downloadOption));
-
-        // Initial page load: show the selection page
-        window.onload = () => {
-            showPage('selection');
-            // Set initial selected state for Save/Download buttons
-            handleSaveDownloadOptionSelection(downloadOption); 
-        };
+        window.onload = setupEventListeners;
     </script>
 </body>
 </html>

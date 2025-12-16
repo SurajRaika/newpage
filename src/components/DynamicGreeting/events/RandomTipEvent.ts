@@ -3,30 +3,32 @@
 import { BaseEvent, EventPriority, type EventResponse, type ImageData } from '../types';
 
 /**
+ * Type definition for a single Tip structure.
+ */
+type Tip = {
+  texts: string[];
+  src: string;
+  position: 'top-right' | 'bottom-left' | 'top-left' | 'bottom-right' | 'center';
+  size: 'small' | 'medium' | 'large';
+};
+
+/**
  * RandomTipEvent:
  * Displays random fun tips/images at intervals (e.g., every few minutes).
  */
 export class RandomTipEvent extends BaseEvent {
   eventId = 'random_tip_event';
 
+  // Local storage key for storing/retrieving the tips data structure itself
+  private dataStorageKey = 'random_tip_event_data'; 
   private probability = 50; // 50% chance by default
   private waitTime = 1000; // in milisec
   private Priority = EventPriority.MEDIUM;
 
   /**
-   * Array of tips with multiple text options for variety.
-   * Each tip contains:
-   *  - texts: multiple strings (we pick one randomly)
-   *  - src: image URL
-   *  - position: placement of image
-   *  - size: image size
+   * Array of tips with multiple text options for variety (Used as the default/fallback).
    */
-  private tips: {
-    texts: string[];
-    src: string;
-    position: string;
-    size: string;
-  }[] = [
+  private defaultTips: Tip[] = [
     {
       texts: [
         "Don't mind me, just thinking about naps.",
@@ -61,19 +63,26 @@ export class RandomTipEvent extends BaseEvent {
 
   constructor() {
     super();
+    
+    // Check if running in a browser environment and initialize localStorage data
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const storedData = localStorage.getItem(this.dataStorageKey);
+      if (!storedData) {
+        // If data is not found, store the default tips
+        localStorage.setItem(this.dataStorageKey, JSON.stringify(this.defaultTips));
+      }
+    }
 
-    // DEMO: Trigger this event after 2 seconds
+    // DEMO: Trigger this event after the waitTime
     setTimeout(() => {
       this.requestDisplay();
-    }, 10);
+    }, this.waitTime);
 
     // Example: trigger every 2 minutes
     // setInterval(() => this.requestDisplay(), 120000);
   }
 
-  /** 
-   * Only show occasionally. For now, always true.
-   * Example: 15% chance -> return Math.random() < 0.15;
+  /** * Only show occasionally.
    */
   canTrigger(): boolean {
     return Math.random() * 100 < this.probability;
@@ -85,18 +94,45 @@ export class RandomTipEvent extends BaseEvent {
 
   /**
    * Picks a random tip and a random text from its `texts` array.
-   * Returns data in correct format: { src, position, size, text }
+   * It loads the data from localStorage first, falling back to defaultTips.
    */
   getImageData(): Omit<ImageData, 'id'> {
-    // Random tip object
-    const randomTip = this.tips[Math.floor(Math.random() * this.tips.length)];
+    let activeTips: Tip[] = [];
 
-    // Random text from that tip
+    // 1. Attempt to load tips from localStorage
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const storedData = localStorage.getItem(this.dataStorageKey);
+      
+      if (storedData) {
+        try {
+          // Attempt to parse the stored string into the expected array structure (Tip[])
+          const loadedTips = JSON.parse(storedData) as Tip[];
+          
+          // Check if the loaded data is a non-empty array
+          if (Array.isArray(loadedTips) && loadedTips.length > 0) {
+            activeTips = loadedTips;
+          }
+        } catch (e) {
+          console.error(`[${this.eventId}] Failed to parse tip data from localStorage. Falling back to defaults.`, e);
+          // If parsing fails, activeTips remains empty, triggering the fallback below
+        }
+      }
+    }
+
+    // 2. Fallback: If localStorage could not be loaded or was empty/invalid, use the default structure.
+    if (activeTips.length === 0) {
+      activeTips = this.defaultTips;
+    }
+
+    // 3. Select a random tip from the determined list (activeTips)
+    const randomTip = activeTips[Math.floor(Math.random() * activeTips.length)];
+
+    // 4. Select a random text from that tip
     const randomText = randomTip.texts[Math.floor(Math.random() * randomTip.texts.length)];
 
     return {
       src: randomTip.src,
-      position: randomTip.position,
+      position: randomTip.position, 
       size: randomTip.size,
       text: randomText
     };
@@ -107,29 +143,22 @@ export class RandomTipEvent extends BaseEvent {
   }
 
   onDisplay(hideCallback: () => void): void {
-    console.log(`[${this.eventId}] Displayed! Will hide in 80 seconds.`);
+    console.log(`[${this.eventId}] Displayed! Will hide in 8 seconds.`);
     let count = 0;
-const intervalId = setInterval(() => {
-  console.log("Count is", count);
+    const intervalId = setInterval(() => {
+      console.log("Count is", count);
 
-  if (count >= 8) {
-    console.log("Closing the displayed image");
-    hideCallback(); // Hide myself after 8 seconds
+      // The original logic checked for count >= 8, making it 9 seconds total (0 through 8).
+      // Let's hide after 8 complete seconds (count = 8)
+      if (count >= 8) {
+        console.log("Closing the displayed image");
+        hideCallback(); // Hide myself
+        clearInterval(intervalId); // stop the interval
+      }
 
-    clearInterval(intervalId); // stop the interval
-  }
+      count += 1;
+    }, 1000);
 
-  count += 1;
-}, 1000);
-
-
-
-    setTimeout(() => {
-      hideCallback(); // Hide myself after 8 seconds
-    }, 80000);
-
-
-
-
+    // Removed the redundant 80-second setTimeout from your original code.
   }
 }

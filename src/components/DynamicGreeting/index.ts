@@ -3,6 +3,8 @@ import { BaseEvent, EventPriority, type EventRequest, type EventResponse, type Q
 import { UIManager } from './UIManager';
 
 // Import all your event classes here
+import { DefaultEvent } from './events/DefaultEvent';
+
 import { InactivityEvent } from './events/InactivityEvent';
 import { OfflineEvent } from './events/offlineEvent';
 import { RandomTipEvent } from './events/RandomTipEvent';
@@ -48,7 +50,7 @@ export class DynamicGreetingHub {
 
   /** Instantiates all event classes. */
   private registerEvents(): void {
-    this.events = [new RandomTipEvent(), new InactivityEvent(), new TimeOfDayEvent(), new OfflineEvent()];
+    this.events = [new DefaultEvent(),new RandomTipEvent(), new InactivityEvent(), new TimeOfDayEvent(), new OfflineEvent()];
     console.log(`📋 Registered ${this.events.length} event types.`);
   }
 

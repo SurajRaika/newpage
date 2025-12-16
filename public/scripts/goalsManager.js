@@ -23,11 +23,11 @@ import { getGoals, saveGoals, formatTimeAgo } from './utils/general.js';
             if (userGoals[i]) {
                 // Render existing goal
                 const goalItem = document.createElement('div');
-                goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border rounded-sm text-xs font-medium min-h-[2.2rem] box-border whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-primary))]';
+                goalItem.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium  min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))]';
                 goalItem.dataset.index = i;
                 goalItem.innerHTML = `
                     <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 text-[rgb(var(--color-text-secondary))]"></i>
-                    <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow">${userGoals[i].text}</span>
+                    <span class="goal-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-grow first-letter:uppercase ">${userGoals[i].text}</span>
                     <span class="time-since text-[0.7rem] font-normal whitespace-nowrap ml-auto flex-shrink-0 mr-2 text-[rgb(var(--color-text-secondary))]">${userGoals[i].creationTime ? formatTimeAgo(userGoals[i].creationTime) : ''}</span>
                 `;
                 // ✅ FIX: Pass the event object 'e' to stop propagation
@@ -39,7 +39,7 @@ import { getGoals, saveGoals, formatTimeAgo } from './utils/general.js';
             } else {
                 // Render "Add Goal" prompt
                 const addPrompt = document.createElement('div');
-                addPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))]';
+                addPrompt.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))] opacity-50 ';
                 addPrompt.innerHTML = `
                     <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2"></i>
                     <span>Click here to add your next goal</span>

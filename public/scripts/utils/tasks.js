@@ -6,6 +6,11 @@ export class TasksManager {
   constructor() {
     this.storageKey = 'goalsEnabled';
     this.eventName = 'toggle-tasks';
+
+    // Initialize default state (enabled)
+    if (localStorage.getItem(this.storageKey) === null) {
+      localStorage.setItem(this.storageKey, 'true');
+    }
   }
 
   /**
@@ -33,6 +38,6 @@ export class TasksManager {
    * @returns {string} Button text
    */
   getTasksButtonText() {
-    return this.isTasksEnabled() ? 'Disable Tasks' : 'Enable‎  Tasks';
+    return this.isTasksEnabled() ? 'Disable Tasks' : 'Enable Tasks';
   }
 }

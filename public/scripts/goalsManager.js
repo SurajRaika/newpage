@@ -23,7 +23,8 @@ import { getGoals, saveGoals, formatTimeAgo } from './utils/general.js';
             if (userGoals[i]) {
                 // Render existing goal
                 const goalItem = document.createElement('div');
-                goalItem.className = 'add-goal-prompt flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium  min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))]';
+                goalItem.className = 'goal-item flex flex-row items-center gap-2 py-1 border border-dashed rounded-sm text-xs font-medium  min-h-[2.2rem] box-border cursor-pointer justify-start relative hover:border-[rgb(var(--color-accent))] hover:bg-[rgb(var(--color-secondary-bg))] border-[rgb(var(--color-border-color))] text-[rgb(var(--color-text-secondary))]';
+
                 goalItem.dataset.index = i;
                 goalItem.innerHTML = `
                     <i class="ph-fill ph-clipboard-text goal-icon text-base flex-shrink-0 ml-2 text-[rgb(var(--color-text-secondary))]"></i>

@@ -2,7 +2,7 @@ const searchEnginePlaceholders = {
         google: "Search Google...",
         perplexity: "Search Perplexity...",
         youtube: "Search YouTube...",
-        chatgpt: "Search ChatGPT...",
+        Bing: "Search Bing...",
         history: "View search history or search Google..."
     };
     const EngineManager = (() => {
@@ -29,7 +29,7 @@ const searchEnginePlaceholders = {
             document.dispatchEvent(new CustomEvent(eventToShow));
         };
         const switchEngine = (key) => {
-            const engineMap = { 'p': 'perplexity', 'g': 'google', 'y': 'youtube', 'c': 'chatgpt', 'h': 'history' };
+            const engineMap = { 'p': 'perplexity', 'g': 'google', 'y': 'youtube', 'c': 'bing', 'h': 'history' };
             if (engineMap[key]) {
                 const radio = document.querySelector(`input[name="engine"][value="${engineMap[key]}"]`);
                 if (radio) {

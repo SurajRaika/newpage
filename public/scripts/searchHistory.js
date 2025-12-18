@@ -105,8 +105,8 @@
                     case 'youtube':
                         url = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`;
                         break;
-                    case 'chatgpt':
-                        url = `https://chat.openai.com/chat?q=${encodeURIComponent(item.query)}`;
+                    case 'bing':
+                        url = `https://www.bing.com/search?q=${encodeURIComponent(item.query)}`;
                         break;
                     default:
                         url = `https://www.google.com/search?q=${encodeURIComponent(item.query)}`;

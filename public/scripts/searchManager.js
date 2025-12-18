@@ -27,7 +27,9 @@ const SearchManager = (() => {
                 google: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
                 perplexity: `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}`,
                 youtube: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
-                chatgpt: `https://chat.openai.com/chat?q=${encodeURIComponent(query)}`,
+                bing: `https://www.bing.com/search?q=${encodeURIComponent(item.query)}` ,
+                    
+
             };
             const url = urls[engine];
             if (!url) return;

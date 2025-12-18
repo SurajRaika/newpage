@@ -41,6 +41,6 @@ export const searchEnginePlaceholders = {
     google: "Search Google...",
     perplexity: "Search Perplexity...",
     youtube: "Search YouTube...",
-    chatgpt: "Search ChatGPT...",
+    bing: "Search Bing...",
     history: "View search history or search Google..." // Special case for history
 };
